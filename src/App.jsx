@@ -1,7 +1,5 @@
 import React from "react";
 import { Button } from "./components/ui/button";
-import Dashboard from "./pages/student/Dashboard";
-import Dashboard from "./pages/teacher/Dashboard";
 
 const App = () => {
   return (
