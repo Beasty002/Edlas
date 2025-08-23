@@ -1,12 +1,12 @@
-import React from "react";
-import { Button } from "./components/ui/button";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router/router";
+import { AuthProvider } from "./context/AuthContext";
+import { SidebarProvider } from "./components/ui/sidebar";
 
-const App = () => {
+export default function App() {
   return (
-    <h1 className="text-blue-500">
-      Vite project using tailwind css <Button>Some button</Button>
-    </h1>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
-};
-
-export default App;
+}
