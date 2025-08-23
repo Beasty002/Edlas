@@ -11,7 +11,7 @@ const MainLayout = () => {
 
       <SidebarInset>
         <Navbar />
-        <div className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-gray-900 h-[calc(100dvh-64px)]">
           <Outlet />
         </div>
       </SidebarInset>

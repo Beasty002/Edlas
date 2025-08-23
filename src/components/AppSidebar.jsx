@@ -1,4 +1,12 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import {
+  Calendar,
+  Home,
+  Inbox,
+  MessageSquare,
+  Search,
+  Settings,
+  User,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 import {
@@ -14,8 +22,8 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "Students", url: "/students", icon: Inbox },
-  { title: "AI chat", url: "/ai", icon: Search },
+  { title: "Students", url: "/students", icon: User },
+  { title: "AI chat", url: "/ai", icon: MessageSquare },
 ];
 
 export function AppSidebar() {
