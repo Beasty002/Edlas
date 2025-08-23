@@ -1,4 +1,5 @@
 import { createContext, useState } from "react";
+import toast from "react-hot-toast";
 
 export const AuthContext = createContext();
 
@@ -6,11 +7,14 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = () => {
-    console.log("logged in");
+    toast.success("Login successful!");
     setIsAuthenticated(true);
   };
 
-  const logout = () => setIsAuthenticated(false);
+  const logout = () => {
+    toast.success("Logged out successfully!");
+    setIsAuthenticated(false);
+  };
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
