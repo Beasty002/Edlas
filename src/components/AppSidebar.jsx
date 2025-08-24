@@ -1,5 +1,6 @@
 import {
   Calendar,
+  ChevronUp,
   Home,
   Inbox,
   MessageSquare,
@@ -12,6 +13,7 @@ import { Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -19,12 +21,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import NavUser from "./NavUser";
 
 const items = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Students", url: "/students", icon: User },
   { title: "AI chat", url: "/ai", icon: MessageSquare },
 ];
+const data = {
+  name: "beasty",
+  email: "beasty@gmail.com",
+  avatar: "/avatars/shadcn.jpg",
+};
 
 export function AppSidebar() {
   return (
@@ -48,6 +56,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={data} />
+      </SidebarFooter>
     </Sidebar>
   );
 }

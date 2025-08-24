@@ -77,7 +77,7 @@ export default function Login() {
                   placeholder="Enter your username or email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 mt-1"
                 />
                 {errors.email && (
                   <span className="text-red-500 text-sm">{errors.email}</span>
@@ -97,7 +97,7 @@ export default function Login() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 mt-1"
                 />
                 {errors.password && (
                   <span className="text-red-500 text-sm">
