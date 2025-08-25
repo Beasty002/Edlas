@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useContext } from "react";
 import {
   IconCreditCard,
   IconDotsVertical,
@@ -25,9 +25,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { AuthContext } from "@/context/AuthContext";
 
 const NavUser = ({ user }) => {
   const { isMobile } = useSidebar();
+  const auth = useContext(AuthContext);
+  const handleLogout = () => {
+    auth.logout();
+    navigate("/login");
+  };
 
   return (
     <SidebarMenu>
@@ -87,7 +93,7 @@ const NavUser = ({ user }) => {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

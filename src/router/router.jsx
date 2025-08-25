@@ -1,10 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import Dashboard from "@/pages/admin/Dashboard";
-import Students from "@/pages/admin/Students";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "@/layout/MainLayout";
 import AiChat from "@/pages/AiChat";
 import Login from "@/pages/Login";
+import StudentsList from "@/pages/shared/studentList/StudentsListPage";
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +19,7 @@ export const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
           { path: "/", element: <Dashboard /> },
-          { path: "/students", element: <Students /> },
+          { path: "/students", element: <StudentsList /> },
           { path: "/ai", element: <AiChat /> },
         ],
       },
