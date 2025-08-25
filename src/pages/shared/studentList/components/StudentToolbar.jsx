@@ -55,7 +55,7 @@ const StudentToolbar = () => {
       <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
         <div className="flex-1 min-w-[200px]">
           <Input
-            placeholder="Search student by name..."
+            placeholder="Search student ..."
             value={search}
             onChange={handleSearchChange}
             className="w-full"

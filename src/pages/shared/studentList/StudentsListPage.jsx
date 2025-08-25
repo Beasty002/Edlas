@@ -1,10 +1,12 @@
 import React from "react";
 import StudentToolbar from "./components/StudentToolbar";
+import StudentListTable from "./components/StudentListTable";
 
 const StudentsListPage = () => {
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <StudentToolbar />
+      <StudentListTable />
     </div>
   );
 };

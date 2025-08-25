@@ -1,0 +1,157 @@
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Edit, MoreVertical, View } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+const initialStudents = [
+  {
+    id: "#stu-1",
+    name: "John Doe",
+    rollNo: "12A",
+    studentClass: "10",
+    section: "A",
+    parentContact: "9841XXXXXX",
+    email: "john@example.com",
+    admissionDate: "2021-04-12",
+    status: "active",
+    avatar: "",
+  },
+  {
+    id: "#stu-2",
+    name: "Jane Smith",
+    rollNo: "7B",
+    studentClass: "9",
+    section: "B",
+    parentContact: "9841YYYYYY",
+    email: "jane@example.com",
+    admissionDate: "2020-03-18",
+    status: "graduated",
+    avatar: "",
+  },
+];
+
+const statusOptions = ["active", "graduated", "transferred", "dropped"];
+
+const StudentListTable = () => {
+  const [students, setStudents] = useState(initialStudents);
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleAction = (studentId, action) => {
+    if (action === "edit") console.log("Edit", studentId);
+    else if (action === "view") console.log("View", studentId);
+    else {
+      setStudents((prev) =>
+        prev.map((s) => (s.id === studentId ? { ...s, status: action } : s))
+      );
+      console.log("Status changed for", studentId, "to", action);
+    }
+  };
+
+  return (
+    <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700">
+      <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <Checkbox
+                checked={selectedIds.length === students.length}
+                onCheckedChange={(checked) =>
+                  setSelectedIds(checked ? students.map((s) => s.id) : [])
+                }
+              />
+            </TableHead>
+            <TableHead>ID</TableHead>
+            <TableHead>Avatar</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Roll No</TableHead>
+            <TableHead>Class</TableHead>
+            <TableHead>Parent Contact</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Admission Date</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {students.map((student) => (
+            <TableRow key={student.id}>
+              <TableCell>
+                <Checkbox
+                  checked={selectedIds.includes(student.id)}
+                  onCheckedChange={() => toggleSelect(student.id)}
+                />
+              </TableCell>
+              <TableCell>{student.id}</TableCell>
+              <TableCell>
+                <Avatar className="h-8 w-8">
+                  {student.avatar ? (
+                    <AvatarImage src={student.avatar} alt={student.name} />
+                  ) : (
+                    <AvatarFallback>{student.name[0]}</AvatarFallback>
+                  )}
+                </Avatar>
+              </TableCell>
+              <TableCell>{student.name}</TableCell>
+              <TableCell>{student.rollNo}</TableCell>
+              <TableCell>
+                {student.studentClass}
+                {student.section}
+              </TableCell>
+              <TableCell>{student.parentContact}</TableCell>
+              <TableCell>{student.email}</TableCell>
+              <TableCell>{student.admissionDate}</TableCell>
+              <TableCell>{student.status}</TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      onClick={() => handleAction(student.id, "edit")}
+                    >
+                      <Edit /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleAction(student.id, "view")}
+                    >
+                      <View /> View Details
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+export default StudentListTable;
