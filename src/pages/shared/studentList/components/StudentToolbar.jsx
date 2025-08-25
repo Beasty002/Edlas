@@ -9,6 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import NewEnrollment from "./NewEnrollment";
 
 const statusOptions = [
   { label: "Active", value: "active" },
@@ -32,6 +33,7 @@ const StudentToolbar = () => {
     studentClass: "",
     section: "",
   });
+  const [enrollmentOpen, setEnrollmentOpen] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -63,7 +65,10 @@ const StudentToolbar = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700">
+          <Button
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            onClick={() => setEnrollmentOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-1" /> New Enrollment
           </Button>
 
@@ -155,6 +160,7 @@ const StudentToolbar = () => {
           </div>
         </div>
       )}
+      <NewEnrollment open={enrollmentOpen} onOpenChange={setEnrollmentOpen} />
     </div>
   );
 };

@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 const StudentLIstView = () => {
-  return (
-    <div>StudentLIstView</div>
-  )
-}
+  return <div>StudentLIstView</div>;
+};
 
-export default StudentLIstView
+export default StudentLIstView;
