@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,11 +22,18 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
 
 export default function NewEnrollment({ open, onOpenChange }) {
-  const { register, handleSubmit, reset, setValue } = useForm({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       firstName: "",
       middleName: "",
       lastName: "",
+      dob: "",
       rollNo: "",
       studentClass: "",
       section: "",
@@ -45,9 +52,10 @@ export default function NewEnrollment({ open, onOpenChange }) {
   const defaultAvatar = "/images/default-avatar.png";
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(defaultAvatar);
+  const avatarInputRef = useRef(null);
 
   const handleAvatarClick = () => {
-    document.getElementById("avatarInput")?.click();
+    avatarInputRef.current?.click();
   };
 
   const handleAvatarChange = (e) => {
@@ -70,7 +78,9 @@ export default function NewEnrollment({ open, onOpenChange }) {
     setAvatarPreview(defaultAvatar);
     setAvatarFile(null);
     setValue("avatar", null);
-    document.getElementById("avatarInput").value = null;
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = null;
+    }
   };
 
   useEffect(() => {
@@ -81,6 +91,13 @@ export default function NewEnrollment({ open, onOpenChange }) {
     };
   }, [avatarPreview]);
 
+  useEffect(() => {
+    if (!open) {
+      reset();
+      removeAvatar();
+    }
+  }, [open, reset]);
+
   const onSubmit = (data) => {
     console.log("Enrollment Data:", data);
     reset();
@@ -90,20 +107,17 @@ export default function NewEnrollment({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90dvh] flex flex-col p-0">
-        {/* Fixed Header */}
+      <DialogContent className="sm:max-w-4xl max-h-[95dvh] flex flex-col p-0">
         <DialogHeader className="p-6 border-b">
           <DialogTitle>New Student Enrollment</DialogTitle>
         </DialogHeader>
 
-        {/* Scrollable Body */}
         <div className="flex-1 overflow-auto p-6 space-y-6 custom-scrollbar">
           <form
             id="enrollmentForm"
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-6"
           >
-            {/* Avatar Section */}
             <div className="flex flex-col items-center space-y-3 relative">
               <div className="relative">
                 <div className="relative group">
@@ -136,25 +150,24 @@ export default function NewEnrollment({ open, onOpenChange }) {
 
               <input
                 type="file"
-                id="avatarInput"
                 accept="image/*"
+                ref={avatarInputRef}
                 className="hidden"
                 onChange={handleAvatarChange}
               />
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   {avatarPreview && avatarPreview !== defaultAvatar
                     ? "Click to change photo"
                     : "Click to add photo"}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                   Recommended: Square image, max 5MB
                 </p>
               </div>
             </div>
 
-            {/* Student Info */}
             <div className="grid gap-6">
               <div>
                 <h3 className="text-lg font-medium mb-2">
@@ -163,7 +176,16 @@ export default function NewEnrollment({ open, onOpenChange }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
                   <div className="flex flex-col">
                     <Label className="mb-3">First Name *</Label>
-                    <Input {...register("firstName", { required: true })} />
+                    <Input
+                      {...register("firstName", {
+                        required: "First name is required",
+                      })}
+                    />
+                    {errors.firstName && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.firstName.message}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <Label className="mb-3">Middle Name</Label>
@@ -171,18 +193,57 @@ export default function NewEnrollment({ open, onOpenChange }) {
                   </div>
                   <div className="flex flex-col">
                     <Label className="mb-3">Last Name *</Label>
-                    <Input {...register("lastName", { required: true })} />
+                    <Input
+                      {...register("lastName", {
+                        required: "Last name is required",
+                      })}
+                    />
+                    {errors.lastName && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.lastName.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
                   <div className="flex flex-col">
+                    <Label className="mb-3">Date of Birth *</Label>
+                    <Input
+                      type="date"
+                      {...register("dob", {
+                        required: "Date of birth is required",
+                      })}
+                      className="dark:[color-scheme:dark]"
+                    />
+                    {errors.dob && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.dob.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col">
                     <Label className="mb-3">Roll Number *</Label>
-                    <Input {...register("rollNo", { required: true })} />
+                    <Input
+                      {...register("rollNo", {
+                        required: "Roll number is required",
+                      })}
+                    />
+                    {errors.rollNo && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.rollNo.message}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <Label className="mb-3">Class *</Label>
-                    <Select {...register("studentClass", { required: true })}>
+                    <Select
+                      onValueChange={(value) =>
+                        setValue("studentClass", value, {
+                          shouldValidate: true,
+                        })
+                      }
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select class" />
                       </SelectTrigger>
@@ -194,10 +255,19 @@ export default function NewEnrollment({ open, onOpenChange }) {
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.studentClass && (
+                      <p className="text-red-500 text-sm mt-1">
+                        Class is required
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <Label className="mb-3">Section *</Label>
-                    <Select {...register("section", { required: true })}>
+                    <Select
+                      onValueChange={(value) =>
+                        setValue("section", value, { shouldValidate: true })
+                      }
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select section" />
                       </SelectTrigger>
@@ -209,20 +279,35 @@ export default function NewEnrollment({ open, onOpenChange }) {
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.section && (
+                      <p className="text-red-500 text-sm mt-1">
+                        Section is required
+                      </p>
+                    )}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
                   <div className="flex flex-col">
                     <Label className="mb-3">Admission Date *</Label>
                     <Input
                       type="date"
-                      {...register("admissionDate", { required: true })}
+                      {...register("admissionDate", {
+                        required: "Admission date is required",
+                      })}
+                      className="dark:[color-scheme:dark]"
                     />
+                    {errors.admissionDate && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.admissionDate.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
 
               <hr />
 
-              {/* Guardian Info */}
               <div>
                 <h3 className="text-lg font-medium mb-2">
                   Guardian Information
@@ -248,7 +333,16 @@ export default function NewEnrollment({ open, onOpenChange }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
                   <div className="flex flex-col">
                     <Label className="mb-3">Primary Phone *</Label>
-                    <Input {...register("phonePrimary", { required: true })} />
+                    <Input
+                      {...register("phonePrimary", {
+                        required: "Primary phone is required",
+                      })}
+                    />
+                    {errors.phonePrimary && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.phonePrimary.message}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <Label className="mb-3">Secondary Phone</Label>
@@ -262,7 +356,16 @@ export default function NewEnrollment({ open, onOpenChange }) {
                 <div className="grid grid-cols-1 gap-4 mt-5">
                   <div className="flex flex-col">
                     <Label className="mb-3">Address *</Label>
-                    <Textarea {...register("address", { required: true })} />
+                    <Textarea
+                      {...register("address", {
+                        required: "Address is required",
+                      })}
+                    />
+                    {errors.address && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.address.message}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <Label className="mb-3">Additional Notes</Label>
@@ -274,7 +377,6 @@ export default function NewEnrollment({ open, onOpenChange }) {
           </form>
         </div>
 
-        {/* Fixed Footer */}
         <DialogFooter className="p-6 border-t">
           <Button
             type="submit"
