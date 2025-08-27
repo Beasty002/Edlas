@@ -12,11 +12,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Edit, MoreVertical, View } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -51,13 +49,6 @@ const statusOptions = ["active", "graduated", "transferred", "dropped"];
 
 const StudentListTable = () => {
   const [students, setStudents] = useState(initialStudents);
-  const [selectedIds, setSelectedIds] = useState([]);
-
-  const toggleSelect = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
-    );
-  };
 
   const handleAction = (studentId, action) => {
     if (action === "edit") console.log("Edit", studentId);
@@ -75,14 +66,6 @@ const StudentListTable = () => {
       <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <TableHeader>
           <TableRow>
-            <TableHead>
-              <Checkbox
-                checked={selectedIds.length === students.length}
-                onCheckedChange={(checked) =>
-                  setSelectedIds(checked ? students.map((s) => s.id) : [])
-                }
-              />
-            </TableHead>
             <TableHead>ID</TableHead>
             <TableHead>Avatar</TableHead>
             <TableHead>Name</TableHead>
@@ -98,12 +81,6 @@ const StudentListTable = () => {
         <TableBody>
           {students.map((student) => (
             <TableRow key={student.id}>
-              <TableCell>
-                <Checkbox
-                  checked={selectedIds.includes(student.id)}
-                  onCheckedChange={() => toggleSelect(student.id)}
-                />
-              </TableCell>
               <TableCell>{student.id}</TableCell>
               <TableCell>
                 <Avatar className="h-8 w-8">

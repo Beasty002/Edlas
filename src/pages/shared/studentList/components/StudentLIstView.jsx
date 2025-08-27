@@ -43,7 +43,7 @@ const StudentListView = () => {
       {students.map((student) => (
         <Card
           key={student.id}
-          className="flex flex-col items-center text-center p-3 transition-transform transform hover:scale-101 hover:shadow-sm gap-3"
+          className="flex flex-col items-center text-center rounded-md p-3 shadow-none transition-transform transform hover:scale-101 hover:shadow-sm gap-3"
         >
           <Avatar className="h-16 w-16 mb-2">
             {student.avatar ? (

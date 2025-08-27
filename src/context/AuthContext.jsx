@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const AuthContext = createContext();
 
@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    toast.success("Logged out successfully!");
+    toast.error("Logged out successfully!");
     setIsAuthenticated(false);
   };
 

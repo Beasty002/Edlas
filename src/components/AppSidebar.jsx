@@ -4,6 +4,11 @@ import {
   User,
   PlusCircle,
   ChevronRight,
+  BookAIcon,
+  SchoolIcon,
+  BookOpenIcon,
+  Navigation2,
+  ArrowUpDown,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -30,7 +35,6 @@ import NavUser from "./NavUser";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "AI chat", url: "/ai", icon: MessageSquare },
   {
     title: "Students",
     icon: User,
@@ -41,8 +45,22 @@ const menuItems = [
         url: "/students/newEnrollment",
         icon: PlusCircle,
       },
+      {
+        title: "Placement",
+        url: "/students/placement",
+        icon: ArrowUpDown,
+      },
     ],
   },
+  {
+    title: "Academics",
+    icon: BookOpenIcon,
+    items: [
+      { title: "Classes", url: "/classes", icon: SchoolIcon },
+      { title: "Subjects", url: "/subjects", icon: BookOpenIcon },
+    ],
+  },
+  { title: "AI chat", url: "/ai", icon: MessageSquare },
 ];
 
 const data = {
