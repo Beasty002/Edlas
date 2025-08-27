@@ -5,6 +5,7 @@ import MainLayout from "@/layout/MainLayout";
 import AiChat from "@/pages/AiChat";
 import Login from "@/pages/Login";
 import StudentsList from "@/pages/shared/studentList/StudentsListPage";
+import NewEnrollment from "@/pages/shared/studentList/components/NewEnrollment";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: <Dashboard /> },
           { path: "/students", element: <StudentsList /> },
+          { path: "/students/newEnrollment", element: <NewEnrollment /> },
           { path: "/ai", element: <AiChat /> },
         ],
       },

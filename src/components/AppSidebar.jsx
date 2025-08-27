@@ -1,14 +1,11 @@
 import {
-  Calendar,
-  ChevronUp,
   Home,
-  Inbox,
   MessageSquare,
-  Search,
-  Settings,
   User,
+  PlusCircle,
+  ChevronRight,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   Sidebar,
@@ -20,14 +17,34 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+
 import NavUser from "./NavUser";
 
-const items = [
+const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "Students", url: "/students", icon: User },
   { title: "AI chat", url: "/ai", icon: MessageSquare },
+  {
+    title: "Students",
+    icon: User,
+    items: [
+      { title: "All Students", url: "/students", icon: User },
+      {
+        title: "New Enrollment",
+        url: "/students/newEnrollment",
+        icon: PlusCircle,
+      },
+    ],
+  },
 ];
+
 const data = {
   name: "beasty",
   email: "beasty@gmail.com",
@@ -35,6 +52,8 @@ const data = {
 };
 
 export function AppSidebar() {
+  const location = useLocation();
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarContent>
@@ -42,16 +61,55 @@ export function AppSidebar() {
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.url} className="flex items-center space-x-2">
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) =>
+                item.items ? (
+                  <Collapsible
+                    key={item.title}
+                    asChild
+                    defaultOpen={location.pathname.startsWith("/students")}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip={item.title}>
+                          {item.icon && <item.icon />}
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items.map((sub) => (
+                            <SidebarMenuSubItem key={sub.title}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={location.pathname === sub.url}
+                              >
+                                <Link to={sub.url}>
+                                  {sub.icon && <sub.icon size={16} />}
+                                  <span>{sub.title}</span>
+                                </Link>
+                              </SidebarMenuButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === item.url}
+                    >
+                      <Link to={item.url}>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Filter, X } from "lucide-react";
+import { Filter, X, List, Table } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import NewEnrollment from "./NewEnrollment";
 
 const statusOptions = [
   { label: "Active", value: "active" },
@@ -25,7 +24,7 @@ const classOptions = Array.from({ length: 12 }, (_, i) => ({
 
 const sectionOptions = ["A", "B", "C"].map((s) => ({ label: s, value: s }));
 
-const StudentToolbar = () => {
+const StudentToolbar = ({ viewMode, setViewMode }) => {
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterData, setFilterData] = useState({
@@ -33,7 +32,6 @@ const StudentToolbar = () => {
     studentClass: "",
     section: "",
   });
-  const [enrollmentOpen, setEnrollmentOpen] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -65,12 +63,32 @@ const StudentToolbar = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            className="bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => setEnrollmentOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-1" /> New Enrollment
-          </Button>
+          <div className="flex items-center gap-0 border rounded-md overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`flex items-center justify-center px-3 py-2 w-12 ${
+                viewMode === "table"
+                  ? "bg-gray-200 dark:bg-gray-600"
+                  : "bg-white dark:bg-gray-800"
+              }`}
+            >
+              {" "}
+              <List className="w-5 h-5" />
+            </button>
+            <div className="border-l border-gray-300 dark:border-gray-600" />
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`flex items-center justify-center px-3 py-2 w-12 ${
+                viewMode === "list"
+                  ? "bg-gray-200 dark:bg-gray-600"
+                  : "bg-white dark:bg-gray-800"
+              }`}
+            >
+              <Table className="w-5 h-5" />
+            </button>
+          </div>
 
           <Button
             variant="outline"
@@ -153,14 +171,11 @@ const StudentToolbar = () => {
               onClick={clearFilters}
               className="flex items-center justify-center w-full md:w-auto"
             >
-              {" "}
-              Clear
-              <X className="w-4 h-4" />
+              Clear <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
       )}
-      <NewEnrollment open={enrollmentOpen} onOpenChange={setEnrollmentOpen} />
     </div>
   );
 };
