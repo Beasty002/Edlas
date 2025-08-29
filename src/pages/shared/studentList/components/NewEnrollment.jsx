@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
+import { toast } from "sonner";
 
 export default function EnrollmentPage() {
   const {
@@ -117,6 +118,7 @@ export default function EnrollmentPage() {
     console.log("Enrollment Data:", data);
     reset();
     removeAvatar();
+    toast.success("Student enrolled successfully!");
   };
 
   const RequiredLabel = ({ children }) => (

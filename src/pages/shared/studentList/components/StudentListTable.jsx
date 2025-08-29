@@ -62,10 +62,10 @@ const StudentListTable = () => {
   };
 
   return (
-    <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700">
+    <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm">
       <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-100 dark:bg-gray-800">
             <TableHead>ID</TableHead>
             <TableHead>Avatar</TableHead>
             <TableHead>Name</TableHead>
@@ -78,54 +78,71 @@ const StudentListTable = () => {
             <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {students.map((student) => (
-            <TableRow key={student.id}>
-              <TableCell>{student.id}</TableCell>
-              <TableCell>
-                <Avatar className="h-8 w-8">
-                  {student.avatar ? (
-                    <AvatarImage src={student.avatar} alt={student.name} />
-                  ) : (
-                    <AvatarFallback>{student.name[0]}</AvatarFallback>
-                  )}
-                </Avatar>
-              </TableCell>
-              <TableCell>{student.name}</TableCell>
-              <TableCell>{student.rollNo}</TableCell>
-              <TableCell>
-                {student.studentClass}
-                {student.section}
-              </TableCell>
-              <TableCell>{student.parentContact}</TableCell>
-              <TableCell>{student.email}</TableCell>
-              <TableCell>{student.admissionDate}</TableCell>
-              <TableCell>{student.status}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => handleAction(student.id, "edit")}
-                    >
-                      <Edit /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleAction(student.id, "view")}
-                    >
-                      <View /> View Details
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+
+        {students.length === 0 ? (
+          <TableBody>
+            <TableRow>
+              <TableCell
+                colSpan={10}
+                className="p-6 text-center text-gray-500 dark:text-gray-400"
+              >
+                No students found
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
+          </TableBody>
+        ) : (
+          <TableBody>
+            {students.map((student) => (
+              <TableRow
+                key={student.id}
+                className="hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <TableCell>{student.id}</TableCell>
+                <TableCell>
+                  <Avatar className="h-8 w-8">
+                    {student.avatar ? (
+                      <AvatarImage src={student.avatar} alt={student.name} />
+                    ) : (
+                      <AvatarFallback>{student.name[0]}</AvatarFallback>
+                    )}
+                  </Avatar>
+                </TableCell>
+                <TableCell>{student.name}</TableCell>
+                <TableCell>{student.rollNo}</TableCell>
+                <TableCell>
+                  {student.studentClass}
+                  {student.section}
+                </TableCell>
+                <TableCell>{student.parentContact}</TableCell>
+                <TableCell>{student.email}</TableCell>
+                <TableCell>{student.admissionDate}</TableCell>
+                <TableCell>{student.status}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={() => handleAction(student.id, "edit")}
+                      >
+                        <Edit /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleAction(student.id, "view")}
+                      >
+                        <View /> View Details
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        )}
       </Table>
     </div>
   );
