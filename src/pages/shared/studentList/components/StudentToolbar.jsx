@@ -51,7 +51,7 @@ const StudentToolbar = ({ viewMode, setViewMode }) => {
   };
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 rounded-sm">
+    <div className="flex flex-col bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
       <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
         <div className="flex-1 min-w-[200px]">
           <Input

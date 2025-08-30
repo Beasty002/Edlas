@@ -140,8 +140,8 @@ const StudentPlacement = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex flex-col gap-3 flex-wrap md:flex-row md:items-center md:justify-between bg-gray-50 dark:bg-gray-900 p-4 border border-gray-200 dark:border-gray-700 rounded-sm shadow-sm">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 flex-wrap md:flex-row md:items-center md:justify-between bg-white  dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm ">
         <div className="flex-1 min-w-[200px]">
           <Input
             placeholder="Search by name"
