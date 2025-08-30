@@ -40,7 +40,7 @@ const dummyStudents = [
     name: "John Doe",
     class: "10",
     section: "A",
-    marks: 78,
+    grade: "A",
     status: "Pass",
   },
   {
@@ -49,7 +49,7 @@ const dummyStudents = [
     name: "Jane Smith",
     class: "10",
     section: "A",
-    marks: 34,
+    grade: "F",
     status: "Fail",
   },
   {
@@ -58,7 +58,7 @@ const dummyStudents = [
     name: "Alice Brown",
     class: "10",
     section: "B",
-    marks: 89,
+    grade: "B+",
     status: "Pass",
   },
   {
@@ -67,7 +67,7 @@ const dummyStudents = [
     name: "Bob Lee",
     class: "9",
     section: "A",
-    marks: 55,
+    grade: "D",
     status: "Pass",
   },
 ];
@@ -141,7 +141,7 @@ const StudentPlacement = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-gray-50 dark:bg-gray-900 p-4 border border-gray-200 dark:border-gray-700 rounded-sm shadow-sm">
+      <div className="flex flex-col gap-3 flex-wrap md:flex-row md:items-center md:justify-between bg-gray-50 dark:bg-gray-900 p-4 border border-gray-200 dark:border-gray-700 rounded-sm shadow-sm">
         <div className="flex-1 min-w-[200px]">
           <Input
             placeholder="Search by name"
@@ -223,7 +223,7 @@ const StudentPlacement = () => {
               <TableHead>Avatar</TableHead>
               <TableHead>Roll No</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Marks</TableHead>
+              <TableHead>Grade</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -262,7 +262,7 @@ const StudentPlacement = () => {
                   </TableCell>
                   <TableCell>{student.roll}</TableCell>
                   <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.marks}</TableCell>
+                  <TableCell>{student.grade}</TableCell>
                   <TableCell
                     className={
                       student.status === "Pass"
@@ -296,7 +296,7 @@ const StudentPlacement = () => {
             </Button>
             <Button
               onClick={confirmAction}
-              className={"bg0blue-600 text-white"}
+              className={"bg-blue-600 text-white"}
             >
               Confirm
             </Button>
