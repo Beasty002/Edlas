@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, MoreVertical, View } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import UpdateStudentForm from "./UpdateStudentForm";
 
 const initialStudents = [
   {
@@ -44,8 +45,6 @@ const initialStudents = [
     avatar: "",
   },
 ];
-
-const statusOptions = ["active", "graduated", "transferred", "dropped"];
 
 const StudentListTable = () => {
   const [students, setStudents] = useState(initialStudents);
@@ -126,10 +125,13 @@ const StudentListTable = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         onClick={() => handleAction(student.id, "edit")}
                       >
                         <Edit /> Edit
+                      </DropdownMenuItem> */}
+                      <DropdownMenuItem asChild>
+                        <UpdateStudentForm student={student} />
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleAction(student.id, "view")}

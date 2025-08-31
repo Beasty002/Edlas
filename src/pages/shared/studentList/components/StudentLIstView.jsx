@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Edit, View } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import UpdateStudentForm from "./UpdateStudentForm";
 
 const dummyStudents = [
   {
@@ -78,14 +79,18 @@ const StudentListView = () => {
           </CardContent>
 
           <div className="flex gap-2 mt-3">
-            <Button
-              variant="outline"
-              size="icon"
-              className="text-blue-500 border-blue-500 hover:bg-blue-100"
-              onClick={() => handleAction(student.id, "edit")}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            <UpdateStudentForm
+              student={student}
+              triggerButton={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="text-blue-500 border-blue-500 hover:bg-blue-100"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              }
+            />
             <Button
               variant="outline"
               size="icon"

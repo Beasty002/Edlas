@@ -15,7 +15,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 
-export default function EnrollmentPage() {
+const StudentDetailForm = ({ mode = "new", studentData = null }) => {
   const {
     register,
     handleSubmit,
@@ -24,7 +24,7 @@ export default function EnrollmentPage() {
     watch,
     formState: { errors },
   } = useForm({
-    defaultValues: {
+    defaultValues: studentData || {
       admissionNumber: "",
       firstName: "",
       middleName: "",
@@ -51,7 +51,9 @@ export default function EnrollmentPage() {
   });
 
   const defaultAvatar = "/images/default-avatar.png";
-  const [avatarPreview, setAvatarPreview] = useState(defaultAvatar);
+  const [avatarPreview, setAvatarPreview] = useState(
+    studentData?.avatarUrl || defaultAvatar
+  );
   const avatarInputRef = useRef(null);
 
   const handleAvatarClick = () => avatarInputRef.current?.click();
@@ -115,10 +117,15 @@ export default function EnrollmentPage() {
   ]);
 
   const onSubmit = (data) => {
-    console.log("Enrollment Data:", data);
+    if (mode === "new") {
+      console.log("New enrollment:", data);
+      toast.success("Student enrolled successfully!");
+    } else {
+      console.log("Edited student:", data);
+      toast.success("Student updated successfully!");
+    }
     reset();
     removeAvatar();
-    toast.success("Student enrolled successfully!");
   };
 
   const RequiredLabel = ({ children }) => (
@@ -129,7 +136,9 @@ export default function EnrollmentPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">New Student Enrollment</h1>
+      {mode === "new" && (
+        <h1 className="text-2xl font-semibold mb-6">New Student Enrollment</h1>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex flex-col items-center space-y-3">
@@ -170,7 +179,11 @@ export default function EnrollmentPage() {
 
         <div>
           <Label className="mb-2">Admission Number</Label>
-          <Input {...register("admissionNumber")} className="w-full" />
+          <Input
+            disabled={mode === "edit"}
+            {...register("admissionNumber")}
+            className="w-full"
+          />
         </div>
 
         <section>
@@ -400,12 +413,17 @@ export default function EnrollmentPage() {
           />
         </section>
 
-        <div className="pt-4">
-          <Button type="submit" className="bg-blue-600 text-white">
-            Enroll Student
+        <div className="pt-4 flex justify-end">
+          <Button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {mode === "new" ? "Enroll Student" : "Update Student"}
           </Button>
         </div>
       </form>
     </div>
   );
-}
+};
+
+export default StudentDetailForm;

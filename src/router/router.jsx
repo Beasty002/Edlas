@@ -5,10 +5,10 @@ import MainLayout from "@/layout/MainLayout";
 import AiChat from "@/pages/AiChat";
 import Login from "@/pages/Login";
 import StudentsList from "@/pages/shared/studentList/StudentsListPage";
-import NewEnrollment from "@/pages/shared/studentList/components/NewEnrollment";
 import Classes from "@/pages/admin/Classes";
 import Subjects from "@/pages/admin/Subjects";
 import StudentPlacement from "@/pages/admin/StudentPlacement";
+import StudentDetailForm from "@/pages/shared/studentList/components/StudentDetailForm";
 
 export const router = createBrowserRouter([
   {
@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: <Dashboard /> },
           { path: "/students", element: <StudentsList /> },
-          { path: "/students/newEnrollment", element: <NewEnrollment /> },
+          { path: "/students/newEnrollment", element: <StudentDetailForm /> },
           { path: "/students/Placement", element: <StudentPlacement /> },
           { path: "/classes", element: <Classes /> },
           { path: "/subjects", element: <Subjects /> },
