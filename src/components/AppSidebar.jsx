@@ -52,6 +52,8 @@ const menuItems = [
       },
     ],
   },
+  { title: "Dashboard", url: "/", icon: Home },
+
   {
     title: "Academics",
     icon: BookOpenIcon,

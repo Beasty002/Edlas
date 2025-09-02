@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
+import PageHeader from "@/components/PageHeader";
 
 const StudentDetailForm = ({ mode = "new", studentData = null }) => {
   const {
@@ -137,7 +138,10 @@ const StudentDetailForm = ({ mode = "new", studentData = null }) => {
   return (
     <div>
       {mode === "new" && (
-        <h1 className="text-2xl font-semibold mb-6">New Student Enrollment</h1>
+        <PageHeader
+          title="New Enrollment"
+          description="Register a new student and assign them to a class and section."
+        />
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">

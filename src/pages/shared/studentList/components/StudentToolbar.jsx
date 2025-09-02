@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Filter, X, List, Table } from "lucide-react";
+import { Filter, X, List, Table, Search } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -53,12 +53,13 @@ const StudentToolbar = ({ viewMode, setViewMode }) => {
   return (
     <div className="flex flex-col bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
       <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search student ..."
             value={search}
             onChange={handleSearchChange}
-            className="w-full"
+            className="w-full pl-10"
           />
         </div>
 

@@ -32,6 +32,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import PageHeader from "../../components/PageHeader";
+import DataNotFound from "@/components/DataNotFound";
+import { Search } from "lucide-react";
 
 const dummyStudents = [
   {
@@ -141,11 +144,16 @@ const StudentPlacement = () => {
 
   return (
     <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Placement Management"
+        description="View, assign, and manage student placement records."
+      />
       <div className="flex flex-col gap-3 flex-wrap md:flex-row md:items-center md:justify-between bg-white  dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm ">
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search by name"
-            className="w-full"
+            className="w-full pl-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -234,7 +242,7 @@ const StudentPlacement = () => {
                   colSpan={7}
                   className="p-6 text-center text-gray-500 dark:text-gray-400"
                 >
-                  No students found
+                  <DataNotFound item="students" />
                 </TableCell>
               </TableRow>
             </TableBody>
