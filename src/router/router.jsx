@@ -9,6 +9,8 @@ import Classes from "@/pages/admin/Classes";
 import Subjects from "@/pages/admin/Subjects";
 import StudentPlacement from "@/pages/admin/StudentPlacement";
 import StudentDetailForm from "@/pages/shared/studentList/components/StudentDetailForm";
+import MarksPage from "@/pages/shared/MarksPage";
+import NotFoundPage from "@/components/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -28,7 +30,10 @@ export const router = createBrowserRouter([
           { path: "/students/Placement", element: <StudentPlacement /> },
           { path: "/classes", element: <Classes /> },
           { path: "/subjects", element: <Subjects /> },
+          { path: "/marks", element: <MarksPage /> },
+
           { path: "/ai", element: <AiChat /> },
+          { path: "*", element: <NotFoundPage /> },
         ],
       },
     ],

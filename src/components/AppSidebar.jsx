@@ -9,6 +9,9 @@ import {
   BookOpenIcon,
   Navigation2,
   ArrowUpDown,
+  Users,
+  FileDigit,
+  Library,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -39,7 +42,7 @@ const menuItems = [
     title: "Students",
     icon: User,
     items: [
-      { title: "All Students", url: "/students", icon: User },
+      { title: "All Students", url: "/students", icon: Users },
       {
         title: "New Enrollment",
         url: "/students/newEnrollment",
@@ -52,14 +55,15 @@ const menuItems = [
       },
     ],
   },
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Staff Management", url: "/staffs", icon: Users },
 
   {
     title: "Academics",
     icon: BookOpenIcon,
     items: [
       { title: "Classes", url: "/classes", icon: SchoolIcon },
-      { title: "Subjects", url: "/subjects", icon: BookOpenIcon },
+      { title: "Subjects", url: "/subjects", icon: Library },
+      { title: "Markings", url: "/marks", icon: FileDigit },
     ],
   },
   { title: "AI chat", url: "/ai", icon: MessageSquare },
