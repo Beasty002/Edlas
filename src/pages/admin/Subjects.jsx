@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { MoreVertical, Eye, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "../../components/PageHeader";
 import DataNotFound from "@/components/DataNotFound";
+import AddSubjectDialog from "../shared/AddSubjectDialog";
 
 const initialSubjects = {
   9: [
@@ -139,6 +140,7 @@ const initialSubjects = {
 };
 
 const Subjects = () => {
+  const [subjects, setSubjects] = useState(initialSubjects);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
 
@@ -146,10 +148,17 @@ const Subjects = () => {
     console.log(`${action} action for subject:`, subject);
     alert(`${action} clicked for ${subject.name}`);
   };
-
-  const filteredSubjects = Object.entries(initialSubjects).reduce(
-    (acc, [cls, subjects]) => {
-      const filtered = subjects.filter((s) =>
+  const handleAddSubject = (cls, newSubject) => {
+    setSubjects((prev) => {
+      const updated = { ...prev };
+      if (!updated[cls]) updated[cls] = [];
+      updated[cls] = [...updated[cls], newSubject];
+      return updated;
+    });
+  };
+  const filteredSubjects = Object.entries(subjects).reduce(
+    (acc, [cls, subs]) => {
+      const filtered = subs.filter((s) =>
         s.name.toLowerCase().includes(search.toLowerCase())
       );
       if (
@@ -194,30 +203,32 @@ const Subjects = () => {
             ))}
           </SelectContent>
         </Select>
+        <AddSubjectDialog onAdd={handleAddSubject} allClasses={allClasses} />
       </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-24">Class</TableHead>
+              <TableHead className="w-16">ID</TableHead>
+              <TableHead>Subject Name</TableHead>
+              <TableHead className="hidden md:table-cell">
+                Description
+              </TableHead>
+              <TableHead className="w-16 text-center">Full Marks</TableHead>
+              <TableHead className="w-16 text-center">Pass Marks</TableHead>
+              <TableHead className="w-16 text-center">Theory</TableHead>
+              <TableHead className="w-16 text-center">Practical</TableHead>
+              <TableHead className="w-16 text-center">Optional</TableHead>
 
-      {Object.entries(filteredSubjects).length === 0 ? (
-        <DataNotFound item="subjects" />
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-24">Class</TableHead>
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead>Subject Name</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  Description
-                </TableHead>
-                <TableHead className="w-16 text-center">Full Marks</TableHead>
-                <TableHead className="w-16 text-center">Pass Marks</TableHead>
-                <TableHead className="w-16 text-center">Theory</TableHead>
-                <TableHead className="w-16 text-center">Practical</TableHead>
-                <TableHead className="w-16 text-center">Optional</TableHead>
-
-                <TableHead className="w-20 text-center"></TableHead>
-              </TableRow>
-            </TableHeader>
+              <TableHead className="w-20 text-center"></TableHead>
+            </TableRow>
+          </TableHeader>
+          {Object.entries(filteredSubjects).length === 0 ? (
+            <TableCell colSpan={10} className="p-0">
+              <DataNotFound item="subjects" />
+            </TableCell>
+          ) : (
             <TableBody>
               {Object.entries(filteredSubjects).map(([cls, subjects]) =>
                 subjects.map((subject, index) => (
@@ -292,9 +303,9 @@ const Subjects = () => {
                 ))
               )}
             </TableBody>
-          </Table>
-        </div>
-      )}
+          )}
+        </Table>
+      </div>
     </div>
   );
 };
