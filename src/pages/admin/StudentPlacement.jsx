@@ -33,8 +33,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import PageHeader from "../../components/PageHeader";
-import DataNotFound from "@/components/DataNotFound";
-import { Search } from "lucide-react";
+import DataNotFound from "@/components/reusable/DataNotFound";
+import { MoreVertical, Search } from "lucide-react";
+import TableActionButton from "@/components/reusable/TableActionButton";
 
 const dummyStudents = [
   {
@@ -159,31 +160,33 @@ const StudentPlacement = () => {
           />
         </div>
 
-        <Select value={classFilter} onValueChange={setClassFilter}>
-          <SelectTrigger className="w-full md:w-32">
-            <SelectValue placeholder="Class" />
-          </SelectTrigger>
-          <SelectContent>
-            {[9, 10, 11, 12].map((c) => (
-              <SelectItem key={c} value={String(c)}>
-                Class {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-4">
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="w-full ">
+              <SelectValue placeholder="Class" />
+            </SelectTrigger>
+            <SelectContent>
+              {[9, 10, 11, 12].map((c) => (
+                <SelectItem key={c} value={String(c)}>
+                  Class {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={sectionFilter} onValueChange={setSectionFilter}>
-          <SelectTrigger className="w-full md:w-32">
-            <SelectValue placeholder="Section" />
-          </SelectTrigger>
-          <SelectContent>
-            {["A", "B", "C"].map((s) => (
-              <SelectItem key={s} value={s}>
-                Section {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={sectionFilter} onValueChange={setSectionFilter}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Section" />
+            </SelectTrigger>
+            <SelectContent>
+              {["A", "B", "C"].map((s) => (
+                <SelectItem key={s} value={s}>
+                  Section {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -233,13 +236,14 @@ const StudentPlacement = () => {
               <TableHead>Name</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           {filtered.length === 0 ? (
             <TableBody>
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="p-6 text-center text-gray-500 dark:text-gray-400"
                 >
                   <DataNotFound item="students" />
@@ -249,10 +253,7 @@ const StudentPlacement = () => {
           ) : (
             <TableBody>
               {filtered.map((student) => (
-                <TableRow
-                  key={student.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
+                <TableRow key={student.id} className="group">
                   <TableCell>
                     <Checkbox
                       checked={selected.includes(student.id)}
@@ -279,6 +280,55 @@ const StudentPlacement = () => {
                     }
                   >
                     {student.status}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <TableActionButton />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected([student.id]);
+                            handleActionClick("promote");
+                          }}
+                        >
+                          Promote
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected([student.id]);
+                            handleActionClick("demote");
+                          }}
+                        >
+                          Demote
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected([student.id]);
+                            handleActionClick("transfer-A");
+                          }}
+                        >
+                          Transfer to A
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected([student.id]);
+                            handleActionClick("transfer-B");
+                          }}
+                        >
+                          Transfer to B
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected([student.id]);
+                            handleActionClick("transfer-C");
+                          }}
+                        >
+                          Transfer to C
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}

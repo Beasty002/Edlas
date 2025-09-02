@@ -25,8 +25,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MoreVertical, Eye, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "../../components/PageHeader";
-import DataNotFound from "@/components/DataNotFound";
+import DataNotFound from "@/components/reusable/DataNotFound";
 import AddSubjectDialog from "../shared/AddSubjectDialog";
+import TableActionButton from "@/components/reusable/TableActionButton";
 
 const initialSubjects = {
   9: [
@@ -208,7 +209,7 @@ const Subjects = () => {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className={"bg-gray-100 dark:bg-gray-800"}>
               <TableHead className="w-24">Class</TableHead>
               <TableHead className="w-16">ID</TableHead>
               <TableHead>Subject Name</TableHead>
@@ -271,13 +272,7 @@ const Subjects = () => {
                     <TableCell className="text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <span className="sr-only">Open menu</span>
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
+                          <TableActionButton />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem

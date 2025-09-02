@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, MoreVertical, View } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UpdateStudentForm from "./UpdateStudentForm";
+import TableActionButton from "@/components/reusable/TableActionButton";
 
 const initialStudents = [
   {
@@ -74,7 +75,7 @@ const StudentListTable = () => {
             <TableHead>Email</TableHead>
             <TableHead>Admission Date</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Action</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
 
@@ -92,10 +93,7 @@ const StudentListTable = () => {
         ) : (
           <TableBody>
             {students.map((student) => (
-              <TableRow
-                key={student.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
+              <TableRow key={student.id} className="group">
                 <TableCell>{student.id}</TableCell>
                 <TableCell>
                   <Avatar className="h-8 w-8">
@@ -119,9 +117,7 @@ const StudentListTable = () => {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
+                      <TableActionButton />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
