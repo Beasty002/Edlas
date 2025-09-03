@@ -27,6 +27,7 @@ import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
+import AddClassModal from "./components/AddClassModal";
 
 // Dummy Data
 const dummyClasses = [
@@ -152,11 +153,24 @@ const Classes = () => {
             </SelectContent>
           </Select>
 
-          <Button
-            className={"bg-blue-600 hover:bg-blue-700 text-white"}
-            onClick={() => alert("Add New Class")}
-          >
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New
+          <Button className={"bg-blue-600 hover:bg-blue-700 text-white"}>
+            <AddClassModal
+              classesData={[
+                {
+                  className: "9",
+                  sections: ["A", "B"],
+                  teacher: "Mr. Ram",
+                  status: "active",
+                },
+                {
+                  className: "10",
+                  sections: ["A", "B", "C"],
+                  teacher: "Mrs. Sita",
+                  status: "active",
+                },
+              ]}
+              onSave={(newClass) => console.log("Saved class:", newClass)}
+            />
           </Button>
         </div>
       </div>
