@@ -44,10 +44,14 @@ const dummyStudents = [
     class: "10",
     section: "A",
     marks: {
-      Math: 78,
-      English: 85,
-      Science: 69,
+      Math: "B+",
+      English: "A",
+      Science: "B",
+      Health: "B+",
+      Social: "A",
+      Nepali: "B",
     },
+    totalGrade: "B+",
   },
   {
     id: "stu-2",
@@ -56,6 +60,87 @@ const dummyStudents = [
     class: "10",
     section: "A",
     marks: {},
+    totalGrade: "N/A",
+  },
+  {
+    id: "stu-3",
+    roll: 3,
+    name: "Michael Johnson",
+    class: "10",
+    section: "A",
+    marks: {
+      Math: "C+",
+      English: "B",
+      Science: "C",
+      Health: "C",
+      Social: "C+",
+      Nepali: "C",
+    },
+    totalGrade: "C+",
+  },
+  {
+    id: "stu-4",
+    roll: 4,
+    name: "Emily Davis",
+    class: "10",
+    section: "A",
+    marks: {
+      Math: "A",
+      English: "A",
+      Science: "B+",
+      Health: "A",
+      Social: "A",
+      Nepali: "A",
+    },
+    totalGrade: "A",
+  },
+  {
+    id: "stu-5",
+    roll: 5,
+    name: "David Wilson",
+    class: "10",
+    section: "A",
+    marks: {
+      Math: "C",
+      English: "C+",
+      Science: "C",
+      Health: "C",
+      Social: "C",
+      Nepali: "C",
+    },
+    totalGrade: "C",
+  },
+  {
+    id: "stu-6",
+    roll: 6,
+    name: "Sophia Brown",
+    class: "10",
+    section: "A",
+    marks: {
+      Math: "B",
+      English: "B+",
+      Science: "B",
+      Health: "B",
+      Social: "B+",
+      Nepali: "B",
+    },
+    totalGrade: "B",
+  },
+  {
+    id: "stu-7",
+    roll: 7,
+    name: "Daniel Lee",
+    class: "10",
+    section: "A",
+    marks: {
+      Math: "F",
+      English: "C",
+      Science: "C",
+      Health: "C+",
+      Social: "C",
+      Nepali: "C",
+    },
+    totalGrade: "C",
   },
 ];
 
@@ -176,20 +261,24 @@ const MarksPage = () => {
             <TableRow className="bg-gray-100 dark:bg-gray-800">
               <TableHead className="w-20 text-center">Roll</TableHead>
               <TableHead>Avatar</TableHead>
-
               <TableHead>Student</TableHead>
-              {classSubjects[classFilter]?.map((sub) => (
+              {[
+                ...new Set( //new set le duplicate hataidincha
+                  filtered.flatMap((student) => Object.keys(student.marks)) //flatmap le sabai nested array lai single array ma convert garcha
+                ),
+              ].map((sub) => (
                 <TableHead key={sub} className="text-center">
                   {sub}
                 </TableHead>
               ))}
+              <TableHead className="text-center">Total Grade</TableHead>
               <TableHead className="w-16 text-center"></TableHead>
             </TableRow>
           </TableHeader>
           {filtered.length === 0 ? (
             <TableBody>
               <TableRow>
-                <TableCell colSpan={10} className="p-6 text-center">
+                <TableCell colSpan={12} className="p-6 text-center">
                   <DataNotFound item="students" />
                 </TableCell>
               </TableRow>
@@ -212,7 +301,9 @@ const MarksPage = () => {
                       <span>{student.name}</span>
                     </div>
                   </TableCell>
-                  {classSubjects[classFilter]?.map((sub) => (
+                  {[
+                    ...new Set(filtered.flatMap((s) => Object.keys(s.marks))),
+                  ].map((sub) => (
                     <TableCell
                       key={sub}
                       className="text-center text-muted-foreground"
@@ -220,6 +311,9 @@ const MarksPage = () => {
                       {student.marks[sub] ?? "-"}
                     </TableCell>
                   ))}
+                  <TableCell className="text-center font-semibold">
+                    {student.totalGrade ?? "-"}
+                  </TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -249,7 +343,7 @@ const MarksPage = () => {
                           <DropdownMenuItem
                             onClick={() => handleAction("Add", student)}
                           >
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Marks
+                            <PlusCircle className="mr-2 h-4 w-4" /> Assign Marks
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
