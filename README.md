@@ -1,12 +1,31 @@
-# React + Vite
+# School Management System - Remaining Tasks
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Student Management
 
-Currently, two official plugins are available:
+- **View Student Details** 
+- **Filter Students**
+  - Filter in all students
+  - Fix placement issues for individual students
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 2. Staff & Teacher Management
 
-## Expanding the ESLint configuration
+- **Staff Management Page**
+- **Teachers Add Page**
+- **Assign/Reassign Teachers**
+  - Option to assign and reassign teacher to each subject
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 3. Class Management
+
+- **View Class Page**
+- **Subject Management**
+  - Functionality to edit subjects
+  - Add all subjects and total marks/grades in marks management table
+
+## 4. Marks & Marksheet
+
+- **View Marksheet**
+- **Download Marksheet**
+
+## 5. UI / Modal Enhancements
+
+- Check and add **subheadings to all modals**
