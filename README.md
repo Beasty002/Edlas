@@ -22,7 +22,7 @@
   - Add all subjects and total marks/grades in marks management table
 
 ## 4. Marks & Marksheet
-
+- **update table to show more subjects along with total grade**
 - **View Marksheet**
 - **Download Marksheet**
 
