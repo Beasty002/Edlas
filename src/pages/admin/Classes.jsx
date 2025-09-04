@@ -29,26 +29,9 @@ import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
 import AddClassModal from "./components/AddClassModal";
 
-// Dummy Data
 const dummyClasses = [
   {
     id: "c1",
-    className: "10",
-    section: "A",
-    teacher: "Mr. Sharma",
-    totalStudents: 45,
-    status: "active",
-  },
-  {
-    id: "c2",
-    className: "10",
-    section: "B",
-    teacher: "Ms. Karki",
-    totalStudents: 40,
-    status: "inactive",
-  },
-  {
-    id: "c3",
     className: "9",
     section: "A",
     teacher: "Mr. Thapa",
@@ -56,12 +39,84 @@ const dummyClasses = [
     status: "active",
   },
   {
-    id: "c4",
+    id: "c2",
     className: "9",
     section: "B",
     teacher: "Ms. Singh",
     totalStudents: 38,
     status: "active",
+  },
+  {
+    id: "c3",
+    className: "9",
+    section: "C",
+    teacher: "",
+    totalStudents: 35,
+    status: "inactive",
+  },
+  {
+    id: "c4",
+    className: "10",
+    section: "A",
+    teacher: "Mr. Sharma",
+    totalStudents: 45,
+    status: "active",
+  },
+  {
+    id: "c5",
+    className: "10",
+    section: "B",
+    teacher: "Ms. Karki",
+    totalStudents: 40,
+    status: "inactive",
+  },
+  {
+    id: "c6",
+    className: "10",
+    section: "C",
+    teacher: "",
+    totalStudents: 41,
+    status: "active",
+  },
+  {
+    id: "c7",
+    className: "11",
+    section: "A",
+    teacher: "Mrs. Sita",
+    totalStudents: 39,
+    status: "active",
+  },
+  {
+    id: "c8",
+    className: "11",
+    section: "B",
+    teacher: "",
+    totalStudents: 36,
+    status: "inactive",
+  },
+  {
+    id: "c9",
+    className: "12",
+    section: "A",
+    teacher: "Mr. Ram",
+    totalStudents: 44,
+    status: "active",
+  },
+  {
+    id: "c10",
+    className: "12",
+    section: "B",
+    teacher: "",
+    totalStudents: 37,
+    status: "active",
+  },
+  {
+    id: "c11",
+    className: "12",
+    section: "C",
+    teacher: "Ms. Koirala",
+    totalStudents: 40,
+    status: "inactive",
   },
 ];
 
@@ -103,7 +158,7 @@ const Classes = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-8xl mx-auto">
       <PageHeader
         title="Class Management"
         description="Manage classes, sections, and assign class teachers efficiently."
@@ -210,7 +265,7 @@ const Classes = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-left">{cls.section}</TableCell>
-                    <TableCell>{cls.teacher}</TableCell>
+                    <TableCell>{cls.teacher || "--"}</TableCell>
                     <TableCell className="text-center">
                       {cls.totalStudents}
                     </TableCell>
@@ -234,11 +289,11 @@ const Classes = () => {
                           >
                             <Eye className="mr-2 h-4 w-4" /> View
                           </DropdownMenuItem>
-                          <DropdownMenuItem
+                          {/* <DropdownMenuItem
                             onClick={() => handleAction("Edit", cls)}
                           >
                             <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                           <DropdownMenuItem
                             onClick={() => handleAction("toggle", cls)}
                           >
@@ -246,6 +301,28 @@ const Classes = () => {
                             {cls.status === "active"
                               ? "Set Inactive"
                               : "Set Active"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleAction(
+                                cls.teacher
+                                  ? "Reassign Teacher"
+                                  : "Assign Teacher",
+                                cls
+                              )
+                            }
+                          >
+                            {cls.teacher ? (
+                              <>
+                                <Edit className="mr-2 h-4 w-4" /> Reassign
+                                Teacher
+                              </>
+                            ) : (
+                              <>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Assign
+                                Teacher
+                              </>
+                            )}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

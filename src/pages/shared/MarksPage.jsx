@@ -111,7 +111,7 @@ const MarksPage = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-8xl mx-auto">
       <PageHeader
         title="Marks Management"
         description="View, add, and edit student marks for each term."
