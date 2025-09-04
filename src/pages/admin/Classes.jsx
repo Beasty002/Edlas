@@ -28,6 +28,7 @@ import DataNotFound from "@/components/reusable/DataNotFound";
 import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
 import AddClassModal from "./components/AddClassModal";
+import AssignTeacherModal from "./components/AssignTeacherModal";
 
 const dummyClasses = [
   {
@@ -125,6 +126,16 @@ const Classes = () => {
   const [classFilter, setClassFilter] = useState("all");
   const [sectionFilter, setSectionFilter] = useState("all");
   const [classes, setClasses] = useState(dummyClasses);
+
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
+
+  const handleAssignTeacher = (cls) => {
+    console.log(cls);
+
+    setSelectedClass(cls);
+    setIsTeacherModalOpen(true);
+  };
 
   const filtered = classes.filter((cls) => {
     const matchesSearch =
@@ -303,14 +314,7 @@ const Classes = () => {
                               : "Set Active"}
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() =>
-                              handleAction(
-                                cls.teacher
-                                  ? "Reassign Teacher"
-                                  : "Assign Teacher",
-                                cls
-                              )
-                            }
+                            onClick={() => handleAssignTeacher(cls)}
                           >
                             {cls.teacher ? (
                               <>
@@ -334,6 +338,25 @@ const Classes = () => {
           )}
         </Table>
       </div>
+      <AssignTeacherModal
+        cls={selectedClass}
+        open={isTeacherModalOpen}
+        onOpenChange={setIsTeacherModalOpen}
+        teachers={[
+          "Mr. Thapa",
+          "Ms. Singh",
+          "Mr. Sharma",
+          "Ms. Karki",
+          "Mrs. Sita",
+          "Mr. Ram",
+          "Ms. Koirala",
+        ]}
+        onSave={(updatedClass) => {
+          setClasses((prev) =>
+            prev.map((c) => (c.id === updatedClass.id ? updatedClass : c))
+          );
+        }}
+      />
     </div>
   );
 };
