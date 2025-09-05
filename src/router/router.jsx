@@ -11,6 +11,7 @@ import StudentPlacement from "@/pages/admin/StudentPlacement";
 import StudentDetailForm from "@/pages/shared/studentList/components/StudentDetailForm";
 import MarksPage from "@/pages/shared/MarksPage";
 import NotFoundPage from "@/components/NotFoundPage";
+import StudentDetailsPage from "@/pages/shared/StudentDetailsPage";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,8 @@ export const router = createBrowserRouter([
           { path: "/students", element: <StudentsList /> },
           { path: "/students/newEnrollment", element: <StudentDetailForm /> },
           { path: "/students/Placement", element: <StudentPlacement /> },
+          { path: "/students/StudentDetail", element: <StudentDetailsPage /> },
+
           { path: "/classes", element: <Classes /> },
           { path: "/subjects", element: <Subjects /> },
           { path: "/marks", element: <MarksPage /> },

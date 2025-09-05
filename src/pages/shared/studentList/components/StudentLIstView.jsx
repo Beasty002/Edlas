@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Edit, View } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UpdateStudentForm from "./UpdateStudentForm";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const dummyStudents = [
   {
@@ -34,9 +35,11 @@ const dummyStudents = [
 
 const StudentListView = () => {
   const [students] = useState(dummyStudents);
+  const navigate = useNavigate();
 
   const handleAction = (studentId, action) => {
     console.log(`${action} clicked for ${studentId}`);
+    navigate("/students/StudentDetail");
   };
 
   return (
