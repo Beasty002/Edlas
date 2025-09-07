@@ -23,7 +23,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Eye, Edit, Trash2, Search } from "lucide-react";
+import {
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash2,
+  Search,
+  PlusCircle,
+  ArrowLeftRightIcon,
+} from "lucide-react";
 import PageHeader from "../../components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import AddSubjectDialog from "../shared/AddSubjectDialog";
@@ -40,6 +48,7 @@ const initialSubjects = {
       theory: 70,
       practical: 30,
       optional: false,
+      teacher: "Mr. Sharma",
     },
     {
       id: 2,
@@ -50,6 +59,7 @@ const initialSubjects = {
       theory: 100,
       practical: 0,
       optional: false,
+      teacher: "Ms. Karki",
     },
     {
       id: 3,
@@ -60,6 +70,7 @@ const initialSubjects = {
       theory: 60,
       practical: 40,
       optional: false,
+      teacher: "Mr. Thapa",
     },
   ],
   10: [
@@ -72,6 +83,7 @@ const initialSubjects = {
       theory: 70,
       practical: 30,
       optional: false,
+      teacher: "Mr. Sharma",
     },
     {
       id: 5,
@@ -82,6 +94,7 @@ const initialSubjects = {
       theory: 100,
       practical: 0,
       optional: false,
+      teacher: "Ms. Karki",
     },
     {
       id: 6,
@@ -92,6 +105,7 @@ const initialSubjects = {
       theory: 60,
       practical: 40,
       optional: false,
+      teacher: "Dr. Rana",
     },
   ],
   11: [
@@ -104,6 +118,7 @@ const initialSubjects = {
       theory: 60,
       practical: 40,
       optional: true,
+      teacher: "Dr. Shrestha",
     },
     {
       id: 8,
@@ -114,6 +129,7 @@ const initialSubjects = {
       theory: 70,
       practical: 30,
       optional: false,
+      teacher: "Mr. Bhandari",
     },
   ],
   12: [
@@ -126,6 +142,7 @@ const initialSubjects = {
       theory: 70,
       practical: 30,
       optional: false,
+      teacher: "Mr. Sharma",
     },
     {
       id: 10,
@@ -136,6 +153,7 @@ const initialSubjects = {
       theory: 100,
       practical: 0,
       optional: true,
+      teacher: "Ms. Gurung",
     },
   ],
 };
@@ -145,10 +163,9 @@ const Subjects = () => {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
 
-  const handleAction = (action, subject) => {
-    console.log(`${action} action for subject:`, subject);
-    alert(`${action} clicked for ${subject.name}`);
-  };
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingSubject, setEditingSubject] = useState(null);
+
   const handleAddSubject = (cls, newSubject) => {
     setSubjects((prev) => {
       const updated = { ...prev };
@@ -157,6 +174,25 @@ const Subjects = () => {
       return updated;
     });
   };
+
+  const handleEditSubject = (cls, updatedSubject) => {
+    setSubjects((prev) => {
+      const updated = { ...prev };
+      updated[cls] = updated[cls].map((s) =>
+        s.id === updatedSubject.id ? updatedSubject : s
+      );
+      return updated;
+    });
+  };
+
+  const handleDeleteSubject = (cls, subjectId) => {
+    setSubjects((prev) => {
+      const updated = { ...prev };
+      updated[cls] = updated[cls].filter((s) => s.id !== subjectId);
+      return updated;
+    });
+  };
+
   const filteredSubjects = Object.entries(subjects).reduce(
     (acc, [cls, subs]) => {
       const filtered = subs.filter((s) =>
@@ -204,7 +240,16 @@ const Subjects = () => {
             ))}
           </SelectContent>
         </Select>
-        <AddSubjectDialog onAdd={handleAddSubject} allClasses={allClasses} />
+        <Button
+          onClick={() => {
+            setEditingSubject(null);
+            setOpenDialog(true);
+          }}
+          className="bg-blue-600 text-white hover:bg-blue-700"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Subject
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -216,12 +261,12 @@ const Subjects = () => {
               <TableHead className="hidden md:table-cell">
                 Description
               </TableHead>
-              <TableHead className="w-16 text-center">Full Marks</TableHead>
-              <TableHead className="w-16 text-center">Pass Marks</TableHead>
-              <TableHead className="w-16 text-center">Theory</TableHead>
-              <TableHead className="w-16 text-center">Practical</TableHead>
-              <TableHead className="w-16 text-center">Optional</TableHead>
-
+              <TableHead className="w-24 text-center">Teacher</TableHead>
+              <TableHead className="w-20 text-center">Full Marks</TableHead>
+              <TableHead className="w-20 text-center">Pass Marks</TableHead>
+              <TableHead className="w-20 text-center">Theory</TableHead>
+              <TableHead className="w-20 text-center">Practical</TableHead>
+              <TableHead className="w-20 text-center">Optional</TableHead>
               <TableHead className="w-20 text-center"></TableHead>
             </TableRow>
           </TableHeader>
@@ -254,6 +299,9 @@ const Subjects = () => {
                       <div className="truncate">{subject.description}</div>
                     </TableCell>
                     <TableCell className="text-center">
+                      {subject.teacher}
+                    </TableCell>
+                    <TableCell className="text-center">
                       {subject.fullMarks}
                     </TableCell>
                     <TableCell className="text-center">
@@ -268,7 +316,6 @@ const Subjects = () => {
                     <TableCell className="text-center">
                       {subject.optional ? "Yes" : "No"}
                     </TableCell>
-
                     <TableCell className="text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -276,17 +323,35 @@ const Subjects = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem
-                            onClick={() => handleAction("View", subject)}
+                            onClick={() => alert(`Viewing ${subject.name}`)}
                           >
                             <Eye className="mr-2 h-4 w-4" /> View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => handleAction("Edit", subject)}
+                            onClick={() => {
+                              setEditingSubject({ ...subject, class: cls });
+                              setOpenDialog(true);
+                            }}
                           >
                             <Edit className="mr-2 h-4 w-4" /> Edit Subject
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => handleAction("Delete", subject)}
+                            onClick={() => alert("Assign teacher logic")}
+                          >
+                            {subject.teacher ? (
+                              <>
+                                <ArrowLeftRightIcon className="mr-2 h-4 w-4" />{" "}
+                                Reassign Teacher
+                              </>
+                            ) : (
+                              <>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Assign
+                                Teacher
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteSubject(cls, subject.id)}
                             className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete Subject
@@ -301,6 +366,15 @@ const Subjects = () => {
           )}
         </Table>
       </div>
+
+      <AddSubjectDialog
+        open={openDialog}
+        onOpenChange={setOpenDialog}
+        onAdd={handleAddSubject}
+        onEdit={handleEditSubject}
+        allClasses={allClasses}
+        subject={editingSubject}
+      />
     </div>
   );
 };

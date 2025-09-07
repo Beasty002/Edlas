@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,10 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle } from "lucide-react";
 
-const AddSubjectDialog = ({ onAdd, allClasses }) => {
-  const [open, setOpen] = useState(false);
+const AddSubjectDialog = ({
+  open,
+  onOpenChange,
+  onAdd,
+  onEdit,
+  allClasses,
+  subject,
+}) => {
+  const teachers = [
+    "Mr. Sharma",
+    "Ms. Karki",
+    "Mr. Thapa",
+    "Dr. Rana",
+    "Dr. Shrestha",
+    "Mr. Bhandari",
+    "Ms. Gurung",
+  ];
+
   const [formData, setFormData] = useState({
     class: "",
     name: "",
@@ -29,12 +43,41 @@ const AddSubjectDialog = ({ onAdd, allClasses }) => {
     theory: "",
     practical: "",
     optional: "false",
+    teacher: "",
   });
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    if (subject) {
+      setFormData({
+        class: subject.class?.toString() || "",
+        name: subject.name || "",
+        description: subject.description || "",
+        fullMarks: subject.fullMarks?.toString() || "",
+        passMarks: subject.passMarks?.toString() || "",
+        theory: subject.theory?.toString() || "",
+        practical: subject.practical?.toString() || "",
+        optional: subject.optional ? "true" : "false",
+        teacher: subject.teacher || "",
+      });
+    } else {
+      setFormData({
+        class: "",
+        name: "",
+        description: "",
+        fullMarks: "",
+        passMarks: "",
+        theory: "",
+        practical: "",
+        optional: "false",
+        teacher: "",
+      });
+    }
+  }, [subject, open]);
+
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: "" })); // clear error when typing
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const validateForm = () => {
@@ -50,6 +93,7 @@ const AddSubjectDialog = ({ onAdd, allClasses }) => {
       newErrors.practical = "Practical marks are required";
     if (!formData.optional)
       newErrors.optional = "Please select optional status";
+    if (!formData.teacher) newErrors.teacher = "Teacher is required";
     return newErrors;
   };
 
@@ -60,8 +104,8 @@ const AddSubjectDialog = ({ onAdd, allClasses }) => {
       return;
     }
 
-    const newSubject = {
-      id: Date.now(),
+    const subjectData = {
+      id: subject ? subject.id : Date.now(),
       name: formData.name,
       description: formData.description,
       fullMarks: parseInt(formData.fullMarks) || 0,
@@ -69,34 +113,26 @@ const AddSubjectDialog = ({ onAdd, allClasses }) => {
       theory: parseInt(formData.theory) || 0,
       practical: parseInt(formData.practical) || 0,
       optional: formData.optional === "true",
+      teacher: formData.teacher,
+      class: formData.class,
     };
 
-    onAdd(formData.class, newSubject);
-    setFormData({
-      class: "",
-      name: "",
-      description: "",
-      fullMarks: "",
-      passMarks: "",
-      theory: "",
-      practical: "",
-      optional: "false",
-    });
-    setOpen(false);
+    if (subject) {
+      onEdit(formData.class, subjectData);
+    } else {
+      onAdd(formData.class, subjectData);
+    }
+
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          className={"w-full md:w-40 bg-blue-600 hover:bg-blue-800 text-white"}
-        >
-          <PlusCircle /> Add New Subject
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add New Subject</DialogTitle>
+          <DialogTitle>
+            {subject ? "Edit Subject" : "Add New Subject"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-3">
@@ -201,7 +237,7 @@ const AddSubjectDialog = ({ onAdd, allClasses }) => {
               onValueChange={(val) => handleChange("optional", val)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="false">No</SelectItem>
@@ -213,11 +249,33 @@ const AddSubjectDialog = ({ onAdd, allClasses }) => {
             )}
           </div>
 
+          <div>
+            <Label className="mb-2">Teacher</Label>
+            <Select
+              value={formData.teacher}
+              onValueChange={(val) => handleChange("teacher", val)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Teacher" />
+              </SelectTrigger>
+              <SelectContent>
+                {teachers.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.teacher && (
+              <p className="text-red-500 text-sm">{errors.teacher}</p>
+            )}
+          </div>
+
           <Button
             onClick={handleSubmit}
             className="w-full bg-blue-600 hover:bg-blue-800 text-white"
           >
-            Save Subject
+            {subject ? "Update Subject" : "Save Subject"}
           </Button>
         </div>
       </DialogContent>

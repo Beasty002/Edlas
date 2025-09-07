@@ -2,7 +2,7 @@
 
 ## 1. Student Management
 
-- **View Student Details** 
+- **View Student Details** ✅
 - **Filter Students**
   - Filter in all students
   - Fix placement issues for individual students
@@ -17,11 +17,12 @@
 ## 3. Class Management
 
 - **View Class Page**
-- **Subject Management**
+- **Subject Management**✅
   - Functionality to edit subjects
   - Add all subjects and total marks/grades in marks management table
 
 ## 4. Marks & Marksheet
+
 - **update table to show more subjects along with total grade**
 - **View Marksheet**
 - **Download Marksheet**
@@ -29,3 +30,8 @@
 ## 5. UI / Modal Enhancements
 
 - Check and add **subheadings to all modals**
+
+## 5. Subject management
+
+- **Edit existing subject** ✅
+- **Reassign Teacher or Assign teacher**
