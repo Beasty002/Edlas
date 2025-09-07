@@ -82,7 +82,7 @@ const StudentDetailsPage = ({ studentData }) => {
   );
 
   return (
-    <div className="flex flex-col md:flex-row gap-2 max-w-8xl mx-auto">
+    <div className="flex flex-col md:flex-row gap-2 max-w-8xl mx-auto h-full">
       <Card className="w-full md:w-1/3 flex flex-col items-center p-6 shadow-sm   border ">
         <div className="w-30 h-30 rounded-full bg-gray-200 mb-4 flex items-center justify-center text-3xl font-bold text-gray-600">
           {studentInfo.firstName[0]}

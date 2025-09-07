@@ -19,6 +19,7 @@ import { Edit, MoreVertical, View } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UpdateStudentForm from "./UpdateStudentForm";
 import TableActionButton from "@/components/reusable/TableActionButton";
+import { useNavigate } from "react-router-dom";
 
 const initialStudents = [
   {
@@ -50,9 +51,11 @@ const initialStudents = [
 const StudentListTable = () => {
   const [students, setStudents] = useState(initialStudents);
 
+  const navigate = useNavigate();
+
   const handleAction = (studentId, action) => {
     if (action === "edit") console.log("Edit", studentId);
-    else if (action === "view") console.log("View", studentId);
+    else if (action === "view") navigate("/students/StudentDetail");
     else {
       setStudents((prev) =>
         prev.map((s) => (s.id === studentId ? { ...s, status: action } : s))
