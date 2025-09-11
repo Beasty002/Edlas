@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Minus, PlusCircle } from "lucide-react";
-import { Label } from "@/components/ui/Label";
+import { Label } from "@/components/ui/label";
 
 const AddClassModal = ({ classesData = [], onSave }) => {
   const [mode, setMode] = useState("new"); // "new" | "section"
