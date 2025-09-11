@@ -137,7 +137,7 @@ const AddSubjectDialog = ({
 
         <div className="space-y-4 mt-3">
           <div>
-            <Label className="mb-2">Class</Label>
+            <Label className="mb-3">Class</Label>
             <Select
               value={formData.class}
               onValueChange={(val) => handleChange("class", val)}
@@ -159,7 +159,7 @@ const AddSubjectDialog = ({
           </div>
 
           <div>
-            <Label className="mb-2">Subject Name</Label>
+            <Label className="mb-3">Subject Name</Label>
             <Input
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
@@ -170,7 +170,7 @@ const AddSubjectDialog = ({
           </div>
 
           <div>
-            <Label className="mb-2">Description</Label>
+            <Label className="mb-3">Description</Label>
             <Input
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
@@ -182,7 +182,7 @@ const AddSubjectDialog = ({
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="mb-2">Full Marks</Label>
+              <Label className="mb-3">Full Marks</Label>
               <Input
                 type="number"
                 value={formData.fullMarks}
@@ -193,7 +193,7 @@ const AddSubjectDialog = ({
               )}
             </div>
             <div>
-              <Label className="mb-2">Pass Marks</Label>
+              <Label className="mb-3">Pass Marks</Label>
               <Input
                 type="number"
                 value={formData.passMarks}
@@ -207,7 +207,7 @@ const AddSubjectDialog = ({
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="mb-2">Theory</Label>
+              <Label className="mb-3">Theory</Label>
               <Input
                 type="number"
                 value={formData.theory}
@@ -218,7 +218,7 @@ const AddSubjectDialog = ({
               )}
             </div>
             <div>
-              <Label className="mb-2">Practical</Label>
+              <Label className="mb-3">Practical</Label>
               <Input
                 type="number"
                 value={formData.practical}
@@ -231,7 +231,7 @@ const AddSubjectDialog = ({
           </div>
 
           <div>
-            <Label className="mb-2">Optional</Label>
+            <Label className="mb-3">Optional</Label>
             <Select
               value={formData.optional}
               onValueChange={(val) => handleChange("optional", val)}
@@ -250,7 +250,7 @@ const AddSubjectDialog = ({
           </div>
 
           <div>
-            <Label className="mb-2">Teacher</Label>
+            <Label className="mb-3">Teacher</Label>
             <Select
               value={formData.teacher}
               onValueChange={(val) => handleChange("teacher", val)}
