@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
 import {
   Card,
@@ -20,7 +20,8 @@ export default function Login() {
   const [theme, setTheme] = useState("light");
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
-
+  const location = useLocation();
+  const from = location.state?.from?.pathname;
   useEffect(() => {
     if (localStorage.theme === "dark") {
       document.documentElement.classList.add("dark");
@@ -28,18 +29,28 @@ export default function Login() {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const newErrors = {};
     if (!email) newErrors.email = "This field is required";
     if (!password) newErrors.password = "This field is required";
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length === 0) {
-      auth.login();
-      navigate("/");
+      try {
+        await auth.login(email, password);
+
+        const redirectTo = !from || from === "/login" ? "/" : from;
+        navigate(redirectTo, { replace: true });
+      } catch (error) {}
     }
   };
-
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [auth.isAuthenticated, from, navigate]);
   return (
     <div className="flex h-screen">
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-700 to-indigo-600 text-white items-center justify-center p-8">

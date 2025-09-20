@@ -26,13 +26,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { AuthContext } from "@/context/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const NavUser = ({ user }) => {
   const { isMobile } = useSidebar();
   const auth = useContext(AuthContext);
   const handleLogout = () => {
     auth.logout();
-    navigate("/login");
+    Navigate("/login");
   };
 
   return (
