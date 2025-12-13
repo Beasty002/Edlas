@@ -34,9 +34,7 @@ const Unauthorize = () => {
           </Button>
         </div>
 
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 italic">
-          (Psst… maybe Get Proper accessLevel first? 😉)
-        </p>
+
       </div>
     </div>
   );

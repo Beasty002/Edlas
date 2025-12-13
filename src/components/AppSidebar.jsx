@@ -1,17 +1,18 @@
+import { useContext } from "react";
 import {
   Home,
   MessageSquare,
   User,
   PlusCircle,
   ChevronRight,
-  BookAIcon,
   SchoolIcon,
   BookOpenIcon,
-  Navigation2,
-  ArrowUpDown,
   Users,
   FileDigit,
   Library,
+  UserPlus,
+  BookMarked,
+  UserCheck,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -22,6 +23,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -35,54 +37,99 @@ import {
 } from "@/components/ui/collapsible";
 
 import NavUser from "./NavUser";
+import { AuthContext } from "@/context/AuthContext";
+import { rolePermissions } from "@/data/staticData";
 
-const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home },
+const allMenuItems = [
+  { 
+    id: "dashboard",
+    title: "Dashboard", 
+    url: "/", 
+    icon: Home 
+  },
   {
+    id: "students",
     title: "Students",
     icon: User,
     items: [
-      { title: "All Students", url: "/students", icon: Users },
-      {
-        title: "New Enrollment",
-        url: "/students/newEnrollment",
-        icon: PlusCircle,
-      },
-      {
-        title: "Placement",
-        url: "/students/placement",
-        icon: ArrowUpDown,
-      },
+      { title: "All Students", url: "/students", icon: Users, roles: ["staff", "superadmin"] },
+      { title: "New Enrollment", url: "/students/newEnrollment", icon: PlusCircle, roles: ["superadmin"] },
     ],
   },
-  { title: "Staff Management", url: "/staffs", icon: Users },
-
   {
+    id: "staffs",
+    title: "Staff Management",
+    icon: Users,
+    items: [
+      { title: "All Staff", url: "/staffs", icon: Users, roles: ["superadmin"] },
+      { title: "Add Staff", url: "/staffs/add", icon: UserPlus, roles: ["superadmin"] },
+    ],
+  },
+  {
+    id: "academics",
     title: "Academics",
     icon: BookOpenIcon,
     items: [
-      { title: "Classes", url: "/classes", icon: SchoolIcon },
-      { title: "Subjects", url: "/subjects", icon: Library },
-      { title: "Markings", url: "/marks", icon: FileDigit },
+      { title: "Classes", url: "/classes", icon: SchoolIcon, roles: ["superadmin"] },
+      { title: "Subjects", url: "/subject-master", icon: BookMarked, roles: ["superadmin"] },
+      { title: "Class Courses", url: "/subjects", icon: Library, roles: ["superadmin"] },
+      { title: "Teacher Assignments", url: "/teacher-assignments", icon: UserCheck, roles: ["superadmin"] },
+      { title: "Markings", url: "/marks", icon: FileDigit, roles: ["staff", "superadmin"] },
     ],
   },
-  { title: "AI chat", url: "/ai", icon: MessageSquare },
+  {
+    id: "results",
+    title: "My Results",
+    url: "/my-results",
+    icon: FileDigit,
+  },
+  { 
+    id: "ai",
+    title: "AI Chat", 
+    url: "/ai", 
+    icon: MessageSquare 
+  },
 ];
 
-const data = {
-  name: "beasty",
-  email: "beasty@gmail.com",
-  avatar: "/avatars/shadcn.jpg",
+const filterMenuByRole = (menu, userType) => {
+  const permissions = rolePermissions[userType]?.sidebar || [];
+  
+  return menu
+    .filter(item => permissions.includes(item.id))
+    .map(item => {
+      if (item.items) {
+        const filteredItems = item.items.filter(
+          sub => !sub.roles || sub.roles.includes(userType)
+        );
+        if (filteredItems.length === 0) return null;
+        return { ...item, items: filteredItems };
+      }
+      return item;
+    })
+    .filter(Boolean);
 };
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user } = useContext(AuthContext);
+  
+  const userType = user?.user_type || "student";
+  const menuItems = filterMenuByRole(allMenuItems, userType);
+
+  const userData = {
+    name: user?.full_name || "User",
+    email: user?.email || "",
+    avatar: "/avatars/shadcn.jpg",
+  };
 
   return (
     <Sidebar collapsible="icon" variant="inset">
+      <SidebarHeader className="border-b px-4 py-3">
+        <span className="font-bold text-lg">Edlas</span>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) =>
@@ -90,7 +137,7 @@ export function AppSidebar() {
                   <Collapsible
                     key={item.title}
                     asChild
-                    defaultOpen={location.pathname.startsWith("/students")}
+                    defaultOpen={item.items.some(sub => location.pathname.startsWith(sub.url))}
                     className="group/collapsible"
                   >
                     <SidebarMenuItem>
@@ -139,7 +186,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   );

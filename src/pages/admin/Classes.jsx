@@ -29,110 +29,18 @@ import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
 import AddClassModal from "./components/AddClassModal";
 import AssignTeacherModal from "./components/AssignTeacherModal";
-
-const dummyClasses = [
-  {
-    id: "c1",
-    className: "9",
-    section: "A",
-    teacher: "Mr. Thapa",
-    totalStudents: 42,
-    status: "active",
-  },
-  {
-    id: "c2",
-    className: "9",
-    section: "B",
-    teacher: "Ms. Singh",
-    totalStudents: 38,
-    status: "active",
-  },
-  {
-    id: "c3",
-    className: "9",
-    section: "C",
-    teacher: "",
-    totalStudents: 35,
-    status: "inactive",
-  },
-  {
-    id: "c4",
-    className: "10",
-    section: "A",
-    teacher: "Mr. Sharma",
-    totalStudents: 45,
-    status: "active",
-  },
-  {
-    id: "c5",
-    className: "10",
-    section: "B",
-    teacher: "Ms. Karki",
-    totalStudents: 40,
-    status: "inactive",
-  },
-  {
-    id: "c6",
-    className: "10",
-    section: "C",
-    teacher: "",
-    totalStudents: 41,
-    status: "active",
-  },
-  {
-    id: "c7",
-    className: "11",
-    section: "A",
-    teacher: "Mrs. Sita",
-    totalStudents: 39,
-    status: "active",
-  },
-  {
-    id: "c8",
-    className: "11",
-    section: "B",
-    teacher: "",
-    totalStudents: 36,
-    status: "inactive",
-  },
-  {
-    id: "c9",
-    className: "12",
-    section: "A",
-    teacher: "Mr. Ram",
-    totalStudents: 44,
-    status: "active",
-  },
-  {
-    id: "c10",
-    className: "12",
-    section: "B",
-    teacher: "",
-    totalStudents: 37,
-    status: "active",
-  },
-  {
-    id: "c11",
-    className: "12",
-    section: "C",
-    teacher: "Ms. Koirala",
-    totalStudents: 40,
-    status: "inactive",
-  },
-];
+import { classesData as initialClasses, allClasses, allSections, teachersList } from "@/data/staticData";
 
 const Classes = () => {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [sectionFilter, setSectionFilter] = useState("all");
-  const [classes, setClasses] = useState(dummyClasses);
+  const [classes, setClasses] = useState(initialClasses);
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
 
   const handleAssignTeacher = (cls) => {
-    console.log(cls);
-
     setSelectedClass(cls);
     setIsTeacherModalOpen(true);
   };
@@ -169,7 +77,7 @@ const Classes = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-8xl mx-auto">
+    <div className="space-y-6 w-full">
       <PageHeader
         title="Class Management"
         description="Manage classes, sections, and assign class teachers efficiently."
@@ -190,14 +98,13 @@ const Classes = () => {
           <Select
             value={classFilter}
             onValueChange={setClassFilter}
-            className={"min-w-[120px]"}
           >
             <SelectTrigger className="w-auto min-w-[150px]">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
-              {["9", "10", "11", "12"].map((c) => (
+              {allClasses.map((c) => (
                 <SelectItem key={c} value={c}>
                   Class {c}
                 </SelectItem>
@@ -211,7 +118,7 @@ const Classes = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sections</SelectItem>
-              {["A", "B", "C"].map((s) => (
+              {allSections.map((s) => (
                 <SelectItem key={s} value={s}>
                   Section {s}
                 </SelectItem>
@@ -219,22 +126,9 @@ const Classes = () => {
             </SelectContent>
           </Select>
 
-          <Button className={"bg-blue-600 hover:bg-blue-700 text-white"}>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
             <AddClassModal
-              classesData={[
-                {
-                  className: "9",
-                  sections: ["A", "B"],
-                  teacher: "Mr. Ram",
-                  status: "active",
-                },
-                {
-                  className: "10",
-                  sections: ["A", "B", "C"],
-                  teacher: "Mrs. Sita",
-                  status: "active",
-                },
-              ]}
+              classesData={classes}
               onSave={(newClass) => console.log("Saved class:", newClass)}
             />
           </Button>
@@ -300,15 +194,10 @@ const Classes = () => {
                           >
                             <Eye className="mr-2 h-4 w-4" /> View
                           </DropdownMenuItem>
-                          {/* <DropdownMenuItem
-                            onClick={() => handleAction("Edit", cls)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem> */}
                           <DropdownMenuItem
                             onClick={() => handleAction("toggle", cls)}
                           >
-                            <UserX className="mr-2 h-4 w-4" />{" "}
+                            <UserX className="mr-2 h-4 w-4" />
                             {cls.status === "active"
                               ? "Set Inactive"
                               : "Set Active"}
@@ -342,15 +231,7 @@ const Classes = () => {
         cls={selectedClass}
         open={isTeacherModalOpen}
         onOpenChange={setIsTeacherModalOpen}
-        teachers={[
-          "Mr. Thapa",
-          "Ms. Singh",
-          "Mr. Sharma",
-          "Ms. Karki",
-          "Mrs. Sita",
-          "Mr. Ram",
-          "Ms. Koirala",
-        ]}
+        teachers={teachersList}
         onSave={(updatedClass) => {
           setClasses((prev) =>
             prev.map((c) => (c.id === updatedClass.id ? updatedClass : c))

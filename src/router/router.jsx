@@ -6,21 +6,20 @@ import { lazy } from "react";
 const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AiChat = lazy(() => import("@/pages/AiChat"));
 const Login = lazy(() => import("@/pages/Login"));
-const StudentsList = lazy(() =>
-  import("@/pages/shared/studentList/StudentsListPage")
-);
+const StudentsList = lazy(() => import("@/pages/shared/studentList/StudentsListPage"));
 const Classes = lazy(() => import("@/pages/admin/Classes"));
 const Subjects = lazy(() => import("@/pages/admin/Subjects"));
+const SubjectMaster = lazy(() => import("@/pages/admin/SubjectMaster"));
+const TeacherAssignments = lazy(() => import("@/pages/admin/TeacherAssignments"));
 const StudentPlacement = lazy(() => import("@/pages/admin/StudentPlacement"));
-const StudentDetailForm = lazy(() =>
-  import("@/pages/shared/studentList/components/StudentDetailForm")
-);
+const StudentDetailForm = lazy(() => import("@/pages/shared/studentList/components/StudentDetailForm"));
 const MarksPage = lazy(() => import("@/pages/shared/MarksPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
-const StudentDetailsPage = lazy(() =>
-  import("@/pages/shared/StudentDetailsPage")
-);
-const Unauthorized = lazy(() => import("@/pages/Unauthorized"));
+const StudentDetailsPage = lazy(() => import("@/pages/shared/StudentDetailsPage"));
+const Unauthorized = lazy(() => import("@/pages/UnAuthorized"));
+const AllStaffs = lazy(() => import("@/pages/admin/AllStaffs"));
+const AddStaff = lazy(() => import("@/pages/admin/AddStaff"));
+const MyResults = lazy(() => import("@/pages/student/MyResults"));
 
 export const router = createBrowserRouter([
   {
@@ -28,33 +27,45 @@ export const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    element: (
-      <ProtectedRoute allowedRoles={["staff", "superadmin", "student"]} />
-    ),
+    element: <ProtectedRoute allowedRoles={["staff", "superadmin", "student"]} />,
     children: [
       {
         path: "/",
         element: <MainLayout />,
         children: [
           { path: "/", element: <Dashboard /> },
-          { path: "/students", element: <StudentsList /> },
-          { path: "/students/newEnrollment", element: <StudentDetailForm /> },
-          { path: "/students/Placement", element: <StudentPlacement /> },
-
+          { path: "/ai", element: <AiChat /> },
+          
           {
-            element: <ProtectedRoute allowedRoles={["staff"]} />,
+            element: <ProtectedRoute allowedRoles={["student"]} />,
             children: [
-              {
-                path: "/students/StudentDetail",
-                element: <StudentDetailsPage />,
-              },
-              { path: "/classes", element: <Classes /> },
-              { path: "/subjects", element: <Subjects /> },
+              { path: "/my-results", element: <MyResults /> },
             ],
           },
-
-          { path: "/marks", element: <MarksPage /> },
-          { path: "/ai", element: <AiChat /> },
+          
+          {
+            element: <ProtectedRoute allowedRoles={["staff", "superadmin"]} />,
+            children: [
+              { path: "/students", element: <StudentsList /> },
+              { path: "/marks", element: <MarksPage /> },
+            ],
+          },
+          
+          {
+            element: <ProtectedRoute allowedRoles={["superadmin"]} />,
+            children: [
+              { path: "/students/newEnrollment", element: <StudentDetailForm /> },
+              { path: "/students/placement", element: <StudentPlacement /> },
+              { path: "/students/StudentDetail", element: <StudentDetailsPage /> },
+              { path: "/staffs", element: <AllStaffs /> },
+              { path: "/staffs/add", element: <AddStaff /> },
+              { path: "/classes", element: <Classes /> },
+              { path: "/subjects", element: <Subjects /> },
+              { path: "/subject-master", element: <SubjectMaster /> },
+              { path: "/teacher-assignments", element: <TeacherAssignments /> },
+            ],
+          },
+          
           { path: "*", element: <NotFoundPage /> },
         ],
       },
