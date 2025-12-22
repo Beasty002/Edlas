@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import StudentToolbar from "./components/StudentToolbar";
 import StudentListTable from "./components/StudentListTable";
-import StudentListView from "./components/StudentLIstView";
+import StudentListView from "./components/StudentListView";
 import PageHeader from "@/components/PageHeader";
 
 const StudentsListPage = () => {
