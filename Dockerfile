@@ -3,6 +3,7 @@ FROM node:20-alpine
 ARG PORT=3000
 ENV PORT=${PORT}
 ENV VITE_BASE_URL=https://edlas.lolskins.gg/api/
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Set working directory
 WORKDIR /app
