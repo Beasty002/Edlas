@@ -48,7 +48,7 @@ jobs:
             echo "🚀 Starting deployment..."
             
             # Navigate to your project directory
-            cd /home/ubuntu/projects/edlas-frontend
+            cd ~/edlas-frontend
             
             # Pull latest changes
             echo "📥 Pulling latest code..."
