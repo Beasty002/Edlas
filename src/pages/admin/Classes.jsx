@@ -22,59 +22,91 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Edit, Eye, UserX, PlusCircle } from "lucide-react";
+import { Search, Edit, Eye, UserX, PlusCircle, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
 import AddClassModal from "./components/AddClassModal";
 import AssignTeacherModal from "./components/AssignTeacherModal";
-import { classesData as initialClasses, allClasses, allSections, teachersList } from "@/data/staticData";
+import { useClassSections, useClassrooms, useUpdateClassSection, useCreateClassSection } from "@/api/hooks";
+import { toast } from "sonner";
 
 const Classes = () => {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [sectionFilter, setSectionFilter] = useState("all");
-  const [classes, setClasses] = useState(initialClasses);
-
   const [selectedClass, setSelectedClass] = useState(null);
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
+
+  const { data: sectionsData, isLoading: sectionsLoading, error: sectionsError, refetch } = useClassSections({ page_size: 100 });
+  const { data: classroomsData } = useClassrooms({ page_size: 100 });
+  const updateSection = useUpdateClassSection();
+  const createSection = useCreateClassSection();
+
+  const classes = sectionsData?.results || [];
+  const classrooms = classroomsData?.results || [];
 
   const handleAssignTeacher = (cls) => {
     setSelectedClass(cls);
     setIsTeacherModalOpen(true);
   };
 
+  const allClasses = [...new Set(classrooms.map((c) => c.name))];
+  const allSections = [...new Set(classes.map((c) => c.name))];
+
   const filtered = classes.filter((cls) => {
     const matchesSearch =
-      cls.className.toLowerCase().includes(search.toLowerCase()) ||
-      cls.section.toLowerCase().includes(search.toLowerCase()) ||
-      cls.teacher.toLowerCase().includes(search.toLowerCase());
-    const matchesClass = classFilter === "all" || cls.className === classFilter;
-    const matchesSection =
-      sectionFilter === "all" || cls.section === sectionFilter;
+      cls.name?.toLowerCase().includes(search.toLowerCase()) ||
+      cls.classroom_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesClass =
+      classFilter === "all" || cls.classroom_name === classFilter;
+    const matchesSection = sectionFilter === "all" || cls.name === sectionFilter;
     return matchesSearch && matchesClass && matchesSection;
   });
 
   const groupedClasses = filtered.reduce((acc, cls) => {
-    if (!acc[cls.className]) acc[cls.className] = [];
-    acc[cls.className].push(cls);
+    const className = cls.classroom_name || "Unknown";
+    if (!acc[className]) acc[className] = [];
+    acc[className].push(cls);
     return acc;
   }, {});
 
-  const handleAction = (action, cls) => {
+  const handleAction = async (action, cls) => {
     if (action === "toggle") {
-      setClasses((prev) =>
-        prev.map((c) =>
-          c.id === cls.id
-            ? { ...c, status: c.status === "active" ? "inactive" : "active" }
-            : c
-        )
+      updateSection.mutate(
+        { id: cls.id, data: { is_active: !cls.is_active } },
+        {
+          onSuccess: () => toast.success("Status updated"),
+          onError: (err) => toast.error(err.message),
+        }
       );
     } else {
-      alert(`${action} class ${cls.className}-${cls.section}`);
+      alert(`${action} class ${cls.classroom_name}-${cls.name}`);
     }
   };
+
+  if (sectionsLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (sectionsError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-red-500">
+        <p>{sectionsError.message}</p>
+        <button
+          onClick={() => refetch()}
+          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 w-full">
@@ -87,7 +119,7 @@ const Classes = () => {
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search by class, section or teacher"
+            placeholder="Search by class or section"
             className="pl-10 w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -95,10 +127,7 @@ const Classes = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Select
-            value={classFilter}
-            onValueChange={setClassFilter}
-          >
+          <Select value={classFilter} onValueChange={setClassFilter}>
             <SelectTrigger className="w-auto min-w-[150px]">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
@@ -129,7 +158,12 @@ const Classes = () => {
           <Button className="bg-blue-600 hover:bg-blue-700 text-white">
             <AddClassModal
               classesData={classes}
-              onSave={(newClass) => console.log("Saved class:", newClass)}
+              onSave={(newClass) => {
+                createSection.mutate(newClass, {
+                  onSuccess: () => toast.success("Class created"),
+                  onError: (err) => toast.error(err.message),
+                });
+              }}
             />
           </Button>
         </div>
@@ -165,22 +199,20 @@ const Classes = () => {
                     <TableCell>
                       {idx === 0 && (
                         <Badge className="bg-primary/10 text-primary border-primary/20">
-                          Class {cls.className}
+                          Class {cls.classroom_name}
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-left">{cls.section}</TableCell>
+                    <TableCell className="text-left">{cls.name}</TableCell>
                     <TableCell>{cls.teacher || "--"}</TableCell>
                     <TableCell className="text-center">
-                      {cls.totalStudents}
+                      {cls.total_students || 0}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge
-                        variant={
-                          cls.status === "active" ? "default" : "destructive"
-                        }
+                        variant={cls.is_active ? "default" : "destructive"}
                       >
-                        {cls.status === "active" ? "Active" : "Inactive"}
+                        {cls.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
@@ -198,9 +230,7 @@ const Classes = () => {
                             onClick={() => handleAction("toggle", cls)}
                           >
                             <UserX className="mr-2 h-4 w-4" />
-                            {cls.status === "active"
-                              ? "Set Inactive"
-                              : "Set Active"}
+                            {cls.is_active ? "Set Inactive" : "Set Active"}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleAssignTeacher(cls)}
@@ -231,10 +261,14 @@ const Classes = () => {
         cls={selectedClass}
         open={isTeacherModalOpen}
         onOpenChange={setIsTeacherModalOpen}
-        teachers={teachersList}
+        teachers={[]}
         onSave={(updatedClass) => {
-          setClasses((prev) =>
-            prev.map((c) => (c.id === updatedClass.id ? updatedClass : c))
+          updateSection.mutate(
+            { id: updatedClass.id, data: { teacher: updatedClass.teacher } },
+            {
+              onSuccess: () => toast.success("Teacher assigned"),
+              onError: (err) => toast.error(err.message),
+            }
           );
         }}
       />

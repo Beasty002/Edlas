@@ -22,6 +22,7 @@ export default function Login() {
   const auth = useContext(AuthContext);
   const location = useLocation();
   const from = location.state?.from?.pathname;
+
   useEffect(() => {
     if (localStorage.theme === "dark") {
       document.documentElement.classList.add("dark");
@@ -46,11 +47,13 @@ export default function Login() {
       } catch (error) {}
     }
   };
+
   useEffect(() => {
     if (auth.isAuthenticated) {
       navigate(from, { replace: true });
     }
   }, [auth.isAuthenticated, from, navigate]);
+
   return (
     <div className="flex h-screen">
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-700 to-indigo-600 text-white items-center justify-center p-8">

@@ -25,116 +25,141 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Search, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
-import {
-  classSubjects as initialClassSubjects,
-  subjectMaster,
-  allClasses,
-  getSubjectName,
-} from "@/data/staticData";
+import { useSubjects, useClassrooms, useCreateSubject, useUpdateSubject, useDeleteSubject } from "@/api/hooks";
+import { toast } from "sonner";
 
 const Subjects = () => {
-  const [classSubjects, setClassSubjects] = useState(initialClassSubjects);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
-  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedClassroom, setSelectedClassroom] = useState("");
   const [formData, setFormData] = useState({
-    subjectId: "",
     code: "",
-    fullMarks: 100,
-    passMarks: 40,
-    theory: 70,
-    practical: 30,
-    optional: false,
+    full_marks: 100,
+    pass_marks: 40,
+    theory_marks: 70,
+    practical_marks: 30,
+    is_optional: false,
   });
 
-  const filteredSubjects = Object.entries(classSubjects).reduce(
-    (acc, [cls, subs]) => {
-      const filtered = subs.filter((s) => {
-        const subjectName = getSubjectName(s.subjectId);
-        return (
-          subjectName.toLowerCase().includes(search.toLowerCase()) ||
-          s.code.toLowerCase().includes(search.toLowerCase())
-        );
-      });
-      if (filtered.length > 0 && (classFilter === "all" || classFilter === cls)) {
-        acc[cls] = filtered;
-      }
-      return acc;
-    },
-    {}
-  );
+  const { data: subjectsData, isLoading, error, refetch } = useSubjects({ page_size: 100 });
+  const { data: classroomsData } = useClassrooms({ page_size: 100 });
+  const createSubject = useCreateSubject();
+  const updateSubject = useUpdateSubject();
+  const deleteSubject = useDeleteSubject();
 
-  const handleOpenDialog = (cls = null, subject = null) => {
+  const subjects = subjectsData?.results || [];
+  const classrooms = classroomsData?.results || [];
+
+  const filteredSubjects = subjects.filter((s) => {
+    const matchesSearch =
+      s.code?.toLowerCase().includes(search.toLowerCase());
+    const matchesClass = classFilter === "all" || s.classroom === parseInt(classFilter);
+    return matchesSearch && matchesClass;
+  });
+
+  const groupedByClassroom = filteredSubjects.reduce((acc, subject) => {
+    const classroom = classrooms.find((c) => c.id === subject.classroom);
+    const classroomName = classroom?.name || "Unknown";
+    if (!acc[classroomName]) acc[classroomName] = [];
+    acc[classroomName].push(subject);
+    return acc;
+  }, {});
+
+  const handleOpenDialog = (subject = null) => {
     if (subject) {
-      setEditingSubject({ ...subject, class: cls });
-      setSelectedClass(cls);
+      setEditingSubject(subject);
+      setSelectedClassroom(subject.classroom?.toString() || "");
       setFormData({
-        subjectId: subject.subjectId.toString(),
-        code: subject.code,
-        fullMarks: subject.fullMarks,
-        passMarks: subject.passMarks,
-        theory: subject.theory,
-        practical: subject.practical,
-        optional: subject.optional,
+        code: subject.code || "",
+        full_marks: subject.full_marks || 100,
+        pass_marks: subject.pass_marks || 40,
+        theory_marks: subject.theory_marks || 70,
+        practical_marks: subject.practical_marks || 30,
+        is_optional: subject.is_optional || false,
       });
     } else {
       setEditingSubject(null);
-      setSelectedClass(cls || "9");
+      setSelectedClassroom(classrooms[0]?.id?.toString() || "");
       setFormData({
-        subjectId: "",
         code: "",
-        fullMarks: 100,
-        passMarks: 40,
-        theory: 70,
-        practical: 30,
-        optional: false,
+        full_marks: 100,
+        pass_marks: 40,
+        theory_marks: 70,
+        practical_marks: 30,
+        is_optional: false,
       });
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (!formData.subjectId || !formData.code || !selectedClass) return;
+    if (!formData.code || !selectedClassroom) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
-    const newSubject = {
-      subjectId: parseInt(formData.subjectId),
+    const payload = {
       code: formData.code,
-      fullMarks: parseInt(formData.fullMarks),
-      passMarks: parseInt(formData.passMarks),
-      theory: parseInt(formData.theory),
-      practical: parseInt(formData.practical),
-      optional: formData.optional,
+      classroom: parseInt(selectedClassroom),
+      full_marks: parseInt(formData.full_marks),
+      pass_marks: parseInt(formData.pass_marks),
+      theory_marks: parseInt(formData.theory_marks),
+      practical_marks: parseInt(formData.practical_marks),
+      is_optional: formData.is_optional,
     };
 
     if (editingSubject) {
-      setClassSubjects((prev) => ({
-        ...prev,
-        [selectedClass]: prev[selectedClass].map((s) =>
-          s.id === editingSubject.id ? { ...s, ...newSubject } : s
-        ),
-      }));
+      updateSubject.mutate(
+        { id: editingSubject.id, data: payload },
+        {
+          onSuccess: () => {
+            toast.success("Subject updated");
+            setIsDialogOpen(false);
+          },
+          onError: (err) => toast.error(err.message),
+        }
+      );
     } else {
-      const allIds = Object.values(classSubjects).flat().map((s) => s.id);
-      const newId = Math.max(...allIds, 0) + 1;
-      setClassSubjects((prev) => ({
-        ...prev,
-        [selectedClass]: [...(prev[selectedClass] || []), { id: newId, ...newSubject }],
-      }));
+      createSubject.mutate(payload, {
+        onSuccess: () => {
+          toast.success("Subject created");
+          setIsDialogOpen(false);
+        },
+        onError: (err) => toast.error(err.message),
+      });
     }
-    setIsDialogOpen(false);
   };
 
-  const handleDelete = (cls, id) => {
-    setClassSubjects((prev) => ({
-      ...prev,
-      [cls]: prev[cls].filter((s) => s.id !== id),
-    }));
+  const handleDelete = (id) => {
+    deleteSubject.mutate(id, {
+      onSuccess: () => toast.success("Subject deleted"),
+      onError: (err) => toast.error(err.message),
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-red-500">
+        <p>{error.message}</p>
+        <button onClick={() => refetch()} className="mt-4 px-4 py-2 bg-primary text-white rounded">
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 w-full">
@@ -147,7 +172,7 @@ const Subjects = () => {
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search by subject or code..."
+            placeholder="Search by subject code..."
             className="pl-10 w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -160,9 +185,9 @@ const Subjects = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
-              {allClasses.map((c) => (
-                <SelectItem key={c} value={c}>
-                  Class {c}
+              {classrooms.map((c) => (
+                <SelectItem key={c.id} value={c.id.toString()}>
+                  Class {c.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -183,7 +208,6 @@ const Subjects = () => {
             <TableRow className="bg-gray-100 dark:bg-gray-800">
               <TableHead className="w-20">Class</TableHead>
               <TableHead className="w-28">Code</TableHead>
-              <TableHead>Subject</TableHead>
               <TableHead className="w-20 text-center">Full</TableHead>
               <TableHead className="w-20 text-center">Pass</TableHead>
               <TableHead className="w-20 text-center">Theory</TableHead>
@@ -192,18 +216,18 @@ const Subjects = () => {
               <TableHead className="w-24 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
-          {Object.entries(filteredSubjects).length === 0 ? (
+          {Object.entries(groupedByClassroom).length === 0 ? (
             <TableBody>
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell colSpan={8}>
                   <DataNotFound item="subjects" />
                 </TableCell>
               </TableRow>
             </TableBody>
           ) : (
             <TableBody>
-              {Object.entries(filteredSubjects).map(([cls, subjects]) =>
-                subjects.map((subject, index) => (
+              {Object.entries(groupedByClassroom).map(([cls, subjectsList]) =>
+                subjectsList.map((subject, index) => (
                   <TableRow key={subject.id}>
                     <TableCell>
                       {index === 0 && (
@@ -213,29 +237,26 @@ const Subjects = () => {
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-sm">{subject.code}</TableCell>
-                    <TableCell className="font-medium">
-                      {getSubjectName(subject.subjectId)}
-                    </TableCell>
-                    <TableCell className="text-center">{subject.fullMarks}</TableCell>
-                    <TableCell className="text-center">{subject.passMarks}</TableCell>
-                    <TableCell className="text-center">{subject.theory}</TableCell>
-                    <TableCell className="text-center">{subject.practical}</TableCell>
+                    <TableCell className="text-center">{subject.full_marks}</TableCell>
+                    <TableCell className="text-center">{subject.pass_marks}</TableCell>
+                    <TableCell className="text-center">{subject.theory_marks}</TableCell>
+                    <TableCell className="text-center">{subject.practical_marks}</TableCell>
                     <TableCell className="text-center">
-                      {subject.optional ? "Yes" : "No"}
+                      {subject.is_optional ? "Yes" : "No"}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleOpenDialog(cls, subject)}
+                          onClick={() => handleOpenDialog(subject)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(cls, subject.id)}
+                          onClick={() => handleDelete(subject.id)}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -254,7 +275,7 @@ const Subjects = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {editingSubject ? "Edit Class Subject" : "Add Subject to Class"}
+              {editingSubject ? "Edit Subject" : "Add Subject to Class"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -262,65 +283,47 @@ const Subjects = () => {
               <div className="grid gap-2">
                 <Label>Class <span className="text-red-500">*</span></Label>
                 <Select
-                  value={selectedClass}
-                  onValueChange={setSelectedClass}
+                  value={selectedClassroom}
+                  onValueChange={setSelectedClassroom}
                   disabled={!!editingSubject}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select class" />
                   </SelectTrigger>
                   <SelectContent>
-                    {allClasses.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        Class {c}
+                    {classrooms.map((c) => (
+                      <SelectItem key={c.id} value={c.id.toString()}>
+                        Class {c.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Subject <span className="text-red-500">*</span></Label>
-                <Select
-                  value={formData.subjectId}
-                  onValueChange={(v) => setFormData({ ...formData, subjectId: v })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjectMaster.map((s) => (
-                      <SelectItem key={s.id} value={s.id.toString()}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Subject Code <span className="text-red-500">*</span></Label>
+                <Input
+                  className="w-full"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  placeholder="e.g., MATH-10"
+                />
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>Subject Code <span className="text-red-500">*</span></Label>
-              <Input
-                className="w-full"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                placeholder="e.g., MATH-10"
-              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Full Marks</Label>
                 <Input
                   type="number"
-                  value={formData.fullMarks}
-                  onChange={(e) => setFormData({ ...formData, fullMarks: e.target.value })}
+                  value={formData.full_marks}
+                  onChange={(e) => setFormData({ ...formData, full_marks: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
                 <Label>Pass Marks</Label>
                 <Input
                   type="number"
-                  value={formData.passMarks}
-                  onChange={(e) => setFormData({ ...formData, passMarks: e.target.value })}
+                  value={formData.pass_marks}
+                  onChange={(e) => setFormData({ ...formData, pass_marks: e.target.value })}
                 />
               </div>
             </div>
@@ -329,16 +332,16 @@ const Subjects = () => {
                 <Label>Theory Marks</Label>
                 <Input
                   type="number"
-                  value={formData.theory}
-                  onChange={(e) => setFormData({ ...formData, theory: e.target.value })}
+                  value={formData.theory_marks}
+                  onChange={(e) => setFormData({ ...formData, theory_marks: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
                 <Label>Practical Marks</Label>
                 <Input
                   type="number"
-                  value={formData.practical}
-                  onChange={(e) => setFormData({ ...formData, practical: e.target.value })}
+                  value={formData.practical_marks}
+                  onChange={(e) => setFormData({ ...formData, practical_marks: e.target.value })}
                 />
               </div>
             </div>
@@ -346,8 +349,8 @@ const Subjects = () => {
               <input
                 type="checkbox"
                 id="optional"
-                checked={formData.optional}
-                onChange={(e) => setFormData({ ...formData, optional: e.target.checked })}
+                checked={formData.is_optional}
+                onChange={(e) => setFormData({ ...formData, is_optional: e.target.checked })}
               />
               <Label htmlFor="optional">Optional Subject</Label>
             </div>
@@ -356,7 +359,10 @@ const Subjects = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={createSubject.isPending || updateSubject.isPending}>
+              {(createSubject.isPending || updateSubject.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {editingSubject ? "Save Changes" : "Add Subject"}
             </Button>
           </DialogFooter>

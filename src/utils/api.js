@@ -1,22 +1,29 @@
-import { mockUsers } from "@/data/staticData";
+import { authAPI } from "@/api/api";
 
 export const login = async (email, password) => {
-  const user = mockUsers[email];
+  const response = await authAPI.login(email, password);
   
-  if (!user || user.password !== password) {
-    throw { response: { data: { detail: "Invalid email or password" } } };
+  if (!response.ok) {
+    throw { response: { data: response.data } };
   }
 
-  return {
-    user: {
-      full_name: user.full_name,
-      email: user.email,
-      user_type: user.user_type,
-      phone: user.phone
-    },
-    tokens: {
-      access: "mock_access_token",
-      refresh: "mock_refresh_token"
-    }
-  };
+  localStorage.setItem("access-token", response.data.tokens.access);
+  localStorage.setItem("refresh-token", response.data.tokens.refresh);
+
+  return response.data;
+};
+
+export const logout = async () => {
+  const response = await authAPI.logout();
+  localStorage.removeItem("access-token");
+  localStorage.removeItem("refresh-token");
+  return response;
+};
+
+export const whoami = async () => {
+  const response = await authAPI.whoami();
+  if (!response.ok) {
+    throw { response: { data: response.data } };
+  }
+  return response.data;
 };

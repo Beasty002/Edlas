@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,55 +13,56 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Edit, MoreVertical, View } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UpdateStudentForm from "./UpdateStudentForm";
 import TableActionButton from "@/components/reusable/TableActionButton";
 import { useNavigate } from "react-router-dom";
-
-const initialStudents = [
-  {
-    id: "#stu-1",
-    name: "John Doe",
-    rollNo: "12A",
-    studentClass: "10",
-    section: "A",
-    parentContact: "9841XXXXXX",
-    email: "john@example.com",
-    admissionDate: "2021-04-12",
-    status: "active",
-    avatar: "",
-  },
-  {
-    id: "#stu-2",
-    name: "Jane Smith",
-    rollNo: "7B",
-    studentClass: "9",
-    section: "B",
-    parentContact: "9841YYYYYY",
-    email: "jane@example.com",
-    admissionDate: "2020-03-18",
-    status: "graduated",
-    avatar: "",
-  },
-];
+import { useStudents, useUpdateStudentStatus } from "@/api/hooks";
+import { View, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const StudentListTable = () => {
-  const [students, setStudents] = useState(initialStudents);
-
   const navigate = useNavigate();
+  const { data, isLoading, error, refetch } = useStudents({ page: 1, page_size: 50 });
+  const updateStatus = useUpdateStudentStatus();
 
-  const handleAction = (studentId, action) => {
-    if (action === "edit") console.log("Edit", studentId);
-    else if (action === "view") navigate("/students/StudentDetail");
-    else {
-      setStudents((prev) =>
-        prev.map((s) => (s.id === studentId ? { ...s, status: action } : s))
+  const students = data?.results || [];
+
+  const handleAction = async (studentId, action) => {
+    if (action === "view") {
+      navigate(`/students/${studentId}`);
+    } else if (["active", "graduated", "transferred", "expelled"].includes(action)) {
+      updateStatus.mutate(
+        { id: studentId, status: action },
+        {
+          onSuccess: () => toast.success("Status updated successfully"),
+          onError: (err) => toast.error(err.message),
+        }
       );
-      console.log("Status changed for", studentId, "to", action);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-red-500">
+        <p>{error.message}</p>
+        <button 
+          onClick={() => refetch()}
+          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -97,26 +97,37 @@ const StudentListTable = () => {
           <TableBody>
             {students.map((student) => (
               <TableRow key={student.id} className="group">
-                <TableCell>{student.id}</TableCell>
+                <TableCell>#{student.id}</TableCell>
                 <TableCell>
                   <Avatar className="h-8 w-8">
-                    {student.avatar ? (
-                      <AvatarImage src={student.avatar} alt={student.name} />
+                    {student.avatar_url ? (
+                      <AvatarImage src={student.avatar_url} alt={student.full_name} />
                     ) : (
-                      <AvatarFallback>{student.name[0]}</AvatarFallback>
+                      <AvatarFallback>
+                        {student.first_name?.[0] || "S"}
+                      </AvatarFallback>
                     )}
                   </Avatar>
                 </TableCell>
-                <TableCell>{student.name}</TableCell>
-                <TableCell>{student.rollNo}</TableCell>
+                <TableCell>{student.full_name}</TableCell>
+                <TableCell>{student.roll_no || "-"}</TableCell>
                 <TableCell>
-                  {student.studentClass}
-                  {student.section}
+                  {student.student_class} {student.section}
                 </TableCell>
-                <TableCell>{student.parentContact}</TableCell>
-                <TableCell>{student.email}</TableCell>
-                <TableCell>{student.admissionDate}</TableCell>
-                <TableCell>{student.status}</TableCell>
+                <TableCell>{student.parent_contact || "-"}</TableCell>
+                <TableCell>{student.email || "-"}</TableCell>
+                <TableCell>{student.admission_date}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    student.status === "active" 
+                      ? "bg-green-100 text-green-800" 
+                      : student.status === "graduated"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}>
+                    {student.status}
+                  </span>
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -124,18 +135,13 @@ const StudentListTable = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      {/* <DropdownMenuItem
-                        onClick={() => handleAction(student.id, "edit")}
-                      >
-                        <Edit /> Edit
-                      </DropdownMenuItem> */}
                       <DropdownMenuItem asChild>
                         <UpdateStudentForm student={student} />
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleAction(student.id, "view")}
                       >
-                        <View /> View Details
+                        <View className="mr-2 h-4 w-4" /> View Details
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

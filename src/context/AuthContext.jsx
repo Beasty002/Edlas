@@ -34,7 +34,9 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
     setTokens(null);
     setUser(null);
-    toast.error("Logged out successfully!");
+    localStorage.removeItem("access-token");
+    localStorage.removeItem("refresh-token");
+    toast.success("Logged out successfully!");
   };
 
   return (
