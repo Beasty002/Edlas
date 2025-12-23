@@ -11,10 +11,4 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - NODE_OPTIONS=--max-old-space-size=2048
-      - VITE_BASE_URL=https://edlas.lolskins.gg/api/
-    deploy:
-      resources:
-        limits:
-          memory: 4g
     restart: always
