@@ -1,30 +1,36 @@
-FROM node:20-alpine
+# ---------- Build stage ----------
+FROM node:20-alpine AS builder
 
 ARG PORT=3000
 ENV PORT=${PORT}
 ENV VITE_BASE_URL=https://edlas.lolskins.gg/api/
-ENV NODE_OPTIONS="--max-old-space-size=512"
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
-
 # Install dependencies
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Install serve globally
-RUN npm install -g serve
-
-# Copy application files
+# Copy source files and build
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Expose the desired port
+# ---------- Production stage ----------
+FROM node:20-alpine
+
+ARG PORT=3000
+ENV PORT=${PORT}
+
+WORKDIR /app
+
+# Install serve to serve static files
+RUN npm install -g serve
+
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+
 EXPOSE $PORT
 
-# Command to serve the build folder
+# Start the app
 CMD ["sh", "-c", "serve -s dist -l $PORT"]
