@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         PORT: 3000
+        VITE_BASE_URL: ${VITE_BASE_URL:-https://edlas.lolskins.gg/api}
     ports:
       - "3000:3000"
     environment:

@@ -2,8 +2,9 @@
 FROM node:20-alpine AS builder
 
 ARG PORT=3000
+ARG VITE_BASE_URL
 ENV PORT=${PORT}
-ENV VITE_BASE_URL=https://edlas.lolskins.gg/api/
+ENV VITE_BASE_URL=${VITE_BASE_URL}
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 WORKDIR /app
