@@ -1,6 +1,41 @@
 import axios from 'axios';
+import { getAccessToken, clearAuth } from '@/utils/tokenStorage';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://edlas.lolskins.gg/api';
+
+const axiosInstance = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    },
+});
+
+axiosInstance.interceptors.request.use(
+    (config) => {
+        if (config.skipAuth) {
+            return config;
+        }
+
+        const token = getAccessToken();
+        if (token && typeof token === 'string' && token.trim() !== '') {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401 && !error.config?.skipAuth) {
+            clearAuth();
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 const baseRequest = async ({
     url,
@@ -11,30 +46,21 @@ const baseRequest = async ({
     signal,
     skipAuth = false,
 }) => {
-    const headers = {
-        Accept: 'application/json',
-    };
-
-    if (body && contentType) {
-        headers['Content-Type'] = contentType;
-    }
-
-    const token = localStorage.getItem('access-token');
-    if (token && !skipAuth) {
-        headers.Authorization = `Bearer ${token}`;
-    }
-
     const requestConfig = {
         method,
-        url: `${BASE_URL}${url}`,
-        headers,
+        url,
         data: body,
         params,
         signal,
+        skipAuth,
     };
 
+    if (body && contentType) {
+        requestConfig.headers = { 'Content-Type': contentType };
+    }
+
     try {
-        const response = await axios(requestConfig);
+        const response = await axiosInstance(requestConfig);
         return {
             data: response.data,
             ok: response.status >= 200 && response.status < 300,
@@ -68,6 +94,7 @@ export const authAPI = {
             url: '/system/auth/google-login/',
             method: 'POST',
             body: { id_token: idToken },
+            skipAuth: true,
         }),
 
     register: (userData) =>
@@ -75,6 +102,7 @@ export const authAPI = {
             url: '/system/auth/register/user/',
             method: 'POST',
             body: userData,
+            skipAuth: true,
         }),
 
     logout: () =>
@@ -94,6 +122,7 @@ export const authAPI = {
             url: '/system/auth/verify-email/',
             method: 'POST',
             body: { email, verification_code: verificationCode },
+            skipAuth: true,
         }),
 
     resendVerification: (email) =>
@@ -101,6 +130,7 @@ export const authAPI = {
             url: '/system/auth/resend-verification/',
             method: 'POST',
             body: { email },
+            skipAuth: true,
         }),
 };
 

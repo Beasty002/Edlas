@@ -1,6 +1,14 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { edlas_api } from "..";
+import { authAPI } from "@/api/api";
+import {
+  getAccessToken,
+  setAccessToken,
+  getUser as getStoredUser,
+  setUser as storeUser,
+  clearAuth,
+  hasValidAuth,
+} from "@/utils/tokenStorage";
 
 export const AuthContext = createContext();
 
@@ -16,34 +24,69 @@ const getFullName = (userData) => {
   return parts.length > 0 ? parts.join(" ") : userData.email?.split("@")[0] || "User";
 };
 
+const saveToStorage = (accessToken, user) => {
+  setAccessToken(accessToken);
+  storeUser(user);
+};
+
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [tokens, setTokens] = useState(null);
+  const [accessToken, setAccessTokenState] = useState(null);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const performLogout = useCallback(() => {
+    clearAuth();
+    setIsAuthenticated(false);
+    setAccessTokenState(null);
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    const initAuth = () => {
+      if (hasValidAuth()) {
+        const storedToken = getAccessToken();
+        const storedUser = getStoredUser();
+
+        setAccessTokenState(storedToken);
+        setUser(storedUser);
+        setIsAuthenticated(true);
+      }
+      setIsLoading(false);
+    };
+
+    initAuth();
+  }, []);
 
   const login = async (email, password) => {
     const toastId = toast.loading("Logging in...");
 
     try {
-      const data = await edlas_api.login(email, password);
-      
+      const response = await authAPI.login(email, password);
+
+      if (!response.ok) {
+        throw { response: { data: response.data } };
+      }
+
+      const data = response.data;
       const userType = getUserType(data.user);
       const fullName = getFullName(data.user);
-      
+
       const processedUser = {
         ...data.user,
         user_type: userType,
         full_name: fullName,
       };
 
+      saveToStorage(data.tokens.access, processedUser);
       setIsAuthenticated(true);
-      setTokens(data.tokens);
+      setAccessTokenState(data.tokens.access);
       setUser(processedUser);
-      
+
       setTimeout(() => {
         toast.success(`Welcome Back, ${fullName}`, { id: toastId });
       }, 300);
-      
+
       return { ...data, user: processedUser };
     } catch (error) {
       toast.error(
@@ -55,19 +98,35 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    setTokens(null);
-    setUser(null);
-    localStorage.removeItem("access-token");
-    localStorage.removeItem("refresh-token");
+    performLogout();
     toast.success("Logged out successfully!");
+  };
+
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.whoami();
+      if (response.ok) {
+        const userType = getUserType(response.data);
+        const fullName = getFullName(response.data);
+        const processedUser = {
+          ...response.data,
+          user_type: userType,
+          full_name: fullName,
+        };
+        setUser(processedUser);
+        storeUser(processedUser);
+      }
+    } catch {
+      logout();
+    }
   };
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, tokens, user, login, logout }}
+      value={{ isAuthenticated, accessToken, user, login, logout, refreshUser, isLoading }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
+

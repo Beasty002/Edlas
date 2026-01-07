@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -16,17 +17,25 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UpdateStudentForm from "./UpdateStudentForm";
 import TableActionButton from "@/components/reusable/TableActionButton";
+import DataNotFound from "@/components/reusable/DataNotFound";
+import { TableSkeleton } from "@/components/reusable/TableSkeleton";
 import { useNavigate } from "react-router-dom";
 import { useStudents, useUpdateStudentStatus } from "@/api/hooks";
-import { View, Loader2 } from "lucide-react";
+import { View } from "lucide-react";
 import { toast } from "sonner";
 
 const StudentListTable = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error, refetch } = useStudents({ page: 1, page_size: 50 });
+  const { data, isLoading, error } = useStudents({ page: 1, page_size: 50 });
   const updateStatus = useUpdateStudentStatus();
 
   const students = data?.results || [];
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to fetch students");
+    }
+  }, [error]);
 
   const handleAction = async (studentId, action) => {
     if (action === "view") {
@@ -43,25 +52,7 @@ const StudentListTable = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-red-500">
-        <p>{error.message}</p>
-        <button 
-          onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-        >
-          Retry
-        </button>
-      </div>
-    );
+    return <TableSkeleton rows={8} columns={10} />;
   }
 
   return (
@@ -82,20 +73,15 @@ const StudentListTable = () => {
           </TableRow>
         </TableHeader>
 
-        {students.length === 0 ? (
-          <TableBody>
+        <TableBody>
+          {students.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={10}
-                className="p-6 text-center text-gray-500 dark:text-gray-400"
-              >
-                No students found
+              <TableCell colSpan={10} className="p-6">
+                <DataNotFound item="students" />
               </TableCell>
             </TableRow>
-          </TableBody>
-        ) : (
-          <TableBody>
-            {students.map((student) => (
+          ) : (
+            students.map((student) => (
               <TableRow key={student.id} className="group">
                 <TableCell>#{student.id}</TableCell>
                 <TableCell>
@@ -147,9 +133,9 @@ const StudentListTable = () => {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        )}
+            ))
+          )}
+        </TableBody>
       </Table>
     </div>
   );

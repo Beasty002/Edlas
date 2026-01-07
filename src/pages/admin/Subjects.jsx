@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
+import { TableSkeleton } from "@/components/reusable/TableSkeleton";
 import { useSubjects, useClassrooms, useCreateSubject, useUpdateSubject, useDeleteSubject } from "@/api/hooks";
 import { toast } from "sonner";
 
@@ -46,7 +47,7 @@ const Subjects = () => {
     is_optional: false,
   });
 
-  const { data: subjectsData, isLoading, error, refetch } = useSubjects({ page_size: 100 });
+  const { data: subjectsData, isLoading, error } = useSubjects({ page_size: 100 });
   const { data: classroomsData } = useClassrooms({ page_size: 100 });
   const createSubject = useCreateSubject();
   const updateSubject = useUpdateSubject();
@@ -55,9 +56,14 @@ const Subjects = () => {
   const subjects = subjectsData?.results || [];
   const classrooms = classroomsData?.results || [];
 
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to fetch subjects");
+    }
+  }, [error]);
+
   const filteredSubjects = subjects.filter((s) => {
-    const matchesSearch =
-      s.code?.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = s.code?.toLowerCase().includes(search.toLowerCase());
     const matchesClass = classFilter === "all" || s.classroom === parseInt(classFilter);
     return matchesSearch && matchesClass;
   });
@@ -142,25 +148,6 @@ const Subjects = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-red-500">
-        <p>{error.message}</p>
-        <button onClick={() => refetch()} className="mt-4 px-4 py-2 bg-primary text-white rounded">
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 w-full">
       <PageHeader
@@ -202,74 +189,76 @@ const Subjects = () => {
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead className="w-20">Class</TableHead>
-              <TableHead className="w-28">Code</TableHead>
-              <TableHead className="w-20 text-center">Full</TableHead>
-              <TableHead className="w-20 text-center">Pass</TableHead>
-              <TableHead className="w-20 text-center">Theory</TableHead>
-              <TableHead className="w-20 text-center">Practical</TableHead>
-              <TableHead className="w-20 text-center">Optional</TableHead>
-              <TableHead className="w-24 text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          {Object.entries(groupedByClassroom).length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={8}>
-                  <DataNotFound item="subjects" />
-                </TableCell>
+      {isLoading ? (
+        <TableSkeleton rows={6} columns={8} />
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100 dark:bg-gray-800">
+                <TableHead className="w-20">Class</TableHead>
+                <TableHead className="w-28">Code</TableHead>
+                <TableHead className="w-20 text-center">Full</TableHead>
+                <TableHead className="w-20 text-center">Pass</TableHead>
+                <TableHead className="w-20 text-center">Theory</TableHead>
+                <TableHead className="w-20 text-center">Practical</TableHead>
+                <TableHead className="w-20 text-center">Optional</TableHead>
+                <TableHead className="w-24 text-center">Actions</TableHead>
               </TableRow>
-            </TableBody>
-          ) : (
+            </TableHeader>
             <TableBody>
-              {Object.entries(groupedByClassroom).map(([cls, subjectsList]) =>
-                subjectsList.map((subject, index) => (
-                  <TableRow key={subject.id}>
-                    <TableCell>
-                      {index === 0 && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary">
-                          Class {cls}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{subject.code}</TableCell>
-                    <TableCell className="text-center">{subject.full_marks}</TableCell>
-                    <TableCell className="text-center">{subject.pass_marks}</TableCell>
-                    <TableCell className="text-center">{subject.theory_marks}</TableCell>
-                    <TableCell className="text-center">{subject.practical_marks}</TableCell>
-                    <TableCell className="text-center">
-                      {subject.is_optional ? "Yes" : "No"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(subject.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+              {Object.entries(groupedByClassroom).length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <DataNotFound item="subjects" />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                Object.entries(groupedByClassroom).map(([cls, subjectsList]) =>
+                  subjectsList.map((subject, index) => (
+                    <TableRow key={subject.id}>
+                      <TableCell>
+                        {index === 0 && (
+                          <Badge variant="outline" className="bg-primary/10 text-primary">
+                            Class {cls}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{subject.code}</TableCell>
+                      <TableCell className="text-center">{subject.full_marks}</TableCell>
+                      <TableCell className="text-center">{subject.pass_marks}</TableCell>
+                      <TableCell className="text-center">{subject.theory_marks}</TableCell>
+                      <TableCell className="text-center">{subject.practical_marks}</TableCell>
+                      <TableCell className="text-center">
+                        {subject.is_optional ? "Yes" : "No"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDialog(subject)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(subject.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
               )}
             </TableBody>
-          )}
-        </Table>
-      </div>
+          </Table>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">

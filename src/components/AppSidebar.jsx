@@ -41,11 +41,11 @@ import { AuthContext } from "@/context/AuthContext";
 import { rolePermissions } from "@/data/staticData";
 
 const allMenuItems = [
-  { 
+  {
     id: "dashboard",
-    title: "Dashboard", 
-    url: "/", 
-    icon: Home 
+    title: "Dashboard",
+    url: "/",
+    icon: Home
   },
   {
     id: "students",
@@ -54,6 +54,7 @@ const allMenuItems = [
     items: [
       { title: "All Students", url: "/students", icon: Users, roles: ["staff", "superadmin"] },
       { title: "New Enrollment", url: "/students/newEnrollment", icon: PlusCircle, roles: ["superadmin"] },
+      { title: "Placement", url: "/students/placement", icon: UserCheck, roles: ["superadmin"] },
     ],
   },
   {
@@ -83,17 +84,17 @@ const allMenuItems = [
     url: "/my-results",
     icon: FileDigit,
   },
-  { 
+  {
     id: "ai",
-    title: "AI Chat", 
-    url: "/ai", 
-    icon: MessageSquare 
+    title: "AI Chat",
+    url: "/ai",
+    icon: MessageSquare
   },
 ];
 
 const filterMenuByRole = (menu, userType) => {
   const permissions = rolePermissions[userType]?.sidebar || [];
-  
+
   return menu
     .filter(item => permissions.includes(item.id))
     .map(item => {
@@ -112,7 +113,7 @@ const filterMenuByRole = (menu, userType) => {
 export function AppSidebar() {
   const location = useLocation();
   const { user } = useContext(AuthContext);
-  
+
   const userType = user?.user_type || "student";
   const menuItems = filterMenuByRole(allMenuItems, userType);
 

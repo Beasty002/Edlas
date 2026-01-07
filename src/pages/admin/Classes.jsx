@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -22,11 +22,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Edit, Eye, UserX, PlusCircle, Loader2 } from "lucide-react";
+import { Search, Edit, Eye, UserX, PlusCircle } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/reusable/TableSkeleton";
 import AddClassModal from "./components/AddClassModal";
 import AssignTeacherModal from "./components/AssignTeacherModal";
 import { useClassSections, useClassrooms, useUpdateClassSection, useCreateClassSection } from "@/api/hooks";
@@ -39,13 +40,19 @@ const Classes = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
 
-  const { data: sectionsData, isLoading: sectionsLoading, error: sectionsError, refetch } = useClassSections({ page_size: 100 });
+  const { data: sectionsData, isLoading, error } = useClassSections({ page_size: 100 });
   const { data: classroomsData } = useClassrooms({ page_size: 100 });
   const updateSection = useUpdateClassSection();
   const createSection = useCreateClassSection();
 
   const classes = sectionsData?.results || [];
   const classrooms = classroomsData?.results || [];
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to fetch classes");
+    }
+  }, [error]);
 
   const handleAssignTeacher = (cls) => {
     setSelectedClass(cls);
@@ -81,32 +88,8 @@ const Classes = () => {
           onError: (err) => toast.error(err.message),
         }
       );
-    } else {
-      alert(`${action} class ${cls.classroom_name}-${cls.name}`);
     }
   };
-
-  if (sectionsLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (sectionsError) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-red-500">
-        <p>{sectionsError.message}</p>
-        <button
-          onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 w-full">
@@ -169,94 +152,87 @@ const Classes = () => {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead>Class</TableHead>
-              <TableHead>Section</TableHead>
-              <TableHead>Class Teacher</TableHead>
-              <TableHead className="text-center">Total Students</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="w-16 text-center"></TableHead>
-            </TableRow>
-          </TableHeader>
-
-          {filtered.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={6} className="p-6 text-center">
-                  <DataNotFound item="classes" />
-                </TableCell>
+      {isLoading ? (
+        <TableSkeleton rows={6} columns={6} />
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100 dark:bg-gray-800">
+                <TableHead>Class</TableHead>
+                <TableHead>Section</TableHead>
+                <TableHead>Class Teacher</TableHead>
+                <TableHead className="text-center">Total Students</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="w-16 text-center"></TableHead>
               </TableRow>
-            </TableBody>
-          ) : (
+            </TableHeader>
+
             <TableBody>
-              {Object.keys(groupedClasses).map((className) => {
-                const classSections = groupedClasses[className];
-                return classSections.map((cls, idx) => (
-                  <TableRow key={cls.id} className="group">
-                    <TableCell>
-                      {idx === 0 && (
-                        <Badge className="bg-primary/10 text-primary border-primary/20">
-                          Class {cls.classroom_name}
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="p-6">
+                    <DataNotFound item="classes" />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                Object.keys(groupedClasses).map((className) => {
+                  const classSections = groupedClasses[className];
+                  return classSections.map((cls, idx) => (
+                    <TableRow key={cls.id} className="group">
+                      <TableCell>
+                        {idx === 0 && (
+                          <Badge className="bg-primary/10 text-primary border-primary/20">
+                            Class {cls.classroom_name}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-left">{cls.name}</TableCell>
+                      <TableCell>{cls.teacher || "--"}</TableCell>
+                      <TableCell className="text-center">
+                        {cls.total_students || 0}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={cls.is_active ? "default" : "destructive"}>
+                          {cls.is_active ? "Active" : "Inactive"}
                         </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-left">{cls.name}</TableCell>
-                    <TableCell>{cls.teacher || "--"}</TableCell>
-                    <TableCell className="text-center">
-                      {cls.total_students || 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={cls.is_active ? "default" : "destructive"}
-                      >
-                        {cls.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <TableActionButton />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleAction("View", cls)}
-                          >
-                            <Eye className="mr-2 h-4 w-4" /> View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleAction("toggle", cls)}
-                          >
-                            <UserX className="mr-2 h-4 w-4" />
-                            {cls.is_active ? "Set Inactive" : "Set Active"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleAssignTeacher(cls)}
-                          >
-                            {cls.teacher ? (
-                              <>
-                                <Edit className="mr-2 h-4 w-4" /> Reassign
-                                Teacher
-                              </>
-                            ) : (
-                              <>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Assign
-                                Teacher
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ));
-              })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <TableActionButton />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleAction("View", cls)}>
+                              <Eye className="mr-2 h-4 w-4" /> View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAction("toggle", cls)}>
+                              <UserX className="mr-2 h-4 w-4" />
+                              {cls.is_active ? "Set Inactive" : "Set Active"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAssignTeacher(cls)}>
+                              {cls.teacher ? (
+                                <>
+                                  <Edit className="mr-2 h-4 w-4" /> Reassign Teacher
+                                </>
+                              ) : (
+                                <>
+                                  <PlusCircle className="mr-2 h-4 w-4" /> Assign Teacher
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ));
+                })
+              )}
             </TableBody>
-          )}
-        </Table>
-      </div>
+          </Table>
+        </div>
+      )}
+
       <AssignTeacherModal
         cls={selectedClass}
         open={isTeacherModalOpen}

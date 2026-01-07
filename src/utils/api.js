@@ -1,4 +1,5 @@
 import { authAPI } from "@/api/api";
+import { setAccessToken, clearAccessToken } from "@/utils/tokenStorage";
 
 export const login = async (email, password) => {
   const response = await authAPI.login(email, password);
@@ -7,16 +8,14 @@ export const login = async (email, password) => {
     throw { response: { data: response.data } };
   }
 
-  localStorage.setItem("access-token", response.data.tokens.access);
-  localStorage.setItem("refresh-token", response.data.tokens.refresh);
+  setAccessToken(response.data.tokens.access);
 
   return response.data;
 };
 
 export const logout = async () => {
   const response = await authAPI.logout();
-  localStorage.removeItem("access-token");
-  localStorage.removeItem("refresh-token");
+  clearAccessToken();
   return response;
 };
 
@@ -27,3 +26,4 @@ export const whoami = async () => {
   }
   return response.data;
 };
+
