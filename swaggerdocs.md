@@ -219,6 +219,479 @@
         }
       ]
     },
+    "/academics/class-sections/{id}/teacher/": {
+      "patch": {
+        "operationId": "academics_class-sections_assign_teacher",
+        "description": "Assign or reassign a teacher to a class section",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "required": [
+                "teacher_id"
+              ],
+              "type": "object",
+              "properties": {
+                "teacher_id": {
+                  "description": "ID of the teacher to assign",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "teacher_id"
+              ],
+              "type": "object",
+              "properties": {
+                "teacher_id": {
+                  "description": "ID of the teacher to assign",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Class Section.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/academics/class-subjects/": {
+      "get": {
+        "operationId": "academics_class-subjects_list",
+        "description": "List all class subjects grouped by class",
+        "parameters": [
+          {
+            "name": "classroom__name",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_optional",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ClassSubjectList"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "post": {
+        "operationId": "academics_class-subjects_create",
+        "description": "Assign subject to class",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectCreateUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectCreateUpdate"
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": []
+    },
+    "/academics/class-subjects/by_class/{class_name}/": {
+      "get": {
+        "operationId": "academics_class-subjects_by_class",
+        "description": "Get all subjects for a specific class",
+        "parameters": [
+          {
+            "name": "classroom__name",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_optional",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ClassSubjectList"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "class_name",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/academics/class-subjects/teacher_assignments/": {
+      "get": {
+        "operationId": "academics_class-subjects_teacher_assignments",
+        "description": "Get all teacher assignments",
+        "parameters": [
+          {
+            "name": "classroom__name",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_optional",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ClassSubjectList"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": []
+    },
+    "/academics/class-subjects/{id}/": {
+      "get": {
+        "operationId": "academics_class-subjects_read",
+        "description": "ViewSet for Class Subjects (Subject assignments to classes)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectList"
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "put": {
+        "operationId": "academics_class-subjects_update",
+        "description": "Update class subject",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectCreateUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectCreateUpdate"
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "patch": {
+        "operationId": "academics_class-subjects_partial_update",
+        "description": "ViewSet for Class Subjects (Subject assignments to classes)",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectCreateUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectCreateUpdate"
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "delete": {
+        "operationId": "academics_class-subjects_delete",
+        "description": "Remove subject from class",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Subject.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/academics/class-subjects/{id}/assign_teacher/": {
+      "post": {
+        "operationId": "academics_class-subjects_assign_teacher",
+        "description": "Assign teacher to teach this subject in a specific section",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectList"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ClassSubjectList"
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Subject.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
     "/academics/classrooms/": {
       "get": {
         "operationId": "academics_classrooms_list",
@@ -308,6 +781,34 @@
             "description": "",
             "schema": {
               "$ref": "#/definitions/Classroom"
+            }
+          }
+        },
+        "tags": [
+          "academics"
+        ]
+      },
+      "parameters": []
+    },
+    "/academics/classrooms/create_with_sections/": {
+      "post": {
+        "operationId": "academics_classrooms_create_with_sections",
+        "description": "Create a classroom along with its sections in one request.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClassroomSections"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ClassroomSections"
             }
           }
         },
@@ -410,7 +911,7 @@
     "/academics/subjects/": {
       "get": {
         "operationId": "academics_subjects_list",
-        "description": "A simple ViewSet for viewing subjects.",
+        "description": "List all subjects",
         "parameters": [
           {
             "name": "search",
@@ -467,7 +968,7 @@
                 "results": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/Subject"
+                    "$ref": "#/definitions/SubjectMaster"
                   }
                 }
               }
@@ -480,14 +981,14 @@
       },
       "post": {
         "operationId": "academics_subjects_create",
-        "description": "A simple ViewSet for viewing subjects.",
+        "description": "Create new subject",
         "parameters": [
           {
             "name": "data",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         ],
@@ -495,7 +996,7 @@
           "201": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         },
@@ -508,13 +1009,13 @@
     "/academics/subjects/{id}/": {
       "get": {
         "operationId": "academics_subjects_read",
-        "description": "A simple ViewSet for viewing subjects.",
+        "description": "ViewSet for Subject Master (Subject Catalog)",
         "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         },
@@ -524,14 +1025,14 @@
       },
       "put": {
         "operationId": "academics_subjects_update",
-        "description": "A simple ViewSet for viewing subjects.",
+        "description": "Update subject",
         "parameters": [
           {
             "name": "data",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         ],
@@ -539,7 +1040,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         },
@@ -549,14 +1050,14 @@
       },
       "patch": {
         "operationId": "academics_subjects_partial_update",
-        "description": "A simple ViewSet for viewing subjects.",
+        "description": "ViewSet for Subject Master (Subject Catalog)",
         "parameters": [
           {
             "name": "data",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         ],
@@ -564,7 +1065,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/Subject"
+              "$ref": "#/definitions/SubjectMaster"
             }
           }
         },
@@ -574,7 +1075,7 @@
       },
       "delete": {
         "operationId": "academics_subjects_delete",
-        "description": "A simple ViewSet for viewing subjects.",
+        "description": "Delete subject - check if in use first",
         "parameters": [],
         "responses": {
           "204": {
@@ -589,7 +1090,7 @@
         {
           "name": "id",
           "in": "path",
-          "description": "A unique integer value identifying this Subject.",
+          "description": "A unique integer value identifying this Subject Master.",
           "required": true,
           "type": "integer"
         }
@@ -864,6 +1365,359 @@
         ]
       },
       "parameters": []
+    },
+    "/system/staff/": {
+      "get": {
+        "operationId": "system_staff_list",
+        "description": "List all staff with pagination",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_teacher",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/StaffList"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "post": {
+        "operationId": "system_staff_create",
+        "description": "Create new staff member",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StaffCreateUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StaffCreateUpdate"
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "parameters": []
+    },
+    "/system/staff/teachers/active/": {
+      "get": {
+        "operationId": "system_staff_teachers_active_teachers",
+        "description": "Get list of active teachers for dropdowns",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_teacher",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ActiveTeacher"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "parameters": []
+    },
+    "/system/staff/{id}/": {
+      "get": {
+        "operationId": "system_staff_read",
+        "description": "Get staff details",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StaffDetail"
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "put": {
+        "operationId": "system_staff_update",
+        "description": "Update staff (full update)",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StaffCreateUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StaffCreateUpdate"
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "patch": {
+        "operationId": "system_staff_partial_update",
+        "description": "Partial update staff",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StaffCreateUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StaffCreateUpdate"
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "delete": {
+        "operationId": "system_staff_delete",
+        "description": "Delete staff",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this User.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/system/staff/{id}/status/": {
+      "patch": {
+        "operationId": "system_staff_toggle_status",
+        "description": "Toggle staff status (active/inactive)",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StaffStatusUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StaffStatusUpdate"
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this User.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
     },
     "/system/students/": {
       "get": {
@@ -1315,10 +2169,7 @@
         }
       }
     },
-    "Classroom": {
-      "required": [
-        "name"
-      ],
+    "ClassSubjectList": {
       "type": "object",
       "properties": {
         "id": {
@@ -1326,56 +2177,73 @@
           "type": "integer",
           "readOnly": true
         },
-        "is_active": {
-          "title": "Is active",
-          "type": "boolean"
-        },
-        "created_at": {
-          "title": "Created at",
-          "type": "string",
-          "format": "date-time",
+        "subject_id": {
+          "title": "Subject id",
+          "type": "integer",
           "readOnly": true
         },
-        "updated_at": {
-          "title": "Updated at",
+        "subject_name": {
+          "title": "Subject name",
           "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        },
-        "name": {
-          "title": "Classroom Name",
-          "type": "string",
-          "maxLength": 10,
+          "readOnly": true,
           "minLength": 1
+        },
+        "class_name": {
+          "title": "Class name",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "code": {
+          "title": "Subject Code",
+          "type": "string",
+          "maxLength": 20,
+          "x-nullable": true
+        },
+        "full_marks": {
+          "title": "Full Marks",
+          "type": "integer",
+          "maximum": 2147483647,
+          "minimum": -2147483648
+        },
+        "pass_marks": {
+          "title": "Pass Marks",
+          "type": "integer",
+          "maximum": 2147483647,
+          "minimum": -2147483648
+        },
+        "theory": {
+          "title": "Theory",
+          "type": "integer",
+          "readOnly": true
+        },
+        "practical": {
+          "title": "Practical",
+          "type": "integer",
+          "readOnly": true
+        },
+        "optional": {
+          "title": "Optional",
+          "type": "boolean",
+          "readOnly": true
         }
       }
     },
-    "Subject": {
+    "ClassSubjectCreateUpdate": {
       "required": [
-        "classroom"
+        "class_name",
+        "subject_id"
       ],
       "type": "object",
       "properties": {
-        "id": {
-          "title": "ID",
-          "type": "integer",
-          "readOnly": true
-        },
-        "is_active": {
-          "title": "Is active",
-          "type": "boolean"
-        },
-        "created_at": {
-          "title": "Created at",
+        "class_name": {
+          "title": "Class name",
           "type": "string",
-          "format": "date-time",
-          "readOnly": true
+          "minLength": 1
         },
-        "updated_at": {
-          "title": "Updated at",
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
+        "subject_id": {
+          "title": "Subject id",
+          "type": "integer"
         },
         "code": {
           "title": "Subject Code",
@@ -1410,15 +2278,114 @@
         "is_optional": {
           "title": "Is Optional",
           "type": "boolean"
+        }
+      }
+    },
+    "Classroom": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
         },
-        "subject_master": {
-          "title": "Subject master",
+        "sections": {
+          "title": "Sections",
+          "type": "string",
+          "readOnly": true
+        },
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean"
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updated_at": {
+          "title": "Updated at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Classroom Name",
+          "type": "string",
+          "maxLength": 10,
+          "minLength": 1
+        }
+      }
+    },
+    "ClassroomSections": {
+      "required": [
+        "classroom_name",
+        "section_names"
+      ],
+      "type": "object",
+      "properties": {
+        "classroom_name": {
+          "title": "Classroom name",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "section_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          }
+        },
+        "teacher": {
+          "title": "Teacher",
           "type": "integer",
           "x-nullable": true
+        }
+      }
+    },
+    "SubjectMaster": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
         },
-        "classroom": {
-          "title": "Classroom",
-          "type": "integer"
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean"
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updated_at": {
+          "title": "Updated at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Subject Name",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "x-nullable": true
         }
       }
     },
@@ -1831,6 +2798,541 @@
         },
         "data": {
           "$ref": "#/definitions/UserBaseDetail"
+        }
+      }
+    },
+    "StaffList": {
+      "required": [
+        "email"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "readOnly": true
+        },
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "middle_name": {
+          "title": "Middle name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "phone": {
+          "title": "Phone",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "dob": {
+          "title": "Dob",
+          "type": "string",
+          "format": "date",
+          "x-nullable": true
+        },
+        "gender": {
+          "title": "Gender",
+          "type": "string",
+          "enum": [
+            "male",
+            "female",
+            "other"
+          ],
+          "x-nullable": true
+        },
+        "address": {
+          "title": "Address",
+          "type": "string",
+          "x-nullable": true
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "Teacher",
+            "Admin",
+            "Accountant",
+            "Librarian",
+            "Coordinator"
+          ]
+        },
+        "subjects": {
+          "title": "Subjects",
+          "type": "object"
+        },
+        "subject_names": {
+          "title": "Subject names",
+          "type": "string",
+          "readOnly": true
+        },
+        "grades": {
+          "title": "Grades",
+          "type": "object"
+        },
+        "qualification": {
+          "title": "Qualification",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "experience": {
+          "title": "Experience",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "specialization": {
+          "title": "Specialization",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "previous_school": {
+          "title": "Previous school",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "readOnly": true
+        },
+        "avatar_url": {
+          "title": "Avatar url",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "StaffCreateUpdate": {
+      "required": [
+        "first_name",
+        "last_name",
+        "email",
+        "role"
+      ],
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "middle_name": {
+          "title": "Middle name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "phone": {
+          "title": "Phone",
+          "type": "string"
+        },
+        "dob": {
+          "title": "Dob",
+          "type": "string",
+          "format": "date",
+          "x-nullable": true
+        },
+        "gender": {
+          "title": "Gender",
+          "type": "string",
+          "enum": [
+            "male",
+            "female",
+            "other"
+          ],
+          "x-nullable": true
+        },
+        "address": {
+          "title": "Address",
+          "type": "string",
+          "x-nullable": true
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "Teacher",
+            "Admin",
+            "Accountant",
+            "Librarian",
+            "Coordinator"
+          ]
+        },
+        "qualification": {
+          "title": "Qualification",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "experience": {
+          "title": "Experience",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "specialization": {
+          "title": "Specialization",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "previous_school": {
+          "title": "Previous school",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "subjects": {
+          "title": "Subjects",
+          "type": "object"
+        },
+        "grades": {
+          "title": "Grades",
+          "type": "object"
+        },
+        "profile_image": {
+          "title": "Profile image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ActiveTeacher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "StaffDetail": {
+      "required": [
+        "email"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "readOnly": true
+        },
+        "avatar_url": {
+          "title": "Avatar url",
+          "type": "string",
+          "readOnly": true
+        },
+        "phone": {
+          "title": "Phone",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "subject_names": {
+          "title": "Subject names",
+          "type": "string",
+          "readOnly": true
+        },
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "readOnly": true
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "last_login": {
+          "title": "Last login",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "is_superuser": {
+          "title": "Superuser status",
+          "description": "Designates that this user has all permissions without explicitly assigning them.",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "uuid": {
+          "title": "Uuid",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "user_type": {
+          "title": "User type",
+          "type": "string",
+          "enum": [
+            "staff",
+            "superadmin"
+          ]
+        },
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "middle_name": {
+          "title": "Middle name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "phone_number": {
+          "title": "Phone number",
+          "type": "string",
+          "maxLength": 30,
+          "x-nullable": true
+        },
+        "profile_image": {
+          "title": "Profile image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "dob": {
+          "title": "Dob",
+          "type": "string",
+          "format": "date",
+          "x-nullable": true
+        },
+        "gender": {
+          "title": "Gender",
+          "type": "string",
+          "enum": [
+            "male",
+            "female",
+            "other"
+          ],
+          "x-nullable": true
+        },
+        "address": {
+          "title": "Address",
+          "type": "string",
+          "x-nullable": true
+        },
+        "role": {
+          "title": "Role",
+          "type": "string",
+          "enum": [
+            "Teacher",
+            "Admin",
+            "Accountant",
+            "Librarian",
+            "Coordinator"
+          ]
+        },
+        "qualification": {
+          "title": "Qualification",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "experience": {
+          "title": "Experience",
+          "type": "string",
+          "maxLength": 100,
+          "x-nullable": true
+        },
+        "specialization": {
+          "title": "Specialization",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "previous_school": {
+          "title": "Previous school",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "subjects": {
+          "title": "Subjects",
+          "type": "object"
+        },
+        "grades": {
+          "title": "Grades",
+          "type": "object"
+        },
+        "is_teacher": {
+          "title": "Is teacher",
+          "type": "boolean"
+        },
+        "is_email_verified": {
+          "title": "Is email verified",
+          "type": "boolean"
+        },
+        "is_active": {
+          "title": "Is active",
+          "type": "boolean"
+        },
+        "is_staff": {
+          "title": "Is staff",
+          "type": "boolean"
+        },
+        "is_2fa_enabled": {
+          "title": "Is 2fa enabled",
+          "type": "boolean"
+        },
+        "_secret": {
+          "title": "secret",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "last_email_sent_at": {
+          "title": "Last email sent at",
+          "type": "string",
+          "format": "date-time",
+          "x-nullable": true
+        },
+        "is_receiving_email": {
+          "title": "Is receiving email",
+          "type": "boolean"
+        },
+        "is_receiving_promotional_email": {
+          "title": "Is receiving promotional email",
+          "type": "boolean"
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updated_at": {
+          "title": "Updated at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "social_provider": {
+          "title": "Social provider",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "social_provider_id": {
+          "title": "Social provider id",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "groups": {
+          "description": "The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+          "type": "array",
+          "items": {
+            "description": "The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+            "type": "integer"
+          },
+          "uniqueItems": true
+        },
+        "user_permissions": {
+          "description": "Specific permissions for this user.",
+          "type": "array",
+          "items": {
+            "description": "Specific permissions for this user.",
+            "type": "integer"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "StaffStatusUpdate": {
+      "required": [
+        "status"
+      ],
+      "type": "object",
+      "properties": {
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ]
         }
       }
     },

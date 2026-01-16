@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,93 +25,131 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Search, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
+import { TableSkeleton } from "@/components/reusable/TableSkeleton";
+import { toast } from "sonner";
 import {
-  teacherAssignments as initialAssignments,
-  subjectMaster,
-  staffList,
-  allClasses,
-  allSections,
-  getSubjectName,
-  getTeacherName,
-} from "@/data/staticData";
+  useTeacherAssignments,
+  useClassSubjects,
+  useClassSections,
+  useActiveTeachers,
+  useAssignTeacher,
+} from "@/api/hooks";
 
 const TeacherAssignments = () => {
-  const [assignments, setAssignments] = useState(initialAssignments);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [formData, setFormData] = useState({
-    subjectId: "",
-    className: "",
-    section: "",
+    classSubjectId: "",
+    sectionId: "",
     teacherId: "",
   });
 
-  const activeTeachers = staffList.filter((s) => s.role === "Teacher" && s.status === "active");
+  // Fetch data from APIs
+  const { data: assignmentsData, isLoading, error } = useTeacherAssignments();
+  const { data: classSubjectsData, isLoading: isLoadingClassSubjects } = useClassSubjects();
+  const { data: sectionsData, isLoading: isLoadingSections } = useClassSections();
+  const { data: teachersData, isLoading: isLoadingTeachers } = useActiveTeachers();
+  const assignTeacher = useAssignTeacher();
+
+  const assignments = assignmentsData?.assignments || [];
+  const classSubjects = classSubjectsData?.class_subjects || {};
+  const sections = sectionsData?.results || [];
+  const activeTeachers = teachersData?.teachers || [];
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to fetch assignments");
+    }
+  }, [error]);
+
+  // Flatten class subjects for dropdown
+  const flattenedClassSubjects = Object.entries(classSubjects).flatMap(([className, subjects]) =>
+    subjects.map((subject) => ({
+      ...subject,
+      className,
+      displayName: `${className} - ${subject.subject_name}`,
+    }))
+  );
+
+  // Get unique class names for filter
+  const availableClasses = [...new Set(Object.keys(classSubjects))].sort();
 
   const filteredAssignments = assignments.filter((a) => {
-    const subjectName = getSubjectName(a.subjectId || 1);
-    const teacherName = getTeacherName(a.teacherId);
     const matchesSearch =
-      subjectName.toLowerCase().includes(search.toLowerCase()) ||
-      teacherName.toLowerCase().includes(search.toLowerCase());
-    const matchesClass = classFilter === "all" || a.className === classFilter;
+      a.subject_name?.toLowerCase().includes(search.toLowerCase()) ||
+      a.teacher_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesClass = classFilter === "all" || a.class_name === classFilter;
     return matchesSearch && matchesClass;
   });
 
+  // Group assignments by class and subject
   const groupedAssignments = filteredAssignments.reduce((acc, a) => {
-    const key = `${a.className}-${a.subjectId}`;
-    const subjectName = getSubjectName(a.subjectId || 1);
+    const key = `${a.class_name}-${a.subject_id}`;
     if (!acc[key]) {
-      acc[key] = { className: a.className, subjectId: a.subjectId, subjectName, sections: [] };
+      acc[key] = { className: a.class_name, subjectId: a.subject_id, subjectName: a.subject_name, sections: [] };
     }
-    acc[key].sections.push({ ...a, teacherName: getTeacherName(a.teacherId) });
+    acc[key].sections.push(a);
     return acc;
   }, {});
 
   const handleOpenDialog = (assignment = null) => {
     if (assignment) {
       setEditingAssignment(assignment);
+      // Find the class subject that matches
+      const classSubject = flattenedClassSubjects.find(
+        cs => cs.subject_name === assignment.subject_name && cs.className === assignment.class_name
+      );
+      const section = sections.find(s => s.name === assignment.section_name);
       setFormData({
-        subjectId: (assignment.subjectId || 1).toString(),
-        className: assignment.className || "9",
-        section: assignment.section,
-        teacherId: assignment.teacherId.toString(),
+        classSubjectId: classSubject?.id?.toString() || "",
+        sectionId: section?.id?.toString() || "",
+        teacherId: assignment.teacher_id?.toString() || "",
       });
     } else {
       setEditingAssignment(null);
-      setFormData({ subjectId: "", className: "", section: "", teacherId: "" });
+      setFormData({ classSubjectId: "", sectionId: "", teacherId: "" });
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (!formData.subjectId || !formData.className || !formData.section || !formData.teacherId) return;
-
-    const newAssignment = {
-      subjectId: parseInt(formData.subjectId),
-      className: formData.className,
-      section: formData.section,
-      teacherId: parseInt(formData.teacherId),
-    };
-
-    if (editingAssignment) {
-      setAssignments((prev) =>
-        prev.map((a) => (a.id === editingAssignment.id ? { ...a, ...newAssignment } : a))
-      );
-    } else {
-      const newId = Math.max(...assignments.map((a) => a.id), 0) + 1;
-      setAssignments((prev) => [...prev, { id: newId, ...newAssignment }]);
+    if (!formData.classSubjectId || !formData.sectionId || !formData.teacherId) {
+      toast.error("Please fill all required fields");
+      return;
     }
-    setIsDialogOpen(false);
+
+    assignTeacher.mutate(
+      {
+        classSubjectId: parseInt(formData.classSubjectId),
+        assignmentData: {
+          section_id: parseInt(formData.sectionId),
+          teacher_id: parseInt(formData.teacherId),
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success(editingAssignment ? "Assignment updated" : "Teacher assigned");
+          setIsDialogOpen(false);
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
-  const handleDelete = (id) => {
-    setAssignments((prev) => prev.filter((a) => a.id !== id));
+  // Get sections for selected class subject
+  const getFilteredSections = () => {
+    if (!formData.classSubjectId) return [];
+    const selectedClassSubject = flattenedClassSubjects.find(
+      cs => cs.id?.toString() === formData.classSubjectId
+    );
+    if (!selectedClassSubject) return [];
+    // Filter sections by classroom
+    return sections.filter(s => s.classroom_name === selectedClassSubject.className);
   };
 
   return (
@@ -138,7 +176,7 @@ const TeacherAssignments = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
-              {allClasses.map((c) => (
+              {availableClasses.map((c) => (
                 <SelectItem key={c} value={c}>
                   Class {c}
                 </SelectItem>
@@ -155,70 +193,66 @@ const TeacherAssignments = () => {
         </div>
       </div>
 
-      <div className="rounded-md border w-full">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead className="w-24">Class</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead className="w-24 text-center">Section</TableHead>
-              <TableHead>Teacher</TableHead>
-              <TableHead className="w-24 text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          {filteredAssignments.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <DataNotFound item="assignments" />
-                </TableCell>
+      {isLoading ? (
+        <TableSkeleton rows={6} columns={5} />
+      ) : (
+        <div className="rounded-md border w-full">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100 dark:bg-gray-800">
+                <TableHead className="w-24">Class</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead className="w-24 text-center">Section</TableHead>
+                <TableHead>Teacher</TableHead>
+                <TableHead className="w-24 text-center">Actions</TableHead>
               </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {Object.values(groupedAssignments).map((group) =>
-                group.sections.map((assignment, idx) => (
-                  <TableRow key={assignment.id}>
-                    <TableCell>
-                      {idx === 0 && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary">
-                          Class {group.className}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {idx === 0 ? group.subjectName : ""}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary">{assignment.section}</Badge>
-                    </TableCell>
-                    <TableCell>{assignment.teacherName}</TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(assignment)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(assignment.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+            </TableHeader>
+            {filteredAssignments.length === 0 ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <DataNotFound item="assignments" />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            ) : (
+              <TableBody>
+                {Object.values(groupedAssignments).map((group) =>
+                  group.sections.map((assignment, idx) => (
+                    <TableRow key={assignment.id}>
+                      <TableCell>
+                        {idx === 0 && (
+                          <Badge variant="outline" className="bg-primary/10 text-primary">
+                            Class {group.className}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {idx === 0 ? group.subjectName : ""}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary">{assignment.section_name}</Badge>
+                      </TableCell>
+                      <TableCell>{assignment.teacher_name}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDialog(assignment)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            )}
+          </Table>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -229,36 +263,19 @@ const TeacherAssignments = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>Subject <span className="text-red-500">*</span></Label>
+              <Label>Class Subject <span className="text-red-500">*</span></Label>
               <Select
-                value={formData.subjectId}
-                onValueChange={(v) => setFormData({ ...formData, subjectId: v })}
+                value={formData.classSubjectId}
+                onValueChange={(v) => setFormData({ ...formData, classSubjectId: v, sectionId: "" })}
+                disabled={!!editingAssignment}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select subject" />
+                  <SelectValue placeholder="Select class subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subjectMaster.map((s) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label>Class <span className="text-red-500">*</span></Label>
-              <Select
-                value={formData.className}
-                onValueChange={(v) => setFormData({ ...formData, className: v })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allClasses.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      Class {c}
+                  {flattenedClassSubjects.map((cs) => (
+                    <SelectItem key={cs.id} value={cs.id.toString()}>
+                      Class {cs.className} - {cs.subject_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -267,16 +284,17 @@ const TeacherAssignments = () => {
             <div className="grid gap-2">
               <Label>Section <span className="text-red-500">*</span></Label>
               <Select
-                value={formData.section}
-                onValueChange={(v) => setFormData({ ...formData, section: v })}
+                value={formData.sectionId}
+                onValueChange={(v) => setFormData({ ...formData, sectionId: v })}
+                disabled={!formData.classSubjectId}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select section" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allSections.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      Section {s}
+                  {getFilteredSections().map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      Section {s.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -305,7 +323,8 @@ const TeacherAssignments = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={assignTeacher.isPending}>
+              {assignTeacher.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingAssignment ? "Save Changes" : "Assign"}
             </Button>
           </DialogFooter>

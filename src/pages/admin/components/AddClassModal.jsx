@@ -18,28 +18,38 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, PlusCircle } from "lucide-react";
+import { Plus, Minus, PlusCircle, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useCreateClassroomWithSections, useCreateClassSection, useClassrooms } from "@/api/hooks";
+import { toast } from "sonner";
 
 const AddClassModal = ({ classesData = [], onSave }) => {
+  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("new"); // "new" | "section"
   const [className, setClassName] = useState("");
-  const [sections, setSections] = useState([]);
+  const [selectedClassroomId, setSelectedClassroomId] = useState("");
+  const [sections, setSections] = useState(["A"]);
   const [existingSections, setExistingSections] = useState([]);
-  const [status] = useState("active");
+
+  const { data: classroomsData } = useClassrooms({ page_size: 100 });
+  const classrooms = classroomsData?.results || [];
+
+  const createClassroomWithSections = useCreateClassroomWithSections();
+  const createSection = useCreateClassSection();
 
   useEffect(() => {
-    if (mode === "section" && className) {
-      const existingClass = classesData.find((c) => c.className === className);
-      if (existingClass) {
-        setExistingSections(existingClass.sections || []);
-        setSections(existingClass.sections || []);
+    if (mode === "section" && selectedClassroomId) {
+      const selectedClassroom = classrooms.find((c) => c.id.toString() === selectedClassroomId);
+      if (selectedClassroom && selectedClassroom.sections) {
+        const existing = selectedClassroom.sections.map(s => s.name);
+        setExistingSections(existing);
+        setSections(existing);
       }
     } else {
       setExistingSections([]);
       setSections(["A"]);
     }
-  }, [className, mode, classesData]);
+  }, [selectedClassroomId, mode, classrooms]);
 
   const addSection = () => {
     const allSections = [...sections];
@@ -52,13 +62,16 @@ const AddClassModal = ({ classesData = [], onSave }) => {
   };
 
   const handleOpenChange = (isOpen) => {
+    setOpen(isOpen);
     if (!isOpen) {
       setMode("new");
       setClassName("");
+      setSelectedClassroomId("");
       setSections(["A"]);
       setExistingSections([]);
     }
   };
+
   const removeSection = () => {
     if (sections.length > existingSections.length) {
       setSections(sections.slice(0, -1));
@@ -66,18 +79,49 @@ const AddClassModal = ({ classesData = [], onSave }) => {
   };
 
   const handleSubmit = () => {
-    const newClass = {
-      id: Date.now().toString(),
-      className,
-      sections,
-      status,
-      totalStudents: 0,
-    };
-    onSave(newClass);
+    if (mode === "new") {
+      // Create new classroom with sections
+      const payload = {
+        classroom_name: className,
+        section_names: sections,
+      };
+      createClassroomWithSections.mutate(payload, {
+        onSuccess: () => {
+          toast.success("Class created successfully");
+          setOpen(false);
+        },
+        onError: (err) => toast.error(err.message),
+      });
+    } else {
+      // Add new sections to existing classroom
+      const newSections = sections.filter(s => !existingSections.includes(s));
+      if (newSections.length === 0) {
+        toast.info("No new sections to add");
+        return;
+      }
+
+      // Create each new section
+      const promises = newSections.map(sectionName =>
+        createSection.mutateAsync({
+          name: sectionName,
+          classroom: parseInt(selectedClassroomId),
+          is_active: true,
+        })
+      );
+
+      Promise.all(promises)
+        .then(() => {
+          toast.success("Sections added successfully");
+          setOpen(false);
+        })
+        .catch((err) => toast.error(err.message));
+    }
   };
 
+  const isSubmitting = createClassroomWithSections.isPending || createSection.isPending;
+
   return (
-    <Dialog onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-700 text-white">
           <PlusCircle className="mr-2 h-4 w-4" /> Add New
@@ -120,14 +164,14 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                 className={"mt-2"}
               />
             ) : (
-              <Select value={className} onValueChange={setClassName}>
+              <Select value={selectedClassroomId} onValueChange={setSelectedClassroomId}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select Existing Class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classesData.map((c) => (
-                    <SelectItem key={c.className} value={c.className}>
-                      Class {c.className}
+                  {classrooms.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      Class {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -135,7 +179,7 @@ const AddClassModal = ({ classesData = [], onSave }) => {
             )}
           </div>
 
-          {className && (
+          {(className || selectedClassroomId) && (
             <div className="space-y-3">
               <Label className="text-sm font-medium">Sections</Label>
 
@@ -146,10 +190,10 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                   size="icon"
                   onClick={() => {
                     if (sections.length > 1) {
-                      removeSection(sections[sections.length - 1]);
+                      removeSection();
                     }
                   }}
-                  disabled={sections.length <= 1}
+                  disabled={sections.length <= Math.max(1, existingSections.length)}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -158,11 +202,10 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                   {sections.map((sec, idx) => (
                     <Badge
                       key={sec + idx}
-                      className={`px-3 w-[30px] h-[30px] py-1 rounded-full text-sm flex items-center justify-center ${
-                        existingSections.includes(sec)
+                      className={`px-3 w-[30px] h-[30px] py-1 rounded-full text-sm flex items-center justify-center ${existingSections.includes(sec)
                           ? "bg-gray-300 dark:bg-gray-600"
                           : "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200"
-                      }`}
+                        }`}
                     >
                       {sec}
                     </Badge>
@@ -186,9 +229,10 @@ const AddClassModal = ({ classesData = [], onSave }) => {
         <DialogFooter>
           <Button
             onClick={handleSubmit}
-            disabled={!className || sections.length === 0}
+            disabled={(!className && !selectedClassroomId) || sections.length === 0 || isSubmitting}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save
           </Button>
         </DialogFooter>

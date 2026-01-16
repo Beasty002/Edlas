@@ -14,10 +14,13 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
     (config) => {
         if (config.skipAuth) {
+            console.log('[API] Skipping auth for:', config.url);
             return config;
         }
 
         const token = getAccessToken();
+        console.log('[API] Request to:', config.url, '| Token present:', !!token);
+        
         if (token && typeof token === 'string' && token.trim() !== '') {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -28,14 +31,7 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401 && !error.config?.skipAuth) {
-            // clearAuth();
-            // window.location.href = '/login';
-        }
-        // return Promise.reject(error);
-        return error;
-    }
+    (error) => Promise.reject(error)
 );
 
 const baseRequest = async ({
@@ -274,6 +270,13 @@ export const classroomsAPI = {
             body: classroomData,
         }),
 
+    createWithSections: (data) =>
+        baseRequest({
+            url: '/academics/classrooms/create_with_sections/',
+            method: 'POST',
+            body: data,
+        }),
+
     update: (id, classroomData) =>
         baseRequest({
             url: `/academics/classrooms/${id}/`,
@@ -337,6 +340,122 @@ export const subjectsAPI = {
         }),
 };
 
+export const staffAPI = {
+    list: (params = {}) =>
+        baseRequest({
+            url: '/system/staff/',
+            method: 'GET',
+            params,
+        }),
+
+    getById: (id) =>
+        baseRequest({
+            url: `/system/staff/${id}/`,
+            method: 'GET',
+        }),
+
+    create: (staffData) =>
+        baseRequest({
+            url: '/system/staff/',
+            method: 'POST',
+            body: staffData,
+        }),
+
+    update: (id, staffData) =>
+        baseRequest({
+            url: `/system/staff/${id}/`,
+            method: 'PUT',
+            body: staffData,
+        }),
+
+    partialUpdate: (id, staffData) =>
+        baseRequest({
+            url: `/system/staff/${id}/`,
+            method: 'PATCH',
+            body: staffData,
+        }),
+
+    delete: (id) =>
+        baseRequest({
+            url: `/system/staff/${id}/`,
+            method: 'DELETE',
+        }),
+
+    toggleStatus: (id, status) =>
+        baseRequest({
+            url: `/system/staff/${id}/status/`,
+            method: 'PATCH',
+            body: { status },
+        }),
+
+    getActiveTeachers: () =>
+        baseRequest({
+            url: '/system/staff/teachers/active/',
+            method: 'GET',
+        }),
+};
+
+export const classSubjectsAPI = {
+    list: (params = {}) =>
+        baseRequest({
+            url: '/academics/class-subjects/',
+            method: 'GET',
+            params,
+        }),
+
+    getById: (id) =>
+        baseRequest({
+            url: `/academics/class-subjects/${id}/`,
+            method: 'GET',
+        }),
+
+    create: (classSubjectData) =>
+        baseRequest({
+            url: '/academics/class-subjects/',
+            method: 'POST',
+            body: classSubjectData,
+        }),
+
+    update: (id, classSubjectData) =>
+        baseRequest({
+            url: `/academics/class-subjects/${id}/`,
+            method: 'PUT',
+            body: classSubjectData,
+        }),
+
+    partialUpdate: (id, classSubjectData) =>
+        baseRequest({
+            url: `/academics/class-subjects/${id}/`,
+            method: 'PATCH',
+            body: classSubjectData,
+        }),
+
+    delete: (id) =>
+        baseRequest({
+            url: `/academics/class-subjects/${id}/`,
+            method: 'DELETE',
+        }),
+
+    byClass: (className) =>
+        baseRequest({
+            url: `/academics/class-subjects/by_class/${className}/`,
+            method: 'GET',
+        }),
+
+    assignTeacher: (id, assignmentData) =>
+        baseRequest({
+            url: `/academics/class-subjects/${id}/assign_teacher/`,
+            method: 'POST',
+            body: assignmentData,
+        }),
+
+    getTeacherAssignments: () =>
+        baseRequest({
+            url: '/academics/class-subjects/teacher_assignments/',
+            method: 'GET',
+        }),
+};
+
 export default {
     auth: authAPI,
     students: studentsAPI,
@@ -344,4 +463,6 @@ export default {
     classSections: classSectionsAPI,
     classrooms: classroomsAPI,
     subjects: subjectsAPI,
+    staff: staffAPI,
+    classSubjects: classSubjectsAPI,
 };

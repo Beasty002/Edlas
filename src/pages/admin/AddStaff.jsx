@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -14,10 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Camera, X } from "lucide-react";
+import { Camera, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
-import { subjectMaster, allClasses } from "@/data/staticData";
+import { useSubjects, useClassrooms, useCreateStaff } from "@/api/hooks";
 
 const AddStaff = () => {
   const navigate = useNavigate();
@@ -47,6 +47,15 @@ const AddStaff = () => {
       status: "active",
     },
   });
+
+  // Fetch subjects and classrooms from API
+  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjects();
+  const { data: classroomsData, isLoading: isLoadingClassrooms } = useClassrooms({ page_size: 100 });
+  const createStaff = useCreateStaff();
+
+  const subjectMaster = subjectsData?.subjects || [];
+  const classrooms = classroomsData?.results || [];
+  const allClasses = [...new Set(classrooms.map(c => c.name))].sort();
 
   const defaultAvatar = "/images/default-avatar.png";
   const [avatarPreview, setAvatarPreview] = useState(defaultAvatar);
@@ -89,14 +98,34 @@ const AddStaff = () => {
 
   const onSubmit = (data) => {
     const staffData = {
-      ...data,
-      name: `${data.firstName} ${data.middleName ? data.middleName + " " : ""}${data.lastName}`.trim(),
+      first_name: data.firstName,
+      middle_name: data.middleName,
+      last_name: data.lastName,
+      email: data.email,
+      phone_number: data.phone,
+      date_of_birth: data.dob,
+      gender: data.gender,
+      address: data.address,
+      role: data.role,
+      qualification: data.qualification,
+      experience: data.experience,
+      specialization: data.specialization,
+      previous_school: data.previousSchool,
       subjects: selectedSubjects,
       grades: selectedGrades,
+      is_active: data.status === "active",
+      is_teacher: data.role === "Teacher",
     };
-    console.log("New Staff:", staffData);
-    toast.success(`Staff "${staffData.name}" added successfully!`);
-    navigate("/staffs");
+
+    createStaff.mutate(staffData, {
+      onSuccess: () => {
+        toast.success(`Staff added successfully!`);
+        navigate("/staffs");
+      },
+      onError: (err) => {
+        toast.error(err.message || "Failed to add staff");
+      },
+    });
   };
 
   const RequiredLabel = ({ children }) => (
@@ -288,47 +317,59 @@ const AddStaff = () => {
 
         <section>
           <h2 className="text-lg font-medium mb-4">Teaching Preferences</h2>
-          
+
           <div className="mb-6">
             <Label className="mb-3 block">Subjects Can Teach</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {subjectMaster.map((subject) => (
-                <div key={subject.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`subject-${subject.id}`}
-                    checked={selectedSubjects.includes(subject.id)}
-                    onCheckedChange={() => handleSubjectToggle(subject.id)}
-                  />
-                  <label
-                    htmlFor={`subject-${subject.id}`}
-                    className="text-sm font-medium leading-none"
-                  >
-                    {subject.name}
-                  </label>
-                </div>
-              ))}
-            </div>
+            {isLoadingSubjects ? (
+              <p className="text-sm text-muted-foreground">Loading subjects...</p>
+            ) : subjectMaster.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No subjects available. Add subjects in Subject Master first.</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {subjectMaster.map((subject) => (
+                  <div key={subject.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`subject-${subject.id}`}
+                      checked={selectedSubjects.includes(subject.id)}
+                      onCheckedChange={() => handleSubjectToggle(subject.id)}
+                    />
+                    <label
+                      htmlFor={`subject-${subject.id}`}
+                      className="text-sm font-medium leading-none"
+                    >
+                      {subject.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
             <Label className="mb-3 block">Grades Can Teach</Label>
-            <div className="flex flex-wrap gap-4">
-              {allClasses.map((grade) => (
-                <div key={grade} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`grade-${grade}`}
-                    checked={selectedGrades.includes(grade)}
-                    onCheckedChange={() => handleGradeToggle(grade)}
-                  />
-                  <label
-                    htmlFor={`grade-${grade}`}
-                    className="text-sm font-medium leading-none"
-                  >
-                    Class {grade}
-                  </label>
-                </div>
-              ))}
-            </div>
+            {isLoadingClassrooms ? (
+              <p className="text-sm text-muted-foreground">Loading grades...</p>
+            ) : allClasses.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No classes available. Add classrooms first.</p>
+            ) : (
+              <div className="flex flex-wrap gap-4">
+                {allClasses.map((grade) => (
+                  <div key={grade} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`grade-${grade}`}
+                      checked={selectedGrades.includes(grade)}
+                      onCheckedChange={() => handleGradeToggle(grade)}
+                    />
+                    <label
+                      htmlFor={`grade-${grade}`}
+                      className="text-sm font-medium leading-none"
+                    >
+                      Class {grade}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -354,7 +395,9 @@ const AddStaff = () => {
           <Button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={createStaff.isPending}
           >
+            {createStaff.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Add Staff
           </Button>
           <Button

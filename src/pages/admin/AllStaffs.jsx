@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,50 +31,90 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Search, Edit, Eye, UserX, PlusCircle } from "lucide-react";
+import { Search, Edit, UserX, PlusCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
+import { TableSkeleton } from "@/components/reusable/TableSkeleton";
 import TableActionButton from "@/components/reusable/TableActionButton";
-import { staffList as initialStaffList } from "@/data/staticData";
+import { useStaffList, useUpdateStaff, useToggleStaffStatus } from "@/api/hooks";
+import { toast } from "sonner";
 
 const AllStaffs = () => {
-  const [staffList, setStaffList] = useState(initialStaffList);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingStaff, setEditingStaff] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const filtered = staffList.filter((staff) => {
-    const matchesSearch =
-      staff.name.toLowerCase().includes(search.toLowerCase()) ||
-      staff.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || staff.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const { data: staffData, isLoading, error } = useStaffList({
+    search: search || undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
   });
+  const updateStaff = useUpdateStaff();
+  const toggleStaffStatus = useToggleStaffStatus();
+
+  const staffList = staffData?.staff || [];
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to fetch staff");
+    }
+  }, [error]);
 
   const handleEditClick = (staff) => {
-    setEditingStaff({ ...staff });
+    setEditingStaff({
+      ...staff,
+      name: `${staff.first_name || ""} ${staff.middle_name || ""} ${staff.last_name || ""}`.trim(),
+    });
     setIsEditDialogOpen(true);
   };
 
   const handleSaveEdit = () => {
-    setStaffList((prev) =>
-      prev.map((s) => (s.id === editingStaff.id ? editingStaff : s))
+    if (!editingStaff) return;
+
+    // Parse name into first/middle/last
+    const nameParts = editingStaff.name.split(" ");
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+    const middle_name = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
+    updateStaff.mutate(
+      {
+        id: editingStaff.id,
+        data: {
+          first_name,
+          middle_name,
+          last_name,
+          email: editingStaff.email,
+          phone_number: editingStaff.phone_number,
+          role: editingStaff.role,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Staff updated");
+          setIsEditDialogOpen(false);
+          setEditingStaff(null);
+        },
+        onError: (err) => toast.error(err.message),
+      }
     );
-    setIsEditDialogOpen(false);
-    setEditingStaff(null);
   };
 
   const handleToggleStatus = (staff) => {
-    setStaffList((prev) =>
-      prev.map((s) =>
-        s.id === staff.id
-          ? { ...s, status: s.status === "active" ? "inactive" : "active" }
-          : s
-      )
+    const newStatus = staff.status === "active" ? "inactive" : "active";
+    toggleStaffStatus.mutate(
+      { id: staff.id, status: newStatus },
+      {
+        onSuccess: () => toast.success(`Staff ${newStatus === "active" ? "activated" : "deactivated"}`),
+        onError: (err) => toast.error(err.message),
+      }
     );
+  };
+
+  // Get full name helper
+  const getFullName = (staff) => {
+    return `${staff.first_name || ""} ${staff.middle_name || ""} ${staff.last_name || ""}`.trim() || "N/A";
   };
 
   return (
@@ -116,74 +156,78 @@ const AllStaffs = () => {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Subjects</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="w-16 text-center"></TableHead>
-            </TableRow>
-          </TableHeader>
-
-          {filtered.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={7} className="p-6 text-center">
-                  <DataNotFound item="staff members" />
-                </TableCell>
+      {isLoading ? (
+        <TableSkeleton rows={6} columns={7} />
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100 dark:bg-gray-800">
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Subjects</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="w-16 text-center"></TableHead>
               </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {filtered.map((staff) => (
-                <TableRow key={staff.id} className="group">
-                  <TableCell className="font-medium">{staff.name}</TableCell>
-                  <TableCell>{staff.email}</TableCell>
-                  <TableCell>{staff.phone}</TableCell>
-                  <TableCell>{staff.role}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {staff.subjects.map((subject) => (
-                        <Badge key={subject} variant="outline">
-                          {subject}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant={staff.status === "active" ? "default" : "destructive"}
-                    >
-                      {staff.status === "active" ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <TableActionButton />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditClick(staff)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleStatus(staff)}>
-                          <UserX className="mr-2 h-4 w-4" />
-                          {staff.status === "active" ? "Set Inactive" : "Set Active"}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+
+            {staffList.length === 0 ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={7} className="p-6 text-center">
+                    <DataNotFound item="staff members" />
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+              </TableBody>
+            ) : (
+              <TableBody>
+                {staffList.map((staff) => (
+                  <TableRow key={staff.id} className="group">
+                    <TableCell className="font-medium">{staff.name || getFullName(staff)}</TableCell>
+                    <TableCell>{staff.email}</TableCell>
+                    <TableCell>{staff.phone}</TableCell>
+                    <TableCell>{staff.role}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {(staff.subject_names || []).map((subject, idx) => (
+                          <Badge key={idx} variant="outline">
+                            {subject}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant={staff.status === "active" ? "default" : "destructive"}
+                      >
+                        {staff.status === "active" ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <TableActionButton />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(staff)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(staff)}>
+                            <UserX className="mr-2 h-4 w-4" />
+                            {staff.status === "active" ? "Set Inactive" : "Set Active"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            )}
+          </Table>
+        </div>
+      )}
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -219,9 +263,9 @@ const AllStaffs = () => {
                 <Input
                   id="phone"
                   className="w-full"
-                  value={editingStaff.phone}
+                  value={editingStaff.phone_number}
                   onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, phone: e.target.value })
+                    setEditingStaff({ ...editingStaff, phone_number: e.target.value })
                   }
                 />
               </div>
@@ -242,7 +286,10 @@ const AllStaffs = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
+            <Button onClick={handleSaveEdit} disabled={updateStaff.isPending}>
+              {updateStaff.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -6,6 +6,8 @@ import {
   classroomsAPI,
   subjectsAPI,
   authAPI,
+  staffAPI,
+  classSubjectsAPI,
 } from "./api";
 
 export const useStudents = (params = {}) => {
@@ -203,6 +205,21 @@ export const useCreateClassroom = () => {
   });
 };
 
+export const useCreateClassroomWithSections = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await classroomsAPI.createWithSections(data);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to create classroom with sections");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classrooms"] });
+      queryClient.invalidateQueries({ queryKey: ["classSections"] });
+    },
+  });
+};
+
 export const useUpdateClassroom = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -293,5 +310,203 @@ export const useWhoAmI = () => {
       return response.data;
     },
     retry: false,
+  });
+};
+
+// ==================== Staff Hooks ====================
+
+export const useStaffList = (params = {}) => {
+  return useQuery({
+    queryKey: ["staff", params],
+    queryFn: async () => {
+      const response = await staffAPI.list(params);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch staff");
+      return response.data;
+    },
+  });
+};
+
+export const useStaff = (id) => {
+  return useQuery({
+    queryKey: ["staff", id],
+    queryFn: async () => {
+      const response = await staffAPI.getById(id);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch staff member");
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useCreateStaff = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (staffData) => {
+      const response = await staffAPI.create(staffData);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to create staff");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+    },
+  });
+};
+
+export const useUpdateStaff = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await staffAPI.update(id, data);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to update staff");
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", variables.id] });
+    },
+  });
+};
+
+export const useDeleteStaff = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const response = await staffAPI.delete(id);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to delete staff");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+    },
+  });
+};
+
+export const useToggleStaffStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }) => {
+      const response = await staffAPI.toggleStatus(id, status);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to toggle staff status");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+    },
+  });
+};
+
+export const useActiveTeachers = () => {
+  return useQuery({
+    queryKey: ["activeTeachers"],
+    queryFn: async () => {
+      const response = await staffAPI.getActiveTeachers();
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch active teachers");
+      return response.data;
+    },
+  });
+};
+
+// ==================== Class Subjects Hooks ====================
+
+export const useClassSubjects = (params = {}) => {
+  return useQuery({
+    queryKey: ["classSubjects", params],
+    queryFn: async () => {
+      const response = await classSubjectsAPI.list(params);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch class subjects");
+      return response.data;
+    },
+  });
+};
+
+export const useClassSubject = (id) => {
+  return useQuery({
+    queryKey: ["classSubject", id],
+    queryFn: async () => {
+      const response = await classSubjectsAPI.getById(id);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch class subject");
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useCreateClassSubject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (classSubjectData) => {
+      const response = await classSubjectsAPI.create(classSubjectData);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to create class subject");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classSubjects"] });
+    },
+  });
+};
+
+export const useUpdateClassSubject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await classSubjectsAPI.update(id, data);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to update class subject");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classSubjects"] });
+    },
+  });
+};
+
+export const useDeleteClassSubject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const response = await classSubjectsAPI.delete(id);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to delete class subject");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classSubjects"] });
+    },
+  });
+};
+
+export const useClassSubjectsByClass = (className) => {
+  return useQuery({
+    queryKey: ["classSubjects", "byClass", className],
+    queryFn: async () => {
+      const response = await classSubjectsAPI.byClass(className);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch class subjects");
+      return response.data;
+    },
+    enabled: !!className,
+  });
+};
+
+export const useAssignTeacher = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ classSubjectId, assignmentData }) => {
+      const response = await classSubjectsAPI.assignTeacher(classSubjectId, assignmentData);
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to assign teacher");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classSubjects"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherAssignments"] });
+    },
+  });
+};
+
+export const useTeacherAssignments = () => {
+  return useQuery({
+    queryKey: ["teacherAssignments"],
+    queryFn: async () => {
+      const response = await classSubjectsAPI.getTeacherAssignments();
+      if (!response.ok) throw new Error(response.data?.detail || "Failed to fetch teacher assignments");
+      return response.data;
+    },
   });
 };
