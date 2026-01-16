@@ -1,12 +1,4 @@
-import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useState, useMemo } from "react";
 import {
   Select,
   SelectContent,
@@ -15,25 +7,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Search,
   Edit,
   PlusCircle,
-  MoreVertical,
   Download,
   View,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
-import TableActionButton from "@/components/reusable/TableActionButton";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import AddOrEditMarksDialog from "./AddOrEditMarksDialog";
 
 const dummyStudents = [
@@ -166,6 +149,11 @@ const MarksPage = () => {
         String(s.roll).includes(search))
   );
 
+  // Get all unique subjects from filtered students
+  const allSubjects = useMemo(() => {
+    return [...new Set(filtered.flatMap((student) => Object.keys(student.marks)))];
+  }, [filtered]);
+
   const handleAction = (action, student) => {
     setSelectedStudent(student);
 
@@ -183,16 +171,127 @@ const MarksPage = () => {
       prev.map((s) =>
         s.id === selectedStudent.id
           ? {
-              ...s,
-              marks: newMarks.reduce((acc, m) => {
-                acc[m.subjectName] =
-                  Number(m.theory || 0) + Number(m.practical || 0);
-                return acc;
-              }, {}),
-            }
+            ...s,
+            marks: newMarks.reduce((acc, m) => {
+              acc[m.subjectName] =
+                Number(m.theory || 0) + Number(m.practical || 0);
+              return acc;
+            }, {}),
+          }
           : s
       )
     );
+  };
+
+  // Build dynamic columns based on subjects
+  const columns = useMemo(() => {
+    const baseColumns = [
+      { field: "roll", headerText: "Roll", width: 60, textAlign: "Center" },
+      {
+        field: "avatar",
+        headerText: "Avatar",
+        width: 60,
+        allowSorting: false,
+        template: (student) => (
+          <Avatar>
+            <AvatarImage
+              src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`}
+            />
+            <AvatarFallback>{student.name[0]}</AvatarFallback>
+          </Avatar>
+        ),
+      },
+      { field: "name", headerText: "Student", width: 150 },
+    ];
+
+    // Add dynamic subject columns
+    const subjectColumns = allSubjects.map((subject) => ({
+      field: subject,
+      headerText: subject,
+      width: 80,
+      textAlign: "Center",
+      template: (student) => (
+        <span className="text-muted-foreground">
+          {student.marks[subject] ?? "-"}
+        </span>
+      ),
+    }));
+
+    const gradeColumn = {
+      field: "totalGrade",
+      headerText: "Total Grade",
+      width: 100,
+      textAlign: "Center",
+      template: (student) => (
+        <span className="font-semibold">{student.totalGrade ?? "-"}</span>
+      ),
+    };
+
+    return [...baseColumns, ...subjectColumns, gradeColumn];
+  }, [allSubjects]);
+
+  // Dynamic actions based on whether student has marks
+  const getActionsForStudent = (student) => {
+    if (Object.keys(student.marks).length > 0) {
+      return [
+        {
+          label: "Edit Marks",
+          icon: <Edit className="h-4 w-4" />,
+          onClick: () => handleAction("Edit", student),
+        },
+        {
+          label: "View Marksheet",
+          icon: <View className="h-4 w-4" />,
+          onClick: () => handleAction("View", student),
+        },
+        {
+          label: "Download Marksheet",
+          icon: <Download className="h-4 w-4" />,
+          onClick: () => handleAction("Download", student),
+        },
+      ];
+    } else {
+      return [
+        {
+          label: "Assign Marks",
+          icon: <PlusCircle className="h-4 w-4" />,
+          onClick: () => handleAction("Add", student),
+        },
+      ];
+    }
+  };
+
+  // We need to use a custom action config that changes per row
+  const actionConfig = {
+    mode: "dropdown",
+    showOnHover: false,
+    width: 60,
+    actions: [
+      {
+        label: "Edit Marks",
+        icon: <Edit className="h-4 w-4" />,
+        onClick: (student) => handleAction("Edit", student),
+        hidden: (student) => Object.keys(student.marks).length === 0,
+      },
+      {
+        label: "View Marksheet",
+        icon: <View className="h-4 w-4" />,
+        onClick: (student) => handleAction("View", student),
+        hidden: (student) => Object.keys(student.marks).length === 0,
+      },
+      {
+        label: "Download Marksheet",
+        icon: <Download className="h-4 w-4" />,
+        onClick: (student) => handleAction("Download", student),
+        hidden: (student) => Object.keys(student.marks).length === 0,
+      },
+      {
+        label: "Assign Marks",
+        icon: <PlusCircle className="h-4 w-4" />,
+        onClick: (student) => handleAction("Add", student),
+        hidden: (student) => Object.keys(student.marks).length > 0,
+      },
+    ],
   };
 
   return (
@@ -255,106 +354,14 @@ const MarksPage = () => {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead className="w-20 text-center">Roll</TableHead>
-              <TableHead>Avatar</TableHead>
-              <TableHead>Student</TableHead>
-              {[
-                ...new Set( //new set le duplicate hataidincha
-                  filtered.flatMap((student) => Object.keys(student.marks)) //flatmap le sabai nested array lai single array ma convert garcha
-                ),
-              ].map((sub) => (
-                <TableHead key={sub} className="text-center">
-                  {sub}
-                </TableHead>
-              ))}
-              <TableHead className="text-center">Total Grade</TableHead>
-              <TableHead className="w-16 text-center"></TableHead>
-            </TableRow>
-          </TableHeader>
-          {filtered.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={12} className="p-6 text-center">
-                  <DataNotFound item="students" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {filtered.map((student) => (
-                <TableRow key={student.id} className="group">
-                  <TableCell className="text-center">{student.roll}</TableCell>
-                  <TableCell>
-                    <Avatar>
-                      <AvatarImage
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`}
-                      />
-                      <AvatarFallback>{student.name[0]}</AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>{student.name}</span>
-                    </div>
-                  </TableCell>
-                  {[
-                    ...new Set(filtered.flatMap((s) => Object.keys(s.marks))),
-                  ].map((sub) => (
-                    <TableCell
-                      key={sub}
-                      className="text-center text-muted-foreground"
-                    >
-                      {student.marks[sub] ?? "-"}
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-center font-semibold">
-                    {student.totalGrade ?? "-"}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <TableActionButton />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {Object.keys(student.marks).length > 0 ? (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => handleAction("Edit", student)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" /> Edit Marks
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleAction("View", student)}
-                            >
-                              <View className="mr-2 h-4 w-4" /> View Marksheet
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleAction("Download", student)}
-                            >
-                              <Download className="mr-2 h-4 w-4" /> Download
-                              Marksheet
-                            </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <DropdownMenuItem
-                            onClick={() => handleAction("Add", student)}
-                          >
-                            <PlusCircle className="mr-2 h-4 w-4" /> Assign Marks
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+      <DataGrid
+        columns={columns}
+        data={filtered}
+        actionConfig={actionConfig}
+        emptyMessage="No students found"
+        keyField="id"
+      />
+
       {selectedStudent && (
         <AddOrEditMarksDialog
           open={dialogOpen}
@@ -368,13 +375,13 @@ const MarksPage = () => {
           initialMarks={
             Object.keys(selectedStudent.marks).length > 0
               ? Object.entries(selectedStudent.marks).map(
-                  ([subjectName, full]) => ({
-                    subjectId: subjectName,
-                    subjectName,
-                    theory: full,
-                    practical: 0,
-                  })
-                )
+                ([subjectName, full]) => ({
+                  subjectId: subjectName,
+                  subjectName,
+                  theory: full,
+                  practical: 0,
+                })
+              )
               : []
           }
           onSave={handleSaveMarks}

@@ -2,20 +2,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -33,8 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Edit, UserX, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
-import TableActionButton from "@/components/reusable/TableActionButton";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import { mockStaff, mockSubjects } from "@/data/mockData";
 import { toast } from "sonner";
 
@@ -75,6 +60,58 @@ const AllStaffs = () => {
     toast.success(
       `Staff ${newStatus === "active" ? "activated" : "deactivated"}`
     );
+  };
+
+  // DataGrid columns configuration
+  const columns = [
+    { field: "full_name", headerText: "Name", width: 150 },
+    { field: "email", headerText: "Email", width: 200 },
+    { field: "phone", headerText: "Phone", width: 120 },
+    { field: "role", headerText: "Role", width: 100 },
+    {
+      field: "subjects",
+      headerText: "Subjects",
+      allowSorting: false,
+      template: (staff) => (
+        <div className="flex flex-wrap gap-1">
+          {getSubjectNames(staff.subjects).map((subject, idx) => (
+            <Badge key={idx} variant="outline">
+              {subject}
+            </Badge>
+          ))}
+        </div>
+      ),
+    },
+    {
+      field: "status",
+      headerText: "Status",
+      width: 100,
+      textAlign: "Center",
+      template: (staff) => (
+        <Badge variant={staff.status === "active" ? "default" : "destructive"}>
+          {staff.status === "active" ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+  ];
+
+  // DataGrid actions configuration
+  const actionConfig = {
+    mode: "dropdown",
+    showOnHover: false,
+    width: 60,
+    actions: [
+      {
+        label: "Edit",
+        icon: <Edit className="h-4 w-4" />,
+        onClick: handleEditClick,
+      },
+      {
+        label: "Toggle Status",
+        icon: <UserX className="h-4 w-4" />,
+        onClick: handleToggleStatus,
+      },
+    ],
   };
 
   return (
@@ -118,82 +155,13 @@ const AllStaffs = () => {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Subjects</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="w-16 text-center"></TableHead>
-            </TableRow>
-          </TableHeader>
-
-          {staffList.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={7} className="p-6 text-center">
-                  <DataNotFound item="staff members" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {staffList.map((staff) => (
-                <TableRow key={staff.id} className="group">
-                  <TableCell className="font-medium">
-                    {staff.full_name}
-                  </TableCell>
-                  <TableCell>{staff.email}</TableCell>
-                  <TableCell>{staff.phone}</TableCell>
-                  <TableCell>{staff.role}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {getSubjectNames(staff.subjects).map((subject, idx) => (
-                        <Badge key={idx} variant="outline">
-                          {subject}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant={
-                        staff.status === "active" ? "default" : "destructive"
-                      }
-                    >
-                      {staff.status === "active" ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <TableActionButton />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditClick(staff)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleToggleStatus(staff)}
-                        >
-                          <UserX className="mr-2 h-4 w-4" />
-                          {staff.status === "active"
-                            ? "Set Inactive"
-                            : "Set Active"}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+      <DataGrid
+        columns={columns}
+        data={staffList}
+        actionConfig={actionConfig}
+        emptyMessage="No staff members found"
+        keyField="id"
+      />
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

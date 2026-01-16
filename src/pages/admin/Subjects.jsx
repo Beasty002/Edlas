@@ -9,14 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -27,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import { mockSubjects, mockClassrooms, mockClassSubjects } from "@/data/mockData";
 import { toast } from "sonner";
 
@@ -45,14 +37,6 @@ const Subjects = () => {
     practical_marks: 30,
     is_optional: false,
   });
-
-  // Group by class for display
-  const groupedByClassroom = classSubjects.reduce((acc, subject) => {
-    const classroomName = subject.classroom_name || "Unknown";
-    if (!acc[classroomName]) acc[classroomName] = [];
-    acc[classroomName].push(subject);
-    return acc;
-  }, {});
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
@@ -156,9 +140,62 @@ const Subjects = () => {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = (id) => {
-    setClassSubjects(prev => prev.filter(s => s.id !== id));
+  const handleDelete = (subject) => {
+    setClassSubjects(prev => prev.filter(s => s.id !== subject.id));
     toast.success("Subject removed from class");
+  };
+
+  // DataGrid columns configuration
+  const columns = [
+    {
+      field: "classroom_name",
+      headerText: "Class",
+      width: 80,
+      template: (subject) => (
+        <Badge variant="outline" className="bg-primary/10 text-primary">
+          Class {subject.classroom_name}
+        </Badge>
+      ),
+    },
+    { field: "subject_name", headerText: "Subject", width: 150 },
+    {
+      field: "subject_code",
+      headerText: "Code",
+      width: 100,
+      template: (subject) => (
+        <span className="font-mono text-sm">{subject.subject_code}</span>
+      ),
+    },
+    { field: "full_marks", headerText: "Full", width: 70, textAlign: "Center" },
+    { field: "pass_marks", headerText: "Pass", width: 70, textAlign: "Center" },
+    { field: "theory_marks", headerText: "Theory", width: 70, textAlign: "Center" },
+    { field: "practical_marks", headerText: "Practical", width: 80, textAlign: "Center" },
+    {
+      field: "is_optional",
+      headerText: "Optional",
+      width: 80,
+      textAlign: "Center",
+      type: "boolean",
+    },
+  ];
+
+  // DataGrid actions configuration (icon mode)
+  const actionConfig = {
+    mode: "icons",
+    width: 100,
+    actions: [
+      {
+        label: "Edit",
+        icon: <Edit className="h-4 w-4" />,
+        onClick: handleOpenDialog,
+      },
+      {
+        label: "Delete",
+        icon: <Trash2 className="h-4 w-4" />,
+        variant: "destructive",
+        onClick: handleDelete,
+      },
+    ],
   };
 
   return (
@@ -200,74 +237,13 @@ const Subjects = () => {
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead className="w-20">Class</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead className="w-28">Code</TableHead>
-              <TableHead className="w-20 text-center">Full</TableHead>
-              <TableHead className="w-20 text-center">Pass</TableHead>
-              <TableHead className="w-20 text-center">Theory</TableHead>
-              <TableHead className="w-20 text-center">Practical</TableHead>
-              <TableHead className="w-20 text-center">Optional</TableHead>
-              <TableHead className="w-24 text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.entries(groupedByClassroom).length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9}>
-                  <DataNotFound item="subjects" />
-                </TableCell>
-              </TableRow>
-            ) : (
-              Object.entries(groupedByClassroom).map(([cls, subjectsList]) =>
-                subjectsList.map((subject, index) => (
-                  <TableRow key={subject.id}>
-                    <TableCell>
-                      {index === 0 && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary">
-                          Class {cls}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">{subject.subject_name}</TableCell>
-                    <TableCell className="font-mono text-sm">{subject.subject_code}</TableCell>
-                    <TableCell className="text-center">{subject.full_marks}</TableCell>
-                    <TableCell className="text-center">{subject.pass_marks}</TableCell>
-                    <TableCell className="text-center">{subject.theory_marks}</TableCell>
-                    <TableCell className="text-center">{subject.practical_marks}</TableCell>
-                    <TableCell className="text-center">
-                      {subject.is_optional ? "Yes" : "No"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(subject.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataGrid
+        columns={columns}
+        data={classSubjects}
+        actionConfig={actionConfig}
+        emptyMessage="No class subjects found"
+        keyField="id"
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">

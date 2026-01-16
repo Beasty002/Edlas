@@ -2,14 +2,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -20,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, Trash2, PlusCircle, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import { mockSubjects } from "@/data/mockData";
 import { toast } from "sonner";
 
@@ -62,9 +54,47 @@ const SubjectMaster = () => {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = (id) => {
-    setSubjects(prev => prev.filter(s => s.id !== id));
+  const handleDelete = (subject) => {
+    setSubjects(prev => prev.filter(s => s.id !== subject.id));
     toast.success("Subject deleted");
+  };
+
+  // DataGrid columns configuration
+  const columns = [
+    {
+      field: "id",
+      headerText: "ID",
+      width: 60,
+      template: (subject) => <span className="text-muted-foreground">#{subject.id}</span>,
+    },
+    { field: "name", headerText: "Subject Name", width: 180 },
+    { field: "code", headerText: "Code", width: 100 },
+    {
+      field: "description",
+      headerText: "Description",
+      template: (subject) => (
+        <span className="text-muted-foreground">{subject.description}</span>
+      ),
+    },
+  ];
+
+  // DataGrid actions configuration (icon mode)
+  const actionConfig = {
+    mode: "icons",
+    width: 100,
+    actions: [
+      {
+        label: "Edit",
+        icon: <Edit className="h-4 w-4" />,
+        onClick: handleOpenDialog,
+      },
+      {
+        label: "Delete",
+        icon: <Trash2 className="h-4 w-4" />,
+        variant: "destructive",
+        onClick: handleDelete,
+      },
+    ],
   };
 
   return (
@@ -92,62 +122,13 @@ const SubjectMaster = () => {
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead className="w-16">ID</TableHead>
-              <TableHead>Subject Name</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-24 text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          {subjects.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <DataNotFound item="subjects" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {subjects.map((subject) => (
-                <TableRow key={subject.id}>
-                  <TableCell className="text-muted-foreground">
-                    #{subject.id}
-                  </TableCell>
-                  <TableCell className="font-medium">{subject.name}</TableCell>
-                  <TableCell>{subject.code}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {subject.description}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenDialog(subject)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(subject.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+      <DataGrid
+        columns={columns}
+        data={subjects}
+        actionConfig={actionConfig}
+        emptyMessage="No subjects found"
+        keyField="id"
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

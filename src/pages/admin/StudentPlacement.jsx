@@ -1,12 +1,4 @@
 import React, { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,7 +8,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -33,9 +24,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import PageHeader from "../../components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
-import { MoreVertical, Search } from "lucide-react";
-import TableActionButton from "@/components/reusable/TableActionButton";
+import { DataGrid } from "@/components/reusable/DataGrid";
+import { Search, ArrowUp, ArrowDown, ArrowRightLeft } from "lucide-react";
 
 const dummyStudents = [
   {
@@ -78,12 +68,12 @@ const dummyStudents = [
 
 const StudentPlacement = () => {
   const [students, setStudents] = useState(dummyStudents);
-  const [selected, setSelected] = useState([]);
   const [classFilter, setClassFilter] = useState("10");
   const [sectionFilter, setSectionFilter] = useState("A");
   const [search, setSearch] = useState("");
   const [selectedAction, setSelectedAction] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingSelectedIds, setPendingSelectedIds] = useState([]);
 
   const filtered = students.filter(
     (s) =>
@@ -92,22 +82,12 @@ const StudentPlacement = () => {
       (search ? s.name.toLowerCase().includes(search.toLowerCase()) : true)
   );
 
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
-    );
-  };
-
-  const toggleSelectAll = (checked) => {
-    if (checked) setSelected(filtered.map((s) => s.id));
-    else setSelected([]);
-  };
-
-  const handleActionClick = (action) => {
-    if (selected.length === 0) {
+  const handleBulkAction = (action, selectedStudents) => {
+    if (selectedStudents.length === 0) {
       toast.error("No students selected.");
       return;
     }
+    setPendingSelectedIds(selectedStudents.map(s => s.id));
     setSelectedAction(action);
     setConfirmOpen(true);
   };
@@ -116,31 +96,149 @@ const StudentPlacement = () => {
     let updated = [...students];
     if (selectedAction === "promote") {
       updated = updated.map((s) =>
-        selected.includes(s.id)
+        pendingSelectedIds.includes(s.id)
           ? { ...s, class: String(Number(s.class) + 1) }
           : s
       );
-      toast.success(`${selected.length} students promoted.`);
+      toast.success(`${pendingSelectedIds.length} students promoted.`);
     } else if (selectedAction === "demote") {
       updated = updated.map((s) =>
-        selected.includes(s.id)
+        pendingSelectedIds.includes(s.id)
           ? { ...s, class: String(Number(s.class) - 1) }
           : s
       );
-      toast.success(`${selected.length} students demoted.`);
+      toast.success(`${pendingSelectedIds.length} students demoted.`);
     } else if (selectedAction.startsWith("transfer")) {
       const section = selectedAction.split("-")[1];
       updated = updated.map((s) =>
-        selected.includes(s.id) ? { ...s, section } : s
+        pendingSelectedIds.includes(s.id) ? { ...s, section } : s
       );
       toast.success(
-        `${selected.length} students transferred to Section ${section}.`
+        `${pendingSelectedIds.length} students transferred to Section ${section}.`
       );
     }
     setStudents(updated);
-    setSelected([]);
+    setPendingSelectedIds([]);
     setSelectedAction("");
     setConfirmOpen(false);
+  };
+
+  // DataGrid columns
+  const columns = [
+    { field: "id", headerText: "ID", width: 80 },
+    {
+      field: "avatar",
+      headerText: "Avatar",
+      width: 60,
+      allowSorting: false,
+      template: (student) => (
+        <Avatar>
+          <AvatarImage
+            src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`}
+          />
+          <AvatarFallback>{student.name[0]}</AvatarFallback>
+        </Avatar>
+      ),
+    },
+    { field: "roll", headerText: "Roll No", width: 80 },
+    { field: "name", headerText: "Name", width: 150 },
+    { field: "grade", headerText: "Grade", width: 80, textAlign: "Center" },
+    {
+      field: "status",
+      headerText: "Status",
+      width: 80,
+      template: (student) => (
+        <span className={student.status === "Pass" ? "text-green-600" : "text-red-600"}>
+          {student.status}
+        </span>
+      ),
+    },
+  ];
+
+  // Row actions
+  const actionConfig = {
+    mode: "dropdown",
+    showOnHover: false,
+    width: 60,
+    actions: [
+      {
+        label: "Promote",
+        icon: <ArrowUp className="h-4 w-4" />,
+        onClick: (student) => {
+          setPendingSelectedIds([student.id]);
+          setSelectedAction("promote");
+          setConfirmOpen(true);
+        },
+      },
+      {
+        label: "Demote",
+        icon: <ArrowDown className="h-4 w-4" />,
+        onClick: (student) => {
+          setPendingSelectedIds([student.id]);
+          setSelectedAction("demote");
+          setConfirmOpen(true);
+        },
+      },
+      {
+        label: "Transfer to A",
+        icon: <ArrowRightLeft className="h-4 w-4" />,
+        onClick: (student) => {
+          setPendingSelectedIds([student.id]);
+          setSelectedAction("transfer-A");
+          setConfirmOpen(true);
+        },
+      },
+      {
+        label: "Transfer to B",
+        icon: <ArrowRightLeft className="h-4 w-4" />,
+        onClick: (student) => {
+          setPendingSelectedIds([student.id]);
+          setSelectedAction("transfer-B");
+          setConfirmOpen(true);
+        },
+      },
+      {
+        label: "Transfer to C",
+        icon: <ArrowRightLeft className="h-4 w-4" />,
+        onClick: (student) => {
+          setPendingSelectedIds([student.id]);
+          setSelectedAction("transfer-C");
+          setConfirmOpen(true);
+        },
+      },
+    ],
+  };
+
+  // Bulk actions config (checkboxes)
+  const bulkActionConfig = {
+    enabled: true,
+    actions: [
+      {
+        label: "Promote",
+        icon: <ArrowUp className="h-4 w-4" />,
+        onClick: (selected) => handleBulkAction("promote", selected),
+      },
+      {
+        label: "Demote",
+        icon: <ArrowDown className="h-4 w-4" />,
+        onClick: (selected) => handleBulkAction("demote", selected),
+      },
+      {
+        label: "Transfer A",
+        icon: <ArrowRightLeft className="h-4 w-4" />,
+        onClick: (selected) => handleBulkAction("transfer-A", selected),
+      },
+      {
+        label: "Transfer B",
+        icon: <ArrowRightLeft className="h-4 w-4" />,
+        onClick: (selected) => handleBulkAction("transfer-B", selected),
+      },
+      {
+        label: "Transfer C",
+        icon: <ArrowRightLeft className="h-4 w-4" />,
+        onClick: (selected) => handleBulkAction("transfer-C", selected),
+      },
+    ],
   };
 
   return (
@@ -149,7 +247,8 @@ const StudentPlacement = () => {
         title="Placement Management"
         description="View, assign, and manage student placement records."
       />
-      <div className="flex flex-col gap-3 flex-wrap md:flex-row md:items-center md:justify-between bg-white  dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm ">
+
+      <div className="flex flex-col gap-3 flex-wrap md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
@@ -162,7 +261,7 @@ const StudentPlacement = () => {
 
         <div className="flex gap-4">
           <Select value={classFilter} onValueChange={setClassFilter}>
-            <SelectTrigger className="w-full ">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
@@ -187,155 +286,21 @@ const StudentPlacement = () => {
             </SelectContent>
           </Select>
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="w-full md:w-40 bg-blue-600 hover:bg-blue-800 text-white">
-              Bulk Action
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleActionClick("promote")}>
-              Promote
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleActionClick("demote")}>
-              Demote
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleActionClick("transfer-A")}>
-              Transfer to A
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleActionClick("transfer-B")}>
-              Transfer to B
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleActionClick("transfer-C")}>
-              Transfer to C
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       <h2 className="text-lg font-semibold">
         Showing: Class {classFilter} - Section {sectionFilter}
       </h2>
 
-      <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm">
-        <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead>
-                <Checkbox
-                  checked={
-                    selected.length === filtered.length && filtered.length > 0
-                  }
-                  onCheckedChange={(val) => toggleSelectAll(val)}
-                />
-              </TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Avatar</TableHead>
-              <TableHead>Roll No</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Grade</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          {filtered.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="p-6 text-center text-gray-500 dark:text-gray-400"
-                >
-                  <DataNotFound item="students" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {filtered.map((student) => (
-                <TableRow key={student.id} className="group">
-                  <TableCell>
-                    <Checkbox
-                      checked={selected.includes(student.id)}
-                      onCheckedChange={() => toggleSelect(student.id)}
-                    />
-                  </TableCell>
-                  <TableCell>{student.id}</TableCell>
-                  <TableCell>
-                    <Avatar>
-                      <AvatarImage
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`}
-                      />
-                      <AvatarFallback>{student.name[0]}</AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                  <TableCell>{student.roll}</TableCell>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.grade}</TableCell>
-                  <TableCell
-                    className={
-                      student.status === "Pass"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }
-                  >
-                    {student.status}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <TableActionButton />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected([student.id]);
-                            handleActionClick("promote");
-                          }}
-                        >
-                          Promote
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected([student.id]);
-                            handleActionClick("demote");
-                          }}
-                        >
-                          Demote
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected([student.id]);
-                            handleActionClick("transfer-A");
-                          }}
-                        >
-                          Transfer to A
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected([student.id]);
-                            handleActionClick("transfer-B");
-                          }}
-                        >
-                          Transfer to B
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected([student.id]);
-                            handleActionClick("transfer-C");
-                          }}
-                        >
-                          Transfer to C
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+      <DataGrid
+        key={`${classFilter}-${sectionFilter}`}
+        columns={columns}
+        data={filtered}
+        actionConfig={actionConfig}
+        bulkActionConfig={bulkActionConfig}
+        emptyMessage="No students found"
+        keyField="id"
+      />
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-lg">
@@ -346,7 +311,7 @@ const StudentPlacement = () => {
           </DialogHeader>
           <div className="py-4 text-center text-gray-700 dark:text-gray-200">
             Are you sure you want to {selectedAction.replace("-", " ")}{" "}
-            {selected.length} student(s)?
+            {pendingSelectedIds.length} student(s)?
           </div>
           <DialogFooter className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>

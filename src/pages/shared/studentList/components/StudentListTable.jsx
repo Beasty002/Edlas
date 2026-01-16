@@ -1,31 +1,16 @@
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UpdateStudentForm from "./UpdateStudentForm";
-import TableActionButton from "@/components/reusable/TableActionButton";
-import DataNotFound from "@/components/reusable/DataNotFound";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import { useNavigate } from "react-router-dom";
 import { mockStudents } from "@/data/mockData";
-import { View } from "lucide-react";
+import { View, Edit } from "lucide-react";
 import { toast } from "sonner";
 
 const StudentListTable = () => {
   const navigate = useNavigate();
   const [students, setStudents] = useState(mockStudents);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   const handleAction = (studentId, action) => {
     if (action === "view") {
@@ -38,90 +23,114 @@ const StudentListTable = () => {
     }
   };
 
-  return (
-    <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm">
-      <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <TableHeader>
-          <TableRow className="bg-gray-100 dark:bg-gray-800">
-            <TableHead>ID</TableHead>
-            <TableHead>Avatar</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Roll No</TableHead>
-            <TableHead>Class</TableHead>
-            <TableHead>Parent Contact</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Admission Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {students.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={10} className="p-6">
-                <DataNotFound item="students" />
-              </TableCell>
-            </TableRow>
+  // DataGrid columns configuration
+  const columns = [
+    {
+      field: "id",
+      headerText: "ID",
+      width: 60,
+      template: (student) => <span>#{student.id}</span>,
+    },
+    {
+      field: "avatar_url",
+      headerText: "Avatar",
+      width: 60,
+      allowSorting: false,
+      template: (student) => (
+        <Avatar className="h-8 w-8">
+          {student.avatar_url ? (
+            <AvatarImage src={student.avatar_url} alt={student.full_name} />
           ) : (
-            students.map((student) => (
-              <TableRow key={student.id} className="group">
-                <TableCell>#{student.id}</TableCell>
-                <TableCell>
-                  <Avatar className="h-8 w-8">
-                    {student.avatar_url ? (
-                      <AvatarImage src={student.avatar_url} alt={student.full_name} />
-                    ) : (
-                      <AvatarFallback>
-                        {student.first_name?.[0] || "S"}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                </TableCell>
-                <TableCell>{student.full_name}</TableCell>
-                <TableCell>{student.roll_no || "-"}</TableCell>
-                <TableCell>
-                  {student.student_class} {student.section}
-                </TableCell>
-                <TableCell>{student.parent_contact || "-"}</TableCell>
-                <TableCell>{student.email || "-"}</TableCell>
-                <TableCell>{student.admission_date}</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${student.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : student.status === "graduated"
-                        ? "bg-blue-100 text-blue-800"
-                        : student.status === "transferred"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                    }`}>
-                    {student.status}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <TableActionButton />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <UpdateStudentForm student={student} />
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleAction(student.id, "view")}
-                      >
-                        <View className="mr-2 h-4 w-4" /> View Details
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
+            <AvatarFallback>
+              {student.first_name?.[0] || "S"}
+            </AvatarFallback>
           )}
-        </TableBody>
-      </Table>
-    </div>
+        </Avatar>
+      ),
+    },
+    { field: "full_name", headerText: "Name", width: 150 },
+    {
+      field: "roll_no",
+      headerText: "Roll No",
+      width: 80,
+      template: (student) => student.roll_no || "-",
+    },
+    {
+      field: "student_class",
+      headerText: "Class",
+      width: 100,
+      template: (student) => `${student.student_class} ${student.section}`,
+    },
+    {
+      field: "parent_contact",
+      headerText: "Parent Contact",
+      width: 130,
+      template: (student) => student.parent_contact || "-",
+    },
+    {
+      field: "email",
+      headerText: "Email",
+      width: 180,
+      template: (student) => student.email || "-",
+    },
+    { field: "admission_date", headerText: "Admission Date", width: 120 },
+    {
+      field: "status",
+      headerText: "Status",
+      width: 100,
+      template: (student) => {
+        const statusColors = {
+          active: "bg-green-100 text-green-800",
+          graduated: "bg-blue-100 text-blue-800",
+          transferred: "bg-yellow-100 text-yellow-800",
+          expelled: "bg-gray-100 text-gray-800",
+        };
+        return (
+          <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[student.status] || statusColors.active}`}>
+            {student.status}
+          </span>
+        );
+      },
+    },
+  ];
+
+  // DataGrid actions configuration
+  const actionConfig = {
+    mode: "dropdown",
+    showOnHover: false,
+    width: 60,
+    headerText: "",
+    actions: [
+      {
+        label: "Edit",
+        icon: <Edit className="h-4 w-4" />,
+        onClick: (student) => setEditingStudent(student),
+      },
+      {
+        label: "View Details",
+        icon: <View className="h-4 w-4" />,
+        onClick: (student) => handleAction(student.id, "view"),
+      },
+    ],
+  };
+
+  return (
+    <>
+      <DataGrid
+        columns={columns}
+        data={students}
+        actionConfig={actionConfig}
+        emptyMessage="No students found"
+        keyField="id"
+      />
+
+      {editingStudent && (
+        <UpdateStudentForm
+          student={editingStudent}
+          onClose={() => setEditingStudent(null)}
+        />
+      )}
+    </>
   );
 };
 

@@ -1,20 +1,5 @@
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Edit, Eye, UserX, PlusCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -23,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Edit, Eye, UserX, PlusCircle, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
-import TableActionButton from "@/components/reusable/TableActionButton";
 import { Badge } from "@/components/ui/badge";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import AddClassModal from "./components/AddClassModal";
 import AssignTeacherModal from "./components/AssignTeacherModal";
 import { mockClassSections, mockStaff } from "@/data/mockData";
@@ -43,14 +28,6 @@ const Classes = () => {
     setSelectedClass(cls);
     setIsTeacherModalOpen(true);
   };
-
-  // Group by class for display
-  const groupedClasses = classes.reduce((acc, cls) => {
-    const className = cls.classroom_name || "Unknown";
-    if (!acc[className]) acc[className] = [];
-    acc[className].push(cls);
-    return acc;
-  }, {});
 
   const handleAction = (action, cls) => {
     if (action === "toggle") {
@@ -77,6 +54,69 @@ const Classes = () => {
     );
     toast.success("Teacher assigned");
     setIsTeacherModalOpen(false);
+  };
+
+  // DataGrid columns configuration
+  const columns = [
+    {
+      field: "classroom_name",
+      headerText: "Class",
+      width: 100,
+      template: (cls) => (
+        <Badge className="bg-primary/10 text-primary border-primary/20">
+          Class {cls.classroom_name}
+        </Badge>
+      ),
+    },
+    { field: "section", headerText: "Section", width: 80 },
+    {
+      field: "class_teacher",
+      headerText: "Class Teacher",
+      width: 150,
+      template: (cls) => cls.class_teacher || "--",
+    },
+    {
+      field: "total_students",
+      headerText: "Total Students",
+      width: 120,
+      textAlign: "Center",
+      template: (cls) => cls.total_students || 0,
+    },
+    {
+      field: "status",
+      headerText: "Status",
+      width: 100,
+      textAlign: "Center",
+      template: (cls) => (
+        <Badge variant={cls.status === "active" ? "default" : "destructive"}>
+          {cls.status === "active" ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+  ];
+
+  // DataGrid actions configuration
+  const actionConfig = {
+    mode: "dropdown",
+    showOnHover: false,
+    width: 60,
+    actions: [
+      {
+        label: "View",
+        icon: <Eye className="h-4 w-4" />,
+        onClick: (cls) => handleAction("View", cls),
+      },
+      {
+        label: "Toggle Status",
+        icon: <UserX className="h-4 w-4" />,
+        onClick: (cls) => handleAction("toggle", cls),
+      },
+      {
+        label: "Assign Teacher",
+        icon: <PlusCircle className="h-4 w-4" />,
+        onClick: handleAssignTeacher,
+      },
+    ],
   };
 
   return (
@@ -116,82 +156,13 @@ const Classes = () => {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead>Class</TableHead>
-              <TableHead>Section</TableHead>
-              <TableHead>Class Teacher</TableHead>
-              <TableHead className="text-center">Total Students</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="w-16 text-center"></TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {classes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="p-6">
-                  <DataNotFound item="classes" />
-                </TableCell>
-              </TableRow>
-            ) : (
-              Object.keys(groupedClasses).map((className) => {
-                const classSections = groupedClasses[className];
-                return classSections.map((cls, idx) => (
-                  <TableRow key={cls.id} className="group">
-                    <TableCell>
-                      {idx === 0 && (
-                        <Badge className="bg-primary/10 text-primary border-primary/20">
-                          Class {cls.classroom_name}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-left">{cls.section}</TableCell>
-                    <TableCell>{cls.class_teacher || "--"}</TableCell>
-                    <TableCell className="text-center">
-                      {cls.total_students || 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={cls.status === "active" ? "default" : "destructive"}>
-                        {cls.status === "active" ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <TableActionButton />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleAction("View", cls)}>
-                            <Eye className="mr-2 h-4 w-4" /> View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleAction("toggle", cls)}>
-                            <UserX className="mr-2 h-4 w-4" />
-                            {cls.status === "active" ? "Set Inactive" : "Set Active"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleAssignTeacher(cls)}>
-                            {cls.class_teacher ? (
-                              <>
-                                <Edit className="mr-2 h-4 w-4" /> Reassign Teacher
-                              </>
-                            ) : (
-                              <>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Assign Teacher
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ));
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataGrid
+        columns={columns}
+        data={classes}
+        actionConfig={actionConfig}
+        emptyMessage="No classes found"
+        keyField="id"
+      />
 
       <AssignTeacherModal
         cls={selectedClass}
