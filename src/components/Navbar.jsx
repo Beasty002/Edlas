@@ -25,7 +25,7 @@ export default function Navbar({ onMenuToggle, isMobile }) {
   };
 
   return (
-    <div className="flex items-center justify-between h-16 px-4 border-b bg-white dark:bg-gray-800 dark:border-gray-700">
+    <div className="flex items-center justify-between h-[49px] px-4 border-b bg-white dark:bg-gray-800 dark:border-gray-700">
       <div className="flex items-center gap-2">
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={onMenuToggle}>

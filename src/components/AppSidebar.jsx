@@ -249,7 +249,7 @@ export function AppSidebar({ isOpen, onToggle }) {
         {hasChildren && isOpen && (
           <div
             className={cn(
-              'ml-5 pl-3 border-l border-sidebar-border overflow-hidden transition-all duration-300',
+              'ml-5 pl-3 border-l border-sidebar-border overflow-hidden transition-[max-height,opacity] duration-300',
               isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             )}
           >
@@ -278,7 +278,7 @@ export function AppSidebar({ isOpen, onToggle }) {
         )}
         <button
           className={cn(
-            'flex items-center justify-center w-8 h-8 rounded-lg transition-colors',
+            'flex items-center justify-center w-8 h-8 shrink-0 aspect-square rounded-lg',
             'bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground',
             isOpen ? 'ml-auto' : ''
           )}
