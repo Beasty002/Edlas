@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { PlusCircle, Edit, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import { toast } from "sonner";
@@ -131,14 +132,48 @@ const TeacherAssignments = () => {
         description="Assign teachers to subjects for each class and section"
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
-        <Button
-          onClick={() => handleOpenDialog()}
-          className="bg-blue-600 text-white hover:bg-blue-700"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Assign Teacher
-        </Button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search assignments..."
+            className="pl-10 w-full"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Select>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Class" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {[...new Set(mockClassSubjects.map(cs => cs.classroom_name))].map((cls) => (
+                <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Teacher" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Teachers</SelectItem>
+              {activeTeachers.map((t) => (
+                <SelectItem key={t.id} value={t.id.toString()}>{t.full_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Assign Teacher
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border w-full">

@@ -14,7 +14,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Edit, Eye, UserX, PlusCircle } from "lucide-react";
+import { Edit, Eye, UserX, PlusCircle, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import TableActionButton from "@/components/reusable/TableActionButton";
@@ -78,13 +86,34 @@ const Classes = () => {
         description="Manage classes, sections, and assign class teachers efficiently."
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-          <AddClassModal
-            classesData={classes}
-            onSave={handleSaveNewClass}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search classes..."
+            className="pl-10 w-full"
           />
-        </Button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Select>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <AddClassModal
+              classesData={classes}
+              onSave={handleSaveNewClass}
+            />
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border overflow-x-auto">

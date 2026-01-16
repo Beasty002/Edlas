@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, Trash2, PlusCircle } from "lucide-react";
+import { Edit, Trash2, PlusCircle, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import { mockSubjects } from "@/data/mockData";
@@ -74,7 +74,15 @@ const SubjectMaster = () => {
         description="Manage the master list of all subjects available in the school"
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search subjects..."
+            className="pl-10 w-full"
+          />
+        </div>
+
         <Button
           onClick={() => handleOpenDialog()}
           className="bg-blue-600 text-white hover:bg-blue-700"

@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import { mockSubjects, mockClassrooms, mockClassSubjects } from "@/data/mockData";
@@ -168,14 +168,36 @@ const Subjects = () => {
         description="Manage subjects assigned to each class with marking schemes"
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
-        <Button
-          onClick={() => handleOpenDialog()}
-          className="bg-blue-600 text-white hover:bg-blue-700"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Subject
-        </Button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search subjects..."
+            className="pl-10 w-full"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Select>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Class" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {mockClassrooms.map((c) => (
+                <SelectItem key={c.id} value={c.name}>Class {c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Subject
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border">

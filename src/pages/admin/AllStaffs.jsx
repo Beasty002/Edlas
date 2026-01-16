@@ -22,10 +22,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Edit, UserX, PlusCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Edit, UserX, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
 import TableActionButton from "@/components/reusable/TableActionButton";
@@ -78,13 +84,38 @@ const AllStaffs = () => {
         description="Manage all staff members and their assignments"
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
-        <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Link to="/staffs/add">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Staff
-          </Link>
-        </Button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search staff..."
+            className="pl-10 w-full"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Select>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="teacher">Teacher</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
