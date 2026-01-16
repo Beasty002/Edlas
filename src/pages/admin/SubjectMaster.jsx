@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,44 +18,25 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Edit, Trash2, PlusCircle, Loader2 } from "lucide-react";
+import { Edit, Trash2, PlusCircle } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import DataNotFound from "@/components/reusable/DataNotFound";
-import { TableSkeleton } from "@/components/reusable/TableSkeleton";
-import { useSubjects, useCreateSubject, useUpdateSubject, useDeleteSubject } from "@/api/hooks";
+import { mockSubjects } from "@/data/mockData";
 import { toast } from "sonner";
 
 const SubjectMaster = () => {
-  const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
-
-  const { data: subjectsData, isLoading, error } = useSubjects();
-  const createSubject = useCreateSubject();
-  const updateSubject = useUpdateSubject();
-  const deleteSubject = useDeleteSubject();
-
-  const subjects = subjectsData?.subjects || [];
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error.message || "Failed to fetch subjects");
-    }
-  }, [error]);
-
-  const filtered = subjects.filter((s) =>
-    s.name?.toLowerCase().includes(search.toLowerCase()) ||
-    s.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const [formData, setFormData] = useState({ name: "", code: "", description: "" });
+  const [subjects, setSubjects] = useState(mockSubjects);
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
       setEditingSubject(subject);
-      setFormData({ name: subject.name, description: subject.description || "" });
+      setFormData({ name: subject.name, code: subject.code || "", description: subject.description || "" });
     } else {
       setEditingSubject(null);
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "", code: "", description: "" });
     }
     setIsDialogOpen(true);
   };
@@ -66,38 +47,24 @@ const SubjectMaster = () => {
       return;
     }
 
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-    };
-
     if (editingSubject) {
-      updateSubject.mutate(
-        { id: editingSubject.id, data: payload },
-        {
-          onSuccess: () => {
-            toast.success("Subject updated");
-            setIsDialogOpen(false);
-          },
-          onError: (err) => toast.error(err.message),
-        }
+      setSubjects(prev =>
+        prev.map(s =>
+          s.id === editingSubject.id ? { ...s, ...formData } : s
+        )
       );
+      toast.success("Subject updated");
     } else {
-      createSubject.mutate(payload, {
-        onSuccess: () => {
-          toast.success("Subject created");
-          setIsDialogOpen(false);
-        },
-        onError: (err) => toast.error(err.message),
-      });
+      const newId = Math.max(...subjects.map(s => s.id)) + 1;
+      setSubjects(prev => [...prev, { id: newId, ...formData }]);
+      toast.success("Subject created");
     }
+    setIsDialogOpen(false);
   };
 
   const handleDelete = (id) => {
-    deleteSubject.mutate(id, {
-      onSuccess: () => toast.success("Subject deleted"),
-      onError: (err) => toast.error(err.message),
-    });
+    setSubjects(prev => prev.filter(s => s.id !== id));
+    toast.success("Subject deleted");
   };
 
   return (
@@ -107,16 +74,7 @@ const SubjectMaster = () => {
         description="Manage the master list of all subjects available in the school"
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search subjects..."
-            className="pl-10 w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
         <Button
           onClick={() => handleOpenDialog()}
           className="bg-blue-600 text-white hover:bg-blue-700"
@@ -126,64 +84,62 @@ const SubjectMaster = () => {
         </Button>
       </div>
 
-      {isLoading ? (
-        <TableSkeleton rows={6} columns={4} />
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-100 dark:bg-gray-800">
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead>Subject Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-24 text-center">Actions</TableHead>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-100 dark:bg-gray-800">
+              <TableHead className="w-16">ID</TableHead>
+              <TableHead>Subject Name</TableHead>
+              <TableHead>Code</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="w-24 text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          {subjects.length === 0 ? (
+            <TableBody>
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <DataNotFound item="subjects" />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            {filtered.length === 0 ? (
-              <TableBody>
-                <TableRow>
-                  <TableCell colSpan={4}>
-                    <DataNotFound item="subjects" />
+            </TableBody>
+          ) : (
+            <TableBody>
+              {subjects.map((subject) => (
+                <TableRow key={subject.id}>
+                  <TableCell className="text-muted-foreground">
+                    #{subject.id}
+                  </TableCell>
+                  <TableCell className="font-medium">{subject.name}</TableCell>
+                  <TableCell>{subject.code}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {subject.description}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenDialog(subject)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(subject.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
-              </TableBody>
-            ) : (
-              <TableBody>
-                {filtered.map((subject) => (
-                  <TableRow key={subject.id}>
-                    <TableCell className="text-muted-foreground">
-                      #{subject.id}
-                    </TableCell>
-                    <TableCell className="font-medium">{subject.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {subject.description}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(subject.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            )}
-          </Table>
-        </div>
-      )}
+              ))}
+            </TableBody>
+          )}
+        </Table>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -206,6 +162,18 @@ const SubjectMaster = () => {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="code">Subject Code</Label>
+              <Input
+                id="code"
+                className="w-full"
+                value={formData.code}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
+                placeholder="e.g., MATH"
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -221,10 +189,7 @@ const SubjectMaster = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={createSubject.isPending || updateSubject.isPending}>
-              {(createSubject.isPending || updateSubject.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button onClick={handleSave}>
               {editingSubject ? "Save Changes" : "Add Subject"}
             </Button>
           </DialogFooter>

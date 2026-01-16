@@ -38,7 +38,7 @@ import {
 
 import NavUser from "./NavUser";
 import { AuthContext } from "@/context/AuthContext";
-import { rolePermissions } from "@/data/staticData";
+import { rolePermissions } from "@/data/mockData";
 
 const allMenuItems = [
   {

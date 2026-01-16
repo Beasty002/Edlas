@@ -18,9 +18,9 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, PlusCircle, Loader2 } from "lucide-react";
+import { Plus, Minus, PlusCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { useCreateClassroomWithSections, useCreateClassSection, useClassrooms } from "@/api/hooks";
+import { mockClassrooms } from "@/data/mockData";
 import { toast } from "sonner";
 
 const AddClassModal = ({ classesData = [], onSave }) => {
@@ -31,25 +31,19 @@ const AddClassModal = ({ classesData = [], onSave }) => {
   const [sections, setSections] = useState(["A"]);
   const [existingSections, setExistingSections] = useState([]);
 
-  const { data: classroomsData } = useClassrooms({ page_size: 100 });
-  const classrooms = classroomsData?.results || [];
-
-  const createClassroomWithSections = useCreateClassroomWithSections();
-  const createSection = useCreateClassSection();
-
   useEffect(() => {
     if (mode === "section" && selectedClassroomId) {
-      const selectedClassroom = classrooms.find((c) => c.id.toString() === selectedClassroomId);
-      if (selectedClassroom && selectedClassroom.sections) {
-        const existing = selectedClassroom.sections.map(s => s.name);
-        setExistingSections(existing);
-        setSections(existing);
+      const selectedClassroom = mockClassrooms.find((c) => c.id.toString() === selectedClassroomId);
+      if (selectedClassroom) {
+        // For mock, we don't have nested sections, just reset
+        setExistingSections([]);
+        setSections(["A"]);
       }
     } else {
       setExistingSections([]);
       setSections(["A"]);
     }
-  }, [selectedClassroomId, mode, classrooms]);
+  }, [selectedClassroomId, mode]);
 
   const addSection = () => {
     const allSections = [...sections];
@@ -80,45 +74,43 @@ const AddClassModal = ({ classesData = [], onSave }) => {
 
   const handleSubmit = () => {
     if (mode === "new") {
-      // Create new classroom with sections
-      const payload = {
+      // For mock, just call onSave with the data
+      const newClassData = {
         classroom_name: className,
-        section_names: sections,
+        section: sections[0] || "A",
+        class_teacher: "",
+        total_students: 0,
+        status: "active",
       };
-      createClassroomWithSections.mutate(payload, {
-        onSuccess: () => {
-          toast.success("Class created successfully");
-          setOpen(false);
-        },
-        onError: (err) => toast.error(err.message),
+
+      // Create entries for each section
+      sections.forEach((sec, idx) => {
+        onSave?.({
+          ...newClassData,
+          section: sec,
+        });
       });
+
+      toast.success("Class created successfully");
+      setOpen(false);
     } else {
       // Add new sections to existing classroom
-      const newSections = sections.filter(s => !existingSections.includes(s));
-      if (newSections.length === 0) {
-        toast.info("No new sections to add");
-        return;
+      const selectedClassroom = mockClassrooms.find((c) => c.id.toString() === selectedClassroomId);
+      if (selectedClassroom) {
+        sections.forEach((sec) => {
+          onSave?.({
+            classroom_name: selectedClassroom.name,
+            section: sec,
+            class_teacher: "",
+            total_students: 0,
+            status: "active",
+          });
+        });
+        toast.success("Sections added successfully");
+        setOpen(false);
       }
-
-      // Create each new section
-      const promises = newSections.map(sectionName =>
-        createSection.mutateAsync({
-          name: sectionName,
-          classroom: parseInt(selectedClassroomId),
-          is_active: true,
-        })
-      );
-
-      Promise.all(promises)
-        .then(() => {
-          toast.success("Sections added successfully");
-          setOpen(false);
-        })
-        .catch((err) => toast.error(err.message));
     }
   };
-
-  const isSubmitting = createClassroomWithSections.isPending || createSection.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -169,7 +161,7 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                   <SelectValue placeholder="Select Existing Class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classrooms.map((c) => (
+                  {mockClassrooms.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()}>
                       Class {c.name}
                     </SelectItem>
@@ -203,8 +195,8 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                     <Badge
                       key={sec + idx}
                       className={`px-3 w-[30px] h-[30px] py-1 rounded-full text-sm flex items-center justify-center ${existingSections.includes(sec)
-                          ? "bg-gray-300 dark:bg-gray-600"
-                          : "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200"
+                        ? "bg-gray-300 dark:bg-gray-600"
+                        : "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200"
                         }`}
                     >
                       {sec}
@@ -229,10 +221,9 @@ const AddClassModal = ({ classesData = [], onSave }) => {
         <DialogFooter>
           <Button
             onClick={handleSubmit}
-            disabled={(!className && !selectedClassroomId) || sections.length === 0 || isSubmitting}
+            disabled={(!className && !selectedClassroomId) || sections.length === 0}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save
           </Button>
         </DialogFooter>

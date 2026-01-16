@@ -12,20 +12,12 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Camera, X, Loader2 } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
-import { useClassrooms, useClassSections, useCreateStudent, useUpdateStudent } from "@/api/hooks";
+import { mockClassrooms, allSections } from "@/data/mockData";
 
 const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
-  const { data: classroomsData } = useClassrooms({ page_size: 100 });
-  const { data: sectionsData } = useClassSections({ page_size: 100 });
-  const createStudent = useCreateStudent();
-  const updateStudent = useUpdateStudent();
-
-  const classrooms = classroomsData?.results || [];
-  const sections = sectionsData?.results || [];
-
   const {
     register,
     handleSubmit,
@@ -119,50 +111,13 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
     }
   }, [guardianChoice, fatherName, fatherPhone, motherName, motherPhone, setValue]);
 
-  const onSubmit = async (data) => {
-    const payload = {
-      admission_number: data.admission_number || null,
-      first_name: data.first_name,
-      middle_name: data.middle_name || null,
-      last_name: data.last_name,
-      dob: data.dob,
-      gender: data.gender,
-      roll_no: data.roll_no ? parseInt(data.roll_no) : null,
-      student_class: data.student_class,
-      section: data.section,
-      admission_date: data.admission_date,
-      address: data.address || null,
-      father_name: data.father_name || null,
-      father_phone: data.father_phone || null,
-      mother_name: data.mother_name || null,
-      mother_phone: data.mother_phone || null,
-      guardian_name: data.guardian_name || null,
-      guardian_relation: data.guardian_relation || null,
-      guardian_phone: data.guardian_phone || null,
-      previous_school: data.previous_school || null,
-      notes: data.notes || null,
-    };
-
-    const mutationConfig = {
-      onSuccess: () => {
-        toast.success(mode === "new" ? "Student enrolled successfully!" : "Student updated successfully!");
-        reset();
-        removeAvatar();
-        onSuccess?.();
-      },
-      onError: (err) => {
-        toast.error(err.message || "Failed to save student");
-      },
-    };
-
-    if (mode === "new") {
-      createStudent.mutate(payload, mutationConfig);
-    } else {
-      updateStudent.mutate({ id: studentData.id, data: payload }, mutationConfig);
-    }
+  const onSubmit = (data) => {
+    // For mock, just show success
+    toast.success(mode === "new" ? "Student enrolled successfully!" : "Student updated successfully!");
+    reset();
+    removeAvatar();
+    onSuccess?.();
   };
-
-  const isLoading = createStudent.isPending || updateStudent.isPending;
 
   const RequiredLabel = ({ children }) => (
     <Label className="mb-2">
@@ -305,7 +260,7 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classrooms.map((c) => (
+                  {mockClassrooms.map((c) => (
                     <SelectItem key={c.id} value={c.name}>
                       Class {c.name}
                     </SelectItem>
@@ -323,9 +278,9 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
                   <SelectValue placeholder="Select section" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sections.map((s) => (
-                    <SelectItem key={s.id} value={s.name}>
-                      {s.name}
+                  {allSections.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -410,9 +365,7 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
           <Button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            disabled={isLoading}
           >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {mode === "new" ? "Enroll Student" : "Update Student"}
           </Button>
         </div>

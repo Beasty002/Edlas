@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -18,42 +18,25 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UpdateStudentForm from "./UpdateStudentForm";
 import TableActionButton from "@/components/reusable/TableActionButton";
 import DataNotFound from "@/components/reusable/DataNotFound";
-import { TableSkeleton } from "@/components/reusable/TableSkeleton";
 import { useNavigate } from "react-router-dom";
-import { useStudents, useUpdateStudentStatus } from "@/api/hooks";
+import { mockStudents } from "@/data/mockData";
 import { View } from "lucide-react";
 import { toast } from "sonner";
 
 const StudentListTable = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useStudents({ page: 1, page_size: 50 });
-  const updateStatus = useUpdateStudentStatus();
+  const [students, setStudents] = useState(mockStudents);
 
-  const students = data?.results || [];
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error.message || "Failed to fetch students");
-    }
-  }, [error]);
-
-  const handleAction = async (studentId, action) => {
+  const handleAction = (studentId, action) => {
     if (action === "view") {
-      navigate(`/students/${studentId}`);
+      navigate(`/students/StudentDetail`);
     } else if (["active", "graduated", "transferred", "expelled"].includes(action)) {
-      updateStatus.mutate(
-        { id: studentId, status: action },
-        {
-          onSuccess: () => toast.success("Status updated successfully"),
-          onError: (err) => toast.error(err.message),
-        }
+      setStudents(prev =>
+        prev.map(s => (s.id === studentId ? { ...s, status: action } : s))
       );
+      toast.success("Status updated successfully");
     }
   };
-
-  if (isLoading) {
-    return <TableSkeleton rows={8} columns={10} />;
-  }
 
   return (
     <div className="overflow-hidden rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -104,13 +87,14 @@ const StudentListTable = () => {
                 <TableCell>{student.email || "-"}</TableCell>
                 <TableCell>{student.admission_date}</TableCell>
                 <TableCell>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    student.status === "active" 
-                      ? "bg-green-100 text-green-800" 
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${student.status === "active"
+                      ? "bg-green-100 text-green-800"
                       : student.status === "graduated"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}>
+                        ? "bg-blue-100 text-blue-800"
+                        : student.status === "transferred"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
+                    }`}>
                     {student.status}
                   </span>
                 </TableCell>
