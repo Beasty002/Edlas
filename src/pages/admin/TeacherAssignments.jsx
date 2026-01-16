@@ -8,14 +8,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -27,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Edit, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import DataNotFound from "@/components/reusable/DataNotFound";
+import { DataGrid } from "@/components/reusable/DataGrid";
 import { toast } from "sonner";
 import {
   mockTeacherAssignments,
@@ -47,16 +39,6 @@ const TeacherAssignments = () => {
   });
 
   const activeTeachers = mockStaff.filter(s => s.role === "Teacher" && s.status === "active");
-
-  // Group assignments by class and subject
-  const groupedAssignments = assignments.reduce((acc, a) => {
-    const key = `${a.classroom_name}-${a.class_subject}`;
-    if (!acc[key]) {
-      acc[key] = { className: a.classroom_name, subjectCode: a.class_subject_code, sections: [] };
-    }
-    acc[key].sections.push(a);
-    return acc;
-  }, {});
 
   const handleOpenDialog = (assignment = null) => {
     if (assignment) {
@@ -125,6 +107,44 @@ const TeacherAssignments = () => {
     return mockClassSections.filter(s => s.classroom_name === selectedClassSubject.classroom_name);
   };
 
+  // DataGrid columns configuration
+  const columns = [
+    {
+      field: "classroom_name",
+      headerText: "Class",
+      width: 100,
+      template: (assignment) => (
+        <Badge variant="outline" className="bg-primary/10 text-primary">
+          Class {assignment.classroom_name}
+        </Badge>
+      ),
+    },
+    { field: "class_subject_code", headerText: "Subject Code", width: 120 },
+    {
+      field: "section",
+      headerText: "Section",
+      width: 80,
+      textAlign: "Center",
+      template: (assignment) => (
+        <Badge variant="secondary">{assignment.section}</Badge>
+      ),
+    },
+    { field: "teacher_name", headerText: "Teacher", width: 180 },
+  ];
+
+  // DataGrid actions configuration (icon mode)
+  const actionConfig = {
+    mode: "icons",
+    width: 60,
+    actions: [
+      {
+        label: "Edit",
+        icon: <Edit className="h-4 w-4" />,
+        onClick: handleOpenDialog,
+      },
+    ],
+  };
+
   return (
     <div className="space-y-6 w-full">
       <PageHeader
@@ -176,62 +196,13 @@ const TeacherAssignments = () => {
         </div>
       </div>
 
-      <div className="rounded-md border w-full">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100 dark:bg-gray-800">
-              <TableHead className="w-24">Class</TableHead>
-              <TableHead>Subject Code</TableHead>
-              <TableHead className="w-24 text-center">Section</TableHead>
-              <TableHead>Teacher</TableHead>
-              <TableHead className="w-24 text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          {assignments.length === 0 ? (
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <DataNotFound item="assignments" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          ) : (
-            <TableBody>
-              {Object.values(groupedAssignments).map((group) =>
-                group.sections.map((assignment, idx) => (
-                  <TableRow key={assignment.id}>
-                    <TableCell>
-                      {idx === 0 && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary">
-                          Class {group.className}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {idx === 0 ? group.subjectCode : ""}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary">{assignment.section}</Badge>
-                    </TableCell>
-                    <TableCell>{assignment.teacher_name}</TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(assignment)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          )}
-        </Table>
-      </div>
+      <DataGrid
+        columns={columns}
+        data={assignments}
+        actionConfig={actionConfig}
+        emptyMessage="No teacher assignments found"
+        keyField="id"
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
