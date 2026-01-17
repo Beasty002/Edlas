@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 
 import { AuthContext } from '@/context/AuthContext';
-import { rolePermissions } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
 const allMenuItems = [
@@ -33,11 +32,13 @@ const allMenuItems = [
     label: 'Dashboard',
     path: '/',
     icon: Home,
+    roles: ['superadmin', 'staff', 'student'],
   },
   {
     id: 'students',
     label: 'Students',
     icon: User,
+    roles: ['superadmin', 'staff'],
     children: [
       { id: 'all-students', label: 'All Students', path: '/students', icon: Users, roles: ['staff', 'superadmin'] },
       { id: 'new-enrollment', label: 'New Enrollment', path: '/students/newEnrollment', icon: PlusCircle, roles: ['superadmin'] },
@@ -48,6 +49,7 @@ const allMenuItems = [
     id: 'staffs',
     label: 'Staff Management',
     icon: Users,
+    roles: ['superadmin'],
     children: [
       { id: 'all-staff', label: 'All Staff', path: '/staffs', icon: Users, roles: ['superadmin'] },
       { id: 'add-staff', label: 'Add Staff', path: '/staffs/add', icon: UserPlus, roles: ['superadmin'] },
@@ -57,6 +59,7 @@ const allMenuItems = [
     id: 'academics',
     label: 'Academics',
     icon: BookOpenIcon,
+    roles: ['superadmin', 'staff'],
     children: [
       { id: 'classes', label: 'Classes', path: '/classes', icon: SchoolIcon, roles: ['superadmin'] },
       { id: 'subjects', label: 'Subjects', path: '/subject-master', icon: BookMarked, roles: ['superadmin'] },
@@ -70,12 +73,14 @@ const allMenuItems = [
     label: 'Notifications',
     path: '/notifications',
     icon: Bell,
+    roles: ['superadmin'],
   },
   {
     id: 'classroom',
     label: 'My Classroom',
     path: '/classroom',
     icon: ClipboardList,
+    roles: ['superadmin', 'staff', 'student'],
     rolePaths: {
       student: '/my-classroom',
       staff: '/classroom',
@@ -87,20 +92,20 @@ const allMenuItems = [
     label: 'My Results',
     path: '/my-results',
     icon: FileDigit,
+    roles: ['student'],
   },
   {
     id: 'ai',
     label: 'AI Chat',
     path: '/ai',
     icon: MessageSquare,
+    roles: ['superadmin', 'staff', 'student'],
   },
 ];
 
 const filterMenuByRole = (menu, userType) => {
-  const permissions = rolePermissions[userType]?.sidebar || [];
-
   return menu
-    .filter((item) => permissions.includes(item.id))
+    .filter((item) => !item.roles || item.roles.includes(userType))
     .map((item) => {
       if (item.children) {
         const filteredChildren = item.children.filter(
@@ -200,7 +205,6 @@ export function AppSidebar({ isOpen, onToggle }) {
       });
     };
     expandParents(menuItems);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const handleProfileAction = (action) => {

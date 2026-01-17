@@ -1,14 +1,14 @@
 import { createContext, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { mockUsers } from "@/data/mockData";
 import {
   getAccessToken,
   setAccessToken,
   getUser as getStoredUser,
   setUser as storeUser,
-  clearAuth,
   hasValidAuth,
+  removeAuthData,
 } from "@/utils/tokenStorage";
+import { authAPI } from "@/api/api";
 
 export const AuthContext = createContext();
 
@@ -29,10 +29,6 @@ const saveToStorage = (accessToken, user) => {
   storeUser(user);
 };
 
-// Generate a mock token
-const generateMockToken = () => {
-  return "mock_token_" + Math.random().toString(36).substring(2) + Date.now().toString(36);
-};
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,7 +37,7 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const performLogout = useCallback(() => {
-    clearAuth();
+    removeAuthData();
     setIsAuthenticated(false);
     setAccessTokenState(null);
     setUser(null);
@@ -66,41 +62,40 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const toastId = toast.loading("Logging in...");
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const response = await authAPI.login(email, password);
 
-    // Check credentials against mock users
-    const mockUser = mockUsers[email];
+      if (!response.ok) {
+        throw { response: { data: response.data } };
+      }
 
-    if (!mockUser || mockUser.password !== password) {
-      toast.error("Invalid email or password", { id: toastId });
-      throw new Error("Invalid credentials");
+      const data = response.data;
+      const userType = getUserType(data.user);
+      const fullName = getFullName(data.user);
+
+      const processedUser = {
+        ...data.user,
+        user_type: userType,
+        full_name: fullName,
+      };
+
+      saveToStorage(data.tokens.access, processedUser);
+      setIsAuthenticated(true);
+      setAccessTokenState(data.tokens.access);
+      setUser(processedUser);
+
+      setTimeout(() => {
+        toast.success(`Welcome Back, ${fullName}`, { id: toastId });
+      }, 300);
+
+      return { ...data, user: processedUser };
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.detail || "Login failed. Please try again.",
+        { id: toastId }
+      );
+      throw error;
     }
-
-    const userType = getUserType(mockUser);
-    const fullName = getFullName(mockUser);
-
-    const processedUser = {
-      ...mockUser,
-      user_type: userType,
-      full_name: fullName,
-    };
-
-    // Remove password from stored user
-    delete processedUser.password;
-
-    const token = generateMockToken();
-
-    saveToStorage(token, processedUser);
-    setIsAuthenticated(true);
-    setAccessTokenState(token);
-    setUser(processedUser);
-
-    setTimeout(() => {
-      toast.success(`Welcome Back, ${fullName}`, { id: toastId });
-    }, 300);
-
-    return { user: processedUser, tokens: { access: token } };
   };
 
   const logout = () => {
@@ -109,10 +104,21 @@ export function AuthProvider({ children }) {
   };
 
   const refreshUser = async () => {
-    // For mock, just return the stored user
-    const storedUser = getStoredUser();
-    if (storedUser) {
-      setUser(storedUser);
+    try {
+      const response = await authAPI.whoami();
+      if (response.ok) {
+        const userType = getUserType(response.data);
+        const fullName = getFullName(response.data);
+        const processedUser = {
+          ...response.data,
+          user_type: userType,
+          full_name: fullName,
+        };
+        setUser(processedUser);
+        storeUser(processedUser);
+      }
+    } catch {
+      logout();
     }
   };
 
