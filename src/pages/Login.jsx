@@ -41,7 +41,6 @@ export default function Login() {
     if (Object.keys(newErrors).length === 0) {
       try {
         await auth.login(email, password);
-
         const redirectTo = !from || from === "/login" ? "/" : from;
         navigate(redirectTo, { replace: true });
       } catch (error) {}

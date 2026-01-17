@@ -1,4 +1,4 @@
-import { getAccessToken, removeAuthData } from "@/utils/tokenStorage";
+import { getAccessToken, removeAuthData, setAccessToken } from "@/utils/tokenStorage";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -104,4 +104,87 @@ const baseRequest = async ({
     }
 };
 
-export default axiosInstance;
+
+//All basic auth related api
+export const authAPI = {
+    login: (email, password) =>
+        baseRequest({
+            url: '/system/auth/login/',
+            method: 'POST',
+            body: { email, password },
+            skipAuth: true,
+        }),
+
+    googleLogin: (idToken) =>
+        baseRequest({
+            url: '/system/auth/google-login/',
+            method: 'POST',
+            body: { id_token: idToken },
+            skipAuth: true,
+        }),
+
+    register: (userData) =>
+        baseRequest({
+            url: '/system/auth/register/user/',
+            method: 'POST',
+            body: userData,
+            skipAuth: true,
+        }),
+
+    logout: () =>
+        baseRequest({
+            url: '/system/auth/logout/',
+            method: 'GET',
+        }),
+
+    whoami: () =>
+        baseRequest({
+            url: '/system/auth/whoami/',
+            method: 'GET',
+        }),
+
+    verifyEmail: (email, verificationCode) =>
+        baseRequest({
+            url: '/system/auth/verify-email/',
+            method: 'POST',
+            body: { email, verification_code: verificationCode },
+            skipAuth: true,
+        }),
+
+    resendVerification: (email) =>
+        baseRequest({
+            url: '/system/auth/resend-verification/',
+            method: 'POST',
+            body: { email },
+            skipAuth: true,
+        }),
+};
+
+export const login = async (email, password) => {
+  const response = await authAPI.login(email, password);
+  
+  if (!response.ok) {
+    throw { response: { data: response.data } };
+  }
+
+  setAccessToken(response.data.tokens.access);
+
+  return response.data;
+};
+
+export const logout = async () => {
+  const response = await authAPI.logout();
+  removeAuthData();
+  return response;
+};
+
+export const whoami = async () => {
+  const response = await authAPI.whoami();
+  if (!response.ok) {
+    throw { response: { data: response.data } };
+  }
+  return response.data;
+};
+//------------------------------------------------------------------------
+
+
