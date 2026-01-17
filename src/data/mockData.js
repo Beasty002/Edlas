@@ -55,12 +55,12 @@ export const rolePermissions = {
     routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/StudentDetail", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/notifications", "/marks", "/ai"]
   },
   staff: {
-    sidebar: ["dashboard", "students", "academics", "ai"],
-    routes: ["/", "/students", "/marks", "/ai"]
+    sidebar: ["dashboard", "students", "academics", "classroom", "ai"],
+    routes: ["/", "/students", "/marks", "/classroom", "/ai"]
   },
   student: {
-    sidebar: ["dashboard", "results", "ai"],
-    routes: ["/", "/my-results", "/ai"]
+    sidebar: ["dashboard", "classroom", "results", "ai"],
+    routes: ["/", "/my-classroom", "/my-results", "/ai"]
   }
 };
 
@@ -622,6 +622,193 @@ export const mockNotifications = [
     createdBy: "Admin User",
     imageUrl: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800",
     linkUrl: null
+  }
+];
+
+// ==================== ASSIGNMENTS ====================
+export const mockAssignments = [
+  {
+    id: 1,
+    classSubjectId: 6,
+    classSubjectCode: "MATH-10",
+    className: "10",
+    section: "A",
+    subjectName: "Mathematics",
+    title: "Chapter 5: Quadratic Equations - Practice Set",
+    description: "Complete exercises 1-15 from Chapter 5. Show all your working steps clearly. Submit handwritten solutions.",
+    dueDate: "2026-01-25T23:59:00",
+    allowLateSubmission: true,
+    lateDeadline: "2026-01-28T23:59:00",
+    attachmentUrl: null,
+    totalMarks: 50,
+    createdBy: 1,
+    createdByName: "Ram Bahadur Sharma",
+    createdAt: "2026-01-10T10:00:00",
+    status: "active"
+  },
+  {
+    id: 2,
+    classSubjectId: 6,
+    classSubjectCode: "MATH-10",
+    className: "10",
+    section: "A",
+    subjectName: "Mathematics",
+    title: "Chapter 6: Arithmetic Progression",
+    description: "Solve all problems from exercise 6.1 and 6.2. Focus on word problems.",
+    dueDate: "2026-01-20T23:59:00",
+    allowLateSubmission: false,
+    lateDeadline: null,
+    attachmentUrl: null,
+    totalMarks: 30,
+    createdBy: 1,
+    createdByName: "Ram Bahadur Sharma",
+    createdAt: "2026-01-08T14:00:00",
+    status: "active"
+  },
+  {
+    id: 3,
+    classSubjectId: 8,
+    classSubjectCode: "PHY-10",
+    className: "10",
+    section: "A",
+    subjectName: "Physics",
+    title: "Light and Reflection Lab Report",
+    description: "Write a detailed lab report on the experiment conducted in class. Include diagrams, observations, and conclusions.",
+    dueDate: "2026-01-22T23:59:00",
+    allowLateSubmission: true,
+    lateDeadline: "2026-01-24T23:59:00",
+    attachmentUrl: "https://example.com/lab-template.pdf",
+    totalMarks: 40,
+    createdBy: 5,
+    createdByName: "Dr. Deepak Rana",
+    createdAt: "2026-01-12T09:00:00",
+    status: "active"
+  },
+  {
+    id: 4,
+    classSubjectId: 1,
+    classSubjectCode: "MATH-9",
+    className: "9",
+    section: "A",
+    subjectName: "Mathematics",
+    title: "Linear Equations Worksheet",
+    description: "Complete the attached worksheet on linear equations in two variables.",
+    dueDate: "2026-01-18T23:59:00",
+    allowLateSubmission: false,
+    lateDeadline: null,
+    attachmentUrl: null,
+    totalMarks: 25,
+    createdBy: 1,
+    createdByName: "Ram Bahadur Sharma",
+    createdAt: "2026-01-05T11:00:00",
+    status: "active"
+  },
+  {
+    id: 5,
+    classSubjectId: 1,
+    classSubjectCode: "MATH-9",
+    className: "9",
+    section: "B",
+    subjectName: "Mathematics",
+    title: "Linear Equations Worksheet",
+    description: "Complete the attached worksheet on linear equations in two variables.",
+    dueDate: "2026-01-18T23:59:00",
+    allowLateSubmission: false,
+    lateDeadline: null,
+    attachmentUrl: null,
+    totalMarks: 25,
+    createdBy: 1,
+    createdByName: "Ram Bahadur Sharma",
+    createdAt: "2026-01-05T11:00:00",
+    status: "active"
+  },
+  {
+    id: 6,
+    classSubjectId: 12,
+    classSubjectCode: "PHY-11",
+    className: "11",
+    section: "A",
+    subjectName: "Physics",
+    title: "Thermodynamics Problem Set",
+    description: "Solve problems 1-10 from the thermodynamics chapter. Include all derivations.",
+    dueDate: "2026-01-30T23:59:00",
+    allowLateSubmission: true,
+    lateDeadline: "2026-02-02T23:59:00",
+    attachmentUrl: null,
+    totalMarks: 50,
+    createdBy: 5,
+    createdByName: "Dr. Deepak Rana",
+    createdAt: "2026-01-15T10:00:00",
+    status: "active"
+  }
+];
+
+// ==================== SUBMISSIONS ====================
+export const mockSubmissions = [
+  {
+    id: 1,
+    assignmentId: 1,
+    studentId: 1,
+    studentName: "Aarav Sharma",
+    studentRollNo: 1,
+    submittedAt: "2026-01-20T14:30:00",
+    fileUrl: "https://example.com/submissions/aarav-math-ch5.pdf",
+    fileName: "quadratic_solutions.pdf",
+    status: "submitted",
+    grade: null,
+    feedback: null
+  },
+  {
+    id: 2,
+    assignmentId: 1,
+    studentId: 2,
+    studentName: "Sita Kumari Thapa",
+    studentRollNo: 2,
+    submittedAt: "2026-01-24T22:45:00",
+    fileUrl: "https://example.com/submissions/sita-math-ch5.pdf",
+    fileName: "chapter5_homework.pdf",
+    status: "submitted",
+    grade: 42,
+    feedback: "Good work! Minor calculation errors in Q12."
+  },
+  {
+    id: 3,
+    assignmentId: 2,
+    studentId: 1,
+    studentName: "Aarav Sharma",
+    studentRollNo: 1,
+    submittedAt: "2026-01-19T18:00:00",
+    fileUrl: "https://example.com/submissions/aarav-math-ap.pdf",
+    fileName: "arithmetic_progression.pdf",
+    status: "graded",
+    grade: 28,
+    feedback: "Excellent work on word problems!"
+  },
+  {
+    id: 4,
+    assignmentId: 3,
+    studentId: 1,
+    studentName: "Aarav Sharma",
+    studentRollNo: 1,
+    submittedAt: "2026-01-21T16:20:00",
+    fileUrl: "https://example.com/submissions/aarav-phy-lab.pdf",
+    fileName: "light_reflection_report.pdf",
+    status: "submitted",
+    grade: null,
+    feedback: null
+  },
+  {
+    id: 5,
+    assignmentId: 4,
+    studentId: 4,
+    studentName: "Priya Rana",
+    studentRollNo: 4,
+    submittedAt: "2026-01-17T20:00:00",
+    fileUrl: "https://example.com/submissions/priya-linear-eq.pdf",
+    fileName: "linear_equations.pdf",
+    status: "graded",
+    grade: 23,
+    feedback: "Very good understanding!"
   }
 ];
 

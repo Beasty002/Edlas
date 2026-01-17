@@ -21,6 +21,10 @@ const AllStaffs = lazy(() => import("@/pages/admin/AllStaffs"));
 const AddStaff = lazy(() => import("@/pages/admin/AddStaff"));
 const MyResults = lazy(() => import("@/pages/student/MyResults"));
 const Notifications = lazy(() => import("@/pages/admin/Notifications"));
+const TeacherClassroom = lazy(() => import("@/pages/Teacher/TeacherClassroom"));
+const TeacherAssignmentList = lazy(() => import("@/pages/Teacher/TeacherAssignmentList"));
+const StudentClassroom = lazy(() => import("@/pages/student/StudentClassroom"));
+const StudentAssignmentList = lazy(() => import("@/pages/student/StudentAssignmentList"));
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +45,8 @@ export const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={["student"]} />,
             children: [
               { path: "/my-results", element: <MyResults /> },
+              { path: "/my-classroom", element: <StudentClassroom /> },
+              { path: "/my-classroom/:subjectId", element: <StudentAssignmentList /> },
             ],
           },
 
@@ -49,6 +55,8 @@ export const router = createBrowserRouter([
             children: [
               { path: "/students", element: <StudentsList /> },
               { path: "/marks", element: <MarksPage /> },
+              { path: "/classroom", element: <TeacherClassroom /> },
+              { path: "/classroom/:classSubjectId", element: <TeacherAssignmentList /> },
             ],
           },
 

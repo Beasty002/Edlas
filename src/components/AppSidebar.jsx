@@ -20,6 +20,7 @@ import {
   BookMarked,
   UserCheck,
   Bell,
+  ClipboardList,
 } from 'lucide-react';
 
 import { AuthContext } from '@/context/AuthContext';
@@ -71,6 +72,17 @@ const allMenuItems = [
     icon: Bell,
   },
   {
+    id: 'classroom',
+    label: 'My Classroom',
+    path: '/classroom',
+    icon: ClipboardList,
+    rolePaths: {
+      student: '/my-classroom',
+      staff: '/classroom',
+      superadmin: '/classroom',
+    },
+  },
+  {
     id: 'results',
     label: 'My Results',
     path: '/my-results',
@@ -96,6 +108,9 @@ const filterMenuByRole = (menu, userType) => {
         );
         if (filteredChildren.length === 0) return null;
         return { ...item, children: filteredChildren };
+      }
+      if (item.rolePaths && item.rolePaths[userType]) {
+        return { ...item, path: item.rolePaths[userType] };
       }
       return item;
     })
