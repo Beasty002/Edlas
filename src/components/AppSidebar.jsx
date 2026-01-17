@@ -19,6 +19,7 @@ import {
   UserPlus,
   BookMarked,
   UserCheck,
+  Bell,
 } from 'lucide-react';
 
 import { AuthContext } from '@/context/AuthContext';
@@ -62,6 +63,12 @@ const allMenuItems = [
       { id: 'teacher-assignments', label: 'Teacher Assignments', path: '/teacher-assignments', icon: UserCheck, roles: ['superadmin'] },
       { id: 'markings', label: 'Markings', path: '/marks', icon: FileDigit, roles: ['staff', 'superadmin'] },
     ],
+  },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    path: '/notifications',
+    icon: Bell,
   },
   {
     id: 'results',

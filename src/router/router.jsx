@@ -20,6 +20,7 @@ const Unauthorized = lazy(() => import("@/pages/UnAuthorized"));
 const AllStaffs = lazy(() => import("@/pages/admin/AllStaffs"));
 const AddStaff = lazy(() => import("@/pages/admin/AddStaff"));
 const MyResults = lazy(() => import("@/pages/student/MyResults"));
+const Notifications = lazy(() => import("@/pages/admin/Notifications"));
 
 export const router = createBrowserRouter([
   {
@@ -35,14 +36,14 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: <Dashboard /> },
           { path: "/ai", element: <AiChat /> },
-          
+
           {
             element: <ProtectedRoute allowedRoles={["student"]} />,
             children: [
               { path: "/my-results", element: <MyResults /> },
             ],
           },
-          
+
           {
             element: <ProtectedRoute allowedRoles={["staff", "superadmin"]} />,
             children: [
@@ -50,7 +51,7 @@ export const router = createBrowserRouter([
               { path: "/marks", element: <MarksPage /> },
             ],
           },
-          
+
           {
             element: <ProtectedRoute allowedRoles={["superadmin"]} />,
             children: [
@@ -63,9 +64,10 @@ export const router = createBrowserRouter([
               { path: "/subjects", element: <Subjects /> },
               { path: "/subject-master", element: <SubjectMaster /> },
               { path: "/teacher-assignments", element: <TeacherAssignments /> },
+              { path: "/notifications", element: <Notifications /> },
             ],
           },
-          
+
           { path: "*", element: <NotFoundPage /> },
         ],
       },

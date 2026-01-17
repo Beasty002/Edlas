@@ -51,8 +51,8 @@ export const mockUsers = {
 // ==================== ROLE PERMISSIONS ====================
 export const rolePermissions = {
   superadmin: {
-    sidebar: ["dashboard", "students", "staffs", "academics", "ai"],
-    routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/StudentDetail", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/marks", "/ai"]
+    sidebar: ["dashboard", "students", "staffs", "academics", "notifications", "ai"],
+    routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/StudentDetail", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/notifications", "/marks", "/ai"]
   },
   staff: {
     sidebar: ["dashboard", "students", "academics", "ai"],
@@ -504,6 +504,124 @@ export const mockStudentResults = [
       { name: "Social Studies", code: "SOC-9", full_marks: 100, obtained: 70, grade: "B" },
       { name: "Nepali", code: "NEP-9", full_marks: 100, obtained: 80, grade: "A" }
     ]
+  }
+];
+
+// ==================== NOTIFICATIONS ====================
+export const mockNotifications = [
+  {
+    id: 1,
+    title: "Annual Sports Day Announcement",
+    description: "We are excited to announce that our Annual Sports Day will be held on January 25th, 2026. All students are required to participate in at least one event. Registration forms are available at the sports department.",
+    contentType: "message",
+    recipients: {
+      type: "all_students",
+      classes: [],
+      sections: []
+    },
+    deliveryChannel: ["web", "email"],
+    status: "sent",
+    scheduledDate: null,
+    sentAt: "2026-01-15T10:00:00",
+    createdAt: "2026-01-15T09:30:00",
+    createdBy: "Admin User",
+    imageUrl: null,
+    linkUrl: null
+  },
+  {
+    id: 2,
+    title: "Class 10 Board Exam Schedule",
+    description: "The board examination schedule for Class 10 has been released. Please click the link below to download the complete timetable and guidelines.",
+    contentType: "link",
+    recipients: {
+      type: "specific_class",
+      classes: ["10"],
+      sections: []
+    },
+    deliveryChannel: ["web", "email"],
+    status: "sent",
+    scheduledDate: null,
+    sentAt: "2026-01-14T14:30:00",
+    createdAt: "2026-01-14T14:00:00",
+    createdBy: "Admin User",
+    imageUrl: null,
+    linkUrl: "https://edlas.edu.np/board-exam-schedule-2026"
+  },
+  {
+    id: 3,
+    title: "Parent-Teacher Meeting Reminder",
+    description: "A reminder that the Parent-Teacher Meeting for Class 9A and 9B is scheduled for tomorrow. Parents are requested to be present at the school auditorium by 10:00 AM.",
+    contentType: "message",
+    recipients: {
+      type: "specific_section",
+      classes: ["9"],
+      sections: ["A", "B"]
+    },
+    deliveryChannel: ["email"],
+    status: "scheduled",
+    scheduledDate: "2026-01-18T08:00:00",
+    sentAt: null,
+    createdAt: "2026-01-16T11:00:00",
+    createdBy: "Admin User",
+    imageUrl: null,
+    linkUrl: null
+  },
+  {
+    id: 4,
+    title: "Staff Training Workshop",
+    description: "All teaching staff are required to attend the professional development workshop on modern teaching methodologies. The workshop will be conducted by Dr. Sharma from the Education Board.",
+    contentType: "blog",
+    recipients: {
+      type: "teachers",
+      classes: [],
+      sections: []
+    },
+    deliveryChannel: ["web"],
+    status: "sent",
+    scheduledDate: null,
+    sentAt: "2026-01-13T09:00:00",
+    createdAt: "2026-01-12T16:00:00",
+    createdBy: "Admin User",
+    imageUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800",
+    linkUrl: null
+  },
+  {
+    id: 5,
+    title: "School Holiday Notice",
+    description: "The school will remain closed on January 26th, 2026 on account of Republic Day. Regular classes will resume on January 27th.",
+    contentType: "message",
+    recipients: {
+      type: "whole_school",
+      classes: [],
+      sections: []
+    },
+    deliveryChannel: ["web", "email"],
+    status: "scheduled",
+    scheduledDate: "2026-01-24T07:00:00",
+    sentAt: null,
+    createdAt: "2026-01-17T10:00:00",
+    createdBy: "Admin User",
+    imageUrl: null,
+    linkUrl: null
+  },
+  {
+    id: 6,
+    title: "New Library Resources Available",
+    description: "We have added 500+ new books to our library including fiction, non-fiction, and reference materials. Students can now access digital resources through our new e-library portal.",
+    contentType: "blog",
+    recipients: {
+      type: "all_students",
+      classes: [],
+      sections: []
+    },
+    deliveryChannel: ["web"],
+    status: "draft",
+    scheduledDate: null,
+    sentAt: null,
+    createdAt: "2026-01-17T08:00:00",
+    createdBy: "Admin User",
+    imageUrl: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800",
+    linkUrl: null
   }
 ];
 
