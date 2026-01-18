@@ -51,7 +51,7 @@ axiosInstance.interceptors.response.use(
     }
 );
 
-const baseRequest = async ({
+export const baseRequest = async ({
     url,
     method = "GET",
     body = null,
