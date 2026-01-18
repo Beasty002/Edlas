@@ -18,6 +18,7 @@ import {
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import AddOrEditMarksDialog from "./AddOrEditMarksDialog";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const dummyStudents = [
   {
@@ -133,6 +134,7 @@ const classSubjects = {
 };
 
 const MarksPage = () => {
+  const { classOptions, getSectionsForClass } = useClassrooms();
   const [students, setStudents] = useState(dummyStudents);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -318,9 +320,9 @@ const MarksPage = () => {
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
-              {["9", "10"].map((c) => (
-                <SelectItem key={c} value={c}>
-                  Class {c}
+              {classOptions.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  Class {c.value}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -331,9 +333,9 @@ const MarksPage = () => {
               <SelectValue placeholder="Section" />
             </SelectTrigger>
             <SelectContent>
-              {["A", "B", "C"].map((s) => (
-                <SelectItem key={s} value={s}>
-                  Section {s}
+              {getSectionsForClass(classFilter).map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  Section {s.label}
                 </SelectItem>
               ))}
             </SelectContent>

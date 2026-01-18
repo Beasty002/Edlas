@@ -20,8 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import { mockSubjects, mockClassrooms, mockClassSubjects } from "@/data/mockData";
+import { mockSubjects, mockClassSubjects } from "@/data/mockData";
 import { toast } from "sonner";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const Subjects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,6 +39,8 @@ const Subjects = () => {
     is_optional: false,
   });
 
+  const { classrooms, classOptions } = useClassrooms();
+
   const handleOpenDialog = (subject = null) => {
     if (subject) {
       setEditingSubject(subject);
@@ -53,7 +56,7 @@ const Subjects = () => {
       });
     } else {
       setEditingSubject(null);
-      setSelectedClassroom(mockClassrooms[0]?.name || "");
+      setSelectedClassroom(classOptions[0]?.value || "");
       setSelectedSubjectMaster("");
       setFormData({
         code: "",
@@ -98,7 +101,7 @@ const Subjects = () => {
     }
 
     const selectedSubject = mockSubjects.find(s => s.id.toString() === selectedSubjectMaster);
-    const classroomObj = mockClassrooms.find(c => c.name === selectedClassroom);
+    const classroomObj = classrooms.find(c => c.name === selectedClassroom);
 
     if (editingSubject) {
       setClassSubjects(prev =>
@@ -221,8 +224,8 @@ const Subjects = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
-              {mockClassrooms.map((c) => (
-                <SelectItem key={c.id} value={c.name}>Class {c.name}</SelectItem>
+              {classOptions.map((c) => (
+                <SelectItem key={c.id} value={c.value}>Class {c.value}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -265,9 +268,9 @@ const Subjects = () => {
                     <SelectValue placeholder="Select class" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockClassrooms.map((c) => (
-                      <SelectItem key={c.id} value={c.name}>
-                        Class {c.name}
+                    {classOptions.map((c) => (
+                      <SelectItem key={c.id} value={c.value}>
+                        Class {c.value}
                       </SelectItem>
                     ))}
                   </SelectContent>

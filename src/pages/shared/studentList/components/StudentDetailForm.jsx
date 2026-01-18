@@ -16,9 +16,9 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
-import { mockClassrooms, allSections } from "@/data/mockData";
 import { baseRequest } from "@/api/api";
 import { getErrorMessage } from "@/utils/helper";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
   const {
@@ -54,6 +54,9 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
       avatar: null,
     },
   });
+
+  const { classOptions, getSectionsForClass } = useClassrooms();
+  const selectedClass = watch("student_class");
 
   const queryClient = useQueryClient();
 
@@ -317,9 +320,9 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockClassrooms.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>
-                      Class {c.name}
+                  {classOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.value}>
+                      Class {c.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -335,9 +338,9 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
                   <SelectValue placeholder="Select section" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allSections.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
+                  {getSectionsForClass(selectedClass).map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -29,6 +29,7 @@ import {
 import PageHeader from "../../components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import { Search, ArrowUp, ArrowDown, ArrowRightLeft } from "lucide-react";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const dummyStudents = [
   {
@@ -79,6 +80,7 @@ const StudentPlacement = () => {
   const [pendingSelectedIds, setPendingSelectedIds] = useState([]);
 
   const queryClient = useQueryClient();
+  const { classOptions, getSectionsForClass } = useClassrooms();
 
   // Placement API call function
   const placementApiCall = async ({ studentIds, action, targetClass, targetSection }) => {
@@ -316,27 +318,29 @@ const StudentPlacement = () => {
         </div>
 
         <div className="flex gap-4">
-          <Select value={classFilter} onValueChange={setClassFilter}>
-            <SelectTrigger className="w-full">
+          <Select value={classFilter} onValueChange={(val) => { setClassFilter(val); setSectionFilter(""); }}>
+            <SelectTrigger className="w-32">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
-              {[9, 10, 11, 12].map((c) => (
-                <SelectItem key={c} value={String(c)}>
-                  Class {c}
+              <SelectItem value="all">All Classes</SelectItem>
+              {classOptions.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select value={sectionFilter} onValueChange={setSectionFilter}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-32">
               <SelectValue placeholder="Section" />
             </SelectTrigger>
             <SelectContent>
-              {["A", "B", "C"].map((s) => (
-                <SelectItem key={s} value={s}>
-                  Section {s}
+              <SelectItem value="all">All Sections</SelectItem>
+              {getSectionsForClass(classFilter).map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
                 </SelectItem>
               ))}
             </SelectContent>

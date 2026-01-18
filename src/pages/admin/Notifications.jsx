@@ -27,9 +27,10 @@ import { Badge } from "@/components/ui/badge";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import CreateNotificationModal from "./components/CreateNotificationModal";
 import NotificationDetailModal from "./components/NotificationDetailModal";
-import { mockNotifications, allClasses, allSections } from "@/data/mockData";
+import { mockNotifications } from "@/data/mockData";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const getContentTypeConfig = (type) => {
     switch (type) {
@@ -83,6 +84,7 @@ const Notifications = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [editingNotification, setEditingNotification] = useState(null);
+    const { classOptions, allSectionOptions } = useClassrooms();
 
     const filteredNotifications = useMemo(() => {
         return notifications.filter((notif) => {
@@ -341,8 +343,8 @@ const Notifications = () => {
                 onOpenChange={handleCloseCreateModal}
                 onSave={handleSave}
                 editData={editingNotification}
-                allClasses={allClasses}
-                allSections={allSections}
+                allClasses={classOptions.map(c => c.value)}
+                allSections={allSectionOptions.map(s => s.value)}
             />
 
             <NotificationDetailModal

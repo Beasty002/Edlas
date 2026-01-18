@@ -17,7 +17,8 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
-import { mockSubjects, allClasses } from "@/data/mockData";
+import { mockSubjects } from "@/data/mockData";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const AddStaff = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const AddStaff = () => {
   const avatarInputRef = useRef(null);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedGrades, setSelectedGrades] = useState([]);
+  const { classOptions } = useClassrooms();
 
   const handleAvatarClick = () => avatarInputRef.current?.click();
 
@@ -306,18 +308,18 @@ const AddStaff = () => {
           <div>
             <Label className="mb-3 block">Grades Can Teach</Label>
             <div className="flex flex-wrap gap-4">
-              {allClasses.map((grade) => (
-                <div key={grade} className="flex items-center space-x-2">
+              {classOptions.map((opt) => (
+                <div key={opt.value} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`grade-${grade}`}
-                    checked={selectedGrades.includes(grade)}
-                    onCheckedChange={() => handleGradeToggle(grade)}
+                    id={`grade-${opt.value}`}
+                    checked={selectedGrades.includes(opt.value)}
+                    onCheckedChange={() => handleGradeToggle(opt.value)}
                   />
                   <label
-                    htmlFor={`grade-${grade}`}
+                    htmlFor={`grade-${opt.value}`}
                     className="text-sm font-medium leading-none"
                   >
-                    Class {grade}
+                    Class {opt.value}
                   </label>
                 </div>
               ))}

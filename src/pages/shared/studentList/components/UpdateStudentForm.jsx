@@ -4,15 +4,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Edit } from "lucide-react";
 import StudentDetailForm from "./StudentDetailForm";
-import { useState } from "react";
 
-const UpdateStudentForm = ({ student, triggerButton }) => {
-  const [open, setOpen] = useState(false);
-
+const UpdateStudentForm = ({ student, onClose }) => {
   const mappedStudent = {
     ...student,
     admission_number: student.admission_number,
@@ -39,15 +34,7 @@ const UpdateStudentForm = ({ student, triggerButton }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {triggerButton || (
-          <div className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm w-full text-foreground">
-            <Edit className="w-4 h-4 text-muted-foreground" />
-            Edit
-          </div>
-        )}
-      </DialogTrigger>
+    <Dialog open={!!student} onOpenChange={(open) => !open && onClose?.()}>
       <DialogContent className="!w-[95vw] h-[95vh] !max-w-[95vw] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0 sticky top-0 z-10 pb-4 border-b">
           <DialogTitle>Edit Student</DialogTitle>
@@ -56,10 +43,10 @@ const UpdateStudentForm = ({ student, triggerButton }) => {
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-auto custom-scrollbar p-4">
-          <StudentDetailForm 
-            mode="edit" 
-            studentData={mappedStudent} 
-            onSuccess={() => setOpen(false)}
+          <StudentDetailForm
+            mode="edit"
+            studentData={mappedStudent}
+            onSuccess={() => onClose?.()}
           />
         </div>
       </DialogContent>

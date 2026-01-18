@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { View, Edit, Search, List, Table } from "lucide-react";
@@ -18,6 +18,7 @@ import UpdateStudentForm from "./components/UpdateStudentForm";
 import StudentListView from "./components/StudentListView";
 import { baseRequest } from "@/api/api";
 import { useDebounce, getSortConfig, buildQueryParams, getPaginationConfig } from "@/utils/helper";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const statusOptions = [
   { label: "Active", value: "active" },
@@ -26,15 +27,10 @@ const statusOptions = [
   { label: "Dropped Out", value: "dropped" },
 ];
 
-const classOptions = Array.from({ length: 12 }, (_, i) => ({
-  label: `Class ${i + 1}`,
-  value: String(i + 1),
-}));
-
-const sectionOptions = ["A", "B", "C"].map((s) => ({ label: s, value: s }));
 
 export default function StudentsListPage() {
   const navigate = useNavigate();
+  const { classOptions, getSectionsForClass } = useClassrooms();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [status, setStatus] = useState("");
@@ -190,8 +186,8 @@ export default function StudentsListPage() {
             </SelectContent>
           </Select>
 
-          <Select value={studentClass} onValueChange={(val) => { setStudentClass(val); setPagination((p) => ({ ...p, page: 1 })); }}>
-            <SelectTrigger className="w-28">
+          <Select value={studentClass} onValueChange={(val) => { setStudentClass(val); setSection(""); setPagination((p) => ({ ...p, page: 1 })); }}>
+            <SelectTrigger className="w-32">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
@@ -208,7 +204,7 @@ export default function StudentsListPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sections</SelectItem>
-              {sectionOptions.map((opt) => (
+              {getSectionsForClass(studentClass).map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
               ))}
             </SelectContent>

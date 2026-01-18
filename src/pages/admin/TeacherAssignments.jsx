@@ -27,6 +27,7 @@ import {
   mockClassSections,
   mockStaff,
 } from "@/data/mockData";
+import { useClassrooms } from "@/context/ClassroomsContext";
 
 const TeacherAssignments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,6 +40,7 @@ const TeacherAssignments = () => {
   });
 
   const activeTeachers = mockStaff.filter(s => s.role === "Teacher" && s.status === "active");
+  const { classOptions, getSectionsForClass } = useClassrooms();
 
   const handleOpenDialog = (assignment = null) => {
     if (assignment) {
@@ -97,14 +99,13 @@ const TeacherAssignments = () => {
     setIsDialogOpen(false);
   };
 
-  // Get sections for selected class subject
   const getFilteredSections = () => {
     if (!formData.classSubjectId) return [];
     const selectedClassSubject = mockClassSubjects.find(
       cs => cs.id?.toString() === formData.classSubjectId
     );
     if (!selectedClassSubject) return [];
-    return mockClassSections.filter(s => s.classroom_name === selectedClassSubject.classroom_name);
+    return getSectionsForClass(selectedClassSubject.classroom_name);
   };
 
   // DataGrid columns configuration
@@ -243,8 +244,8 @@ const TeacherAssignments = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {getFilteredSections().map((s) => (
-                    <SelectItem key={s.id} value={s.section}>
-                      Section {s.section}
+                    <SelectItem key={s.value} value={s.value}>
+                      Section {s.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

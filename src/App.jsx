@@ -2,6 +2,7 @@ import { RouterProvider } from "react-router-dom";
 import { useContext } from "react";
 import { router } from "./router/router";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { ClassroomsProvider } from "./context/ClassroomsContext";
 import { Toaster } from "sonner";
 
 function AppRoutes() {
@@ -17,8 +18,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <Toaster position="bottom-right" richColors />
-      <AppRoutes />
+      <ClassroomsProvider>
+        <Toaster position="bottom-right" richColors />
+        <AppRoutes />
+      </ClassroomsProvider>
     </AuthProvider>
   );
 }
+
