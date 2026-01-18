@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,8 @@ import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
 import { mockClassrooms, allSections } from "@/data/mockData";
+import { baseRequest } from "@/api/api";
+import { getErrorMessage } from "@/utils/helper";
 
 const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
   const {
@@ -49,6 +52,64 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
       notes: "",
       previous_school: "",
       avatar: null,
+    },
+  });
+
+  const queryClient = useQueryClient();
+
+  const studentApiCall = async (data) => {
+    const payload = {
+      admission_number: data.admission_number,
+      first_name: data.first_name,
+      middle_name: data.middle_name,
+      last_name: data.last_name,
+      email: data.email,
+      roll_no: data.roll_no ? parseInt(data.roll_no, 10) : null,
+      student_class: data.student_class,
+      section: data.section,
+      dob: data.dob,
+      gender: data.gender,
+      address: data.address,
+      admission_date: data.admission_date,
+      status: data.status || "active",
+      father_name: data.father_name,
+      father_phone: data.father_phone,
+      mother_name: data.mother_name,
+      mother_phone: data.mother_phone,
+      guardian_name: data.guardian_name,
+      guardian_relation: data.guardian_relation,
+      guardian_phone: data.guardian_phone,
+      previous_school: data.previous_school,
+      notes: data.notes,
+    };
+
+    const res = await baseRequest({
+      url: mode === "new" ? "/system/students/" : `/system/students/${studentData?.id}/`,
+      method: mode === "new" ? "POST" : "PATCH",
+      body: payload,
+    });
+
+    if (!res.ok) {
+      throw { response: { data: res.data, status: res.status } };
+    }
+
+    return res.data;
+  };
+
+  const enrollStudentMutation = useMutation({
+    mutationFn: studentApiCall,
+    onMutate: () => {
+      toast.loading(mode === "new" ? "Enrolling student..." : "Updating student...", { id: "student" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success(mode === "new" ? "Student enrolled successfully!" : "Student updated successfully!", { id: "student" });
+      reset();
+      removeAvatar();
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to save student. Please try again."), { id: "student" });
     },
   });
 
@@ -112,11 +173,7 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
   }, [guardianChoice, fatherName, fatherPhone, motherName, motherPhone, setValue]);
 
   const onSubmit = (data) => {
-    // For mock, just show success
-    toast.success(mode === "new" ? "Student enrolled successfully!" : "Student updated successfully!");
-    reset();
-    removeAvatar();
-    onSuccess?.();
+    enrollStudentMutation.mutate(data);
   };
 
   const RequiredLabel = ({ children }) => (
@@ -365,8 +422,13 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
           <Button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={enrollStudentMutation.isPending}
           >
-            {mode === "new" ? "Enroll Student" : "Update Student"}
+            {enrollStudentMutation.isPending
+              ? "Saving..."
+              : mode === "new"
+                ? "Enroll Student"
+                : "Update Student"}
           </Button>
         </div>
       </form>

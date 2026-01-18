@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,6 +10,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { baseRequest } from "@/api/api";
+import { getErrorMessage } from "@/utils/helper";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -75,6 +78,57 @@ const StudentPlacement = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingSelectedIds, setPendingSelectedIds] = useState([]);
 
+  const queryClient = useQueryClient();
+
+  // Placement API call function
+  const placementApiCall = async ({ studentIds, action, targetClass, targetSection }) => {
+    const payload = {
+      student_ids: studentIds,
+      action: action,
+      target_class: targetClass,
+      target_section: targetSection,
+    };
+
+    const res = await baseRequest({
+      url: "/system/students/placement/",
+      method: "POST",
+      body: payload,
+    });
+
+    if (!res.ok) {
+      throw { response: { data: res.data, status: res.status } };
+    }
+
+    return res.data;
+  };
+
+  const placementMutation = useMutation({
+    mutationFn: placementApiCall,
+    onMutate: () => {
+      toast.loading("Processing placement...", { id: "placement" });
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate students query to refetch the list
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+
+      const count = variables.studentIds.length;
+      if (variables.action === "promote") {
+        toast.success(`${count} student(s) promoted successfully.`, { id: "placement" });
+      } else if (variables.action === "demote") {
+        toast.success(`${count} student(s) demoted successfully.`, { id: "placement" });
+      } else if (variables.action === "transfer") {
+        toast.success(`${count} student(s) transferred to Section ${variables.targetSection}.`, { id: "placement" });
+      }
+
+      setPendingSelectedIds([]);
+      setSelectedAction("");
+      setConfirmOpen(false);
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Placement action failed. Please try again."), { id: "placement" });
+    },
+  });
+
   const filtered = students.filter(
     (s) =>
       s.class === classFilter &&
@@ -93,34 +147,36 @@ const StudentPlacement = () => {
   };
 
   const confirmAction = () => {
-    let updated = [...students];
+    // Determine target class and section based on action
+    let action = selectedAction;
+    let targetClass = classFilter;
+    let targetSection = sectionFilter;
+
     if (selectedAction === "promote") {
-      updated = updated.map((s) =>
-        pendingSelectedIds.includes(s.id)
-          ? { ...s, class: String(Number(s.class) + 1) }
-          : s
-      );
-      toast.success(`${pendingSelectedIds.length} students promoted.`);
+      action = "promote";
+      targetClass = String(Number(classFilter) + 1);
     } else if (selectedAction === "demote") {
-      updated = updated.map((s) =>
-        pendingSelectedIds.includes(s.id)
-          ? { ...s, class: String(Number(s.class) - 1) }
-          : s
-      );
-      toast.success(`${pendingSelectedIds.length} students demoted.`);
+      action = "demote";
+      targetClass = String(Number(classFilter) - 1);
     } else if (selectedAction.startsWith("transfer")) {
-      const section = selectedAction.split("-")[1];
-      updated = updated.map((s) =>
-        pendingSelectedIds.includes(s.id) ? { ...s, section } : s
-      );
-      toast.success(
-        `${pendingSelectedIds.length} students transferred to Section ${section}.`
-      );
+      action = "transfer";
+      targetSection = selectedAction.split("-")[1];
     }
-    setStudents(updated);
-    setPendingSelectedIds([]);
-    setSelectedAction("");
-    setConfirmOpen(false);
+
+    // Convert IDs to numbers if they're strings like "stu-1"
+    const numericIds = pendingSelectedIds.map(id => {
+      if (typeof id === "string" && id.startsWith("stu-")) {
+        return parseInt(id.replace("stu-", ""), 10);
+      }
+      return typeof id === "number" ? id : parseInt(id, 10);
+    });
+
+    placementMutation.mutate({
+      studentIds: numericIds,
+      action: action,
+      targetClass: targetClass,
+      targetSection: targetSection,
+    });
   };
 
   // DataGrid columns
@@ -314,14 +370,19 @@ const StudentPlacement = () => {
             {pendingSelectedIds.length} student(s)?
           </div>
           <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={placementMutation.isPending}
+            >
               Cancel
             </Button>
             <Button
               onClick={confirmAction}
               className={"bg-blue-600 text-white"}
+              disabled={placementMutation.isPending}
             >
-              Confirm
+              {placementMutation.isPending ? "Processing..." : "Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>

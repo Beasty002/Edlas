@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,20 +21,56 @@ import { Label } from "@/components/ui/label";
 import { Edit, UserX, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import { mockStaff, mockSubjects } from "@/data/mockData";
+import { baseRequest } from "@/api/api";
+import { useDebounce, getSortConfig, buildQueryParams, getPaginationConfig } from "@/utils/helper";
 import { toast } from "sonner";
+
+const statusOptions = [
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+];
+
+const roleOptions = [
+  { label: "Teacher", value: "teacher" },
+  { label: "Admin", value: "admin" },
+];
 
 const AllStaffs = () => {
   const [editingStaff, setEditingStaff] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [staffList, setStaffList] = useState(mockStaff);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [status, setStatus] = useState("");
+  const [role, setRole] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20 });
+  const [ordering, setOrdering] = useState(null);
 
-  // Get subject names for a staff member
-  const getSubjectNames = (subjectIds) => {
-    return subjectIds.map((id) => {
-      const subject = mockSubjects.find((s) => s.id === id);
-      return subject ? subject.name : "Unknown";
-    });
+  const queryParams = buildQueryParams({
+    pagination,
+    search: debouncedSearch,
+    ordering,
+    filters: {
+      status,
+      role,
+    },
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["staff", queryParams.toString()],
+    queryFn: async () => {
+      const res = await baseRequest({
+        url: `/system/staff/?${queryParams.toString()}`,
+        method: "GET",
+      });
+      return res.data;
+    },
+  });
+
+  const sortConfig = getSortConfig(ordering);
+
+  const handleSort = (newOrdering) => {
+    setOrdering(newOrdering);
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleEditClick = (staff) => {
@@ -43,10 +80,6 @@ const AllStaffs = () => {
 
   const handleSaveEdit = () => {
     if (!editingStaff) return;
-
-    setStaffList((prev) =>
-      prev.map((s) => (s.id === editingStaff.id ? editingStaff : s))
-    );
     toast.success("Staff updated");
     setIsEditDialogOpen(false);
     setEditingStaff(null);
@@ -54,34 +87,17 @@ const AllStaffs = () => {
 
   const handleToggleStatus = (staff) => {
     const newStatus = staff.status === "active" ? "inactive" : "active";
-    setStaffList((prev) =>
-      prev.map((s) => (s.id === staff.id ? { ...s, status: newStatus } : s))
-    );
     toast.success(
       `Staff ${newStatus === "active" ? "activated" : "deactivated"}`
     );
   };
 
-  // DataGrid columns configuration
   const columns = [
-    { field: "full_name", headerText: "Name", width: 150 },
+    { field: "id", headerText: "ID", width: 60, template: (staff) => <span>#{staff.id}</span> },
+    { field: "name", headerText: "Name", width: 150 },
     { field: "email", headerText: "Email", width: 200 },
-    { field: "phone", headerText: "Phone", width: 120 },
+    { field: "phone", headerText: "Phone", width: 120, template: (staff) => staff.phone || "-" },
     { field: "role", headerText: "Role", width: 100 },
-    {
-      field: "subjects",
-      headerText: "Subjects",
-      allowSorting: false,
-      template: (staff) => (
-        <div className="flex flex-wrap gap-1">
-          {getSubjectNames(staff.subjects).map((subject, idx) => (
-            <Badge key={idx} variant="outline">
-              {subject}
-            </Badge>
-          ))}
-        </div>
-      ),
-    },
     {
       field: "status",
       headerText: "Status",
@@ -95,7 +111,6 @@ const AllStaffs = () => {
     },
   ];
 
-  // DataGrid actions configuration
   const actionConfig = {
     mode: "dropdown",
     showOnHover: false,
@@ -123,33 +138,37 @@ const AllStaffs = () => {
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
         <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search staff..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-10 w-full"
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Select>
+          <Select value={status} onValueChange={(val) => { setStatus(val); setPagination((p) => ({ ...p, page: 1 })); }}>
             <SelectTrigger className="w-28">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+              {statusOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select value={role} onValueChange={(val) => { setRole(val); setPagination((p) => ({ ...p, page: 1 })); }}>
             <SelectTrigger className="w-28">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="teacher">Teacher</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
+              {roleOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -157,10 +176,14 @@ const AllStaffs = () => {
 
       <DataGrid
         columns={columns}
-        data={staffList}
+        data={data?.staff || []}
+        isLoading={isLoading}
         actionConfig={actionConfig}
         emptyMessage="No staff members found"
         keyField="id"
+        sortConfig={sortConfig}
+        onSort={handleSort}
+        pagination={getPaginationConfig(pagination, data?.pagination?.total || 0, setPagination)}
       />
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

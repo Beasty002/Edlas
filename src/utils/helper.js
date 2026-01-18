@@ -55,3 +55,51 @@ export const getPaginationConfig = (pagination, total, setPagination, pageSizeOp
   onPageChange: (p) => setPagination((prev) => ({ ...prev, page: p })),
   onPageSizeChange: (size) => setPagination({ page: 1, pageSize: size }),
 });
+
+
+export const getErrorMessage = (error, defaultMessage = "An error occurred. Please try again.") => {
+  if (!error?.response) {
+    if (error?.message) {
+      return error.message;
+    }
+    return defaultMessage;
+  }
+
+  const errorData = error.response?.data;
+
+  if (typeof errorData === "string") {
+    return errorData || defaultMessage;
+  }
+
+  if (errorData && typeof errorData === "object") {
+    if (errorData.message) {
+      return errorData.message;
+    }
+    if (errorData.detail) {
+      return errorData.detail;
+    }
+    if (errorData.error) {
+      return errorData.error;
+    }
+
+    const fieldErrors = Object.entries(errorData)
+      .filter(([key]) => !["message", "detail", "error", "status", "statusCode"].includes(key))
+      .map(([field, messages]) => {
+        const msg = Array.isArray(messages) ? messages.join(", ") : messages;
+        const formattedField = field
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+        return `${formattedField}: ${msg}`;
+      });
+
+    if (fieldErrors.length > 0) {
+      return fieldErrors.join("\n");
+    }
+  }
+
+  if (Array.isArray(errorData) && errorData.length > 0) {
+    return errorData.join(", ");
+  }
+
+  return defaultMessage;
+};
