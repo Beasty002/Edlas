@@ -34,12 +34,14 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
       first_name: "",
       middle_name: "",
       last_name: "",
+      email: "",
       dob: "",
       gender: "",
       roll_no: "",
       student_class: "",
       section: "",
       admission_date: "",
+      status: "active",
       father_name: "",
       father_phone: "",
       mother_name: "",
@@ -306,6 +308,35 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
                 {...register("admission_date", { required: "Admission date required" })}
                 className="w-full"
               />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 mt-5">
+            <div>
+              <Label className="mb-2">Email</Label>
+              <Input
+                type="email"
+                {...register("email")}
+                className="w-full"
+                placeholder="student@example.com"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Status</Label>
+              <Select
+                onValueChange={(v) => setValue("status", v)}
+                defaultValue={studentData?.status || "active"}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="graduated">Graduated</SelectItem>
+                  <SelectItem value="transferred">Transferred</SelectItem>
+                  <SelectItem value="dropped">Dropped Out</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
