@@ -20,9 +20,10 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import { mockSubjects, mockClassSubjects } from "@/data/mockData";
+import { mockClassSubjects } from "@/data/mockData";
 import { toast } from "sonner";
 import { useClassrooms } from "@/context/ClassroomsContext";
+import { useSubjectMaster } from "@/hooks/useSubjectMaster";
 
 const Subjects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,6 +41,7 @@ const Subjects = () => {
   });
 
   const { classrooms, classOptions } = useClassrooms();
+  const { subjects } = useSubjectMaster();
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
@@ -72,11 +74,11 @@ const Subjects = () => {
 
   const handleSubjectMasterChange = (subjectId) => {
     setSelectedSubjectMaster(subjectId);
-    const selectedSubject = mockSubjects.find(s => s.id.toString() === subjectId);
+    const selectedSubject = subjects.find(s => s.id.toString() === subjectId);
     if (selectedSubject && selectedClassroom) {
       setFormData(prev => ({
         ...prev,
-        code: `${selectedSubject.code}-${selectedClassroom}`
+        code: `${selectedSubject.name.substring(0, 3).toUpperCase()}-${selectedClassroom}`
       }));
     }
   };
@@ -84,11 +86,11 @@ const Subjects = () => {
   const handleClassroomChange = (className) => {
     setSelectedClassroom(className);
     if (selectedSubjectMaster) {
-      const selectedSubject = mockSubjects.find(s => s.id.toString() === selectedSubjectMaster);
+      const selectedSubject = subjects.find(s => s.id.toString() === selectedSubjectMaster);
       if (selectedSubject) {
         setFormData(prev => ({
           ...prev,
-          code: `${selectedSubject.code}-${className}`
+          code: `${selectedSubject.name.substring(0, 3).toUpperCase()}-${className}`
         }));
       }
     }
@@ -100,7 +102,7 @@ const Subjects = () => {
       return;
     }
 
-    const selectedSubject = mockSubjects.find(s => s.id.toString() === selectedSubjectMaster);
+    const selectedSubject = subjects.find(s => s.id.toString() === selectedSubjectMaster);
     const classroomObj = classrooms.find(c => c.name === selectedClassroom);
 
     if (editingSubject) {
@@ -287,7 +289,7 @@ const Subjects = () => {
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockSubjects.map((subject) => (
+                    {subjects.map((subject) => (
                       <SelectItem key={subject.id} value={subject.id.toString()}>
                         {subject.name}
                       </SelectItem>

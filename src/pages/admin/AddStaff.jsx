@@ -17,8 +17,8 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
-import { mockSubjects } from "@/data/mockData";
 import { useClassrooms } from "@/context/ClassroomsContext";
+import { useSubjectMaster } from "@/hooks/useSubjectMaster";
 
 const AddStaff = () => {
   const navigate = useNavigate();
@@ -54,6 +54,7 @@ const AddStaff = () => {
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedGrades, setSelectedGrades] = useState([]);
   const { classOptions } = useClassrooms();
+  const { subjects } = useSubjectMaster();
 
   const handleAvatarClick = () => avatarInputRef.current?.click();
 
@@ -287,7 +288,7 @@ const AddStaff = () => {
           <div className="mb-6">
             <Label className="mb-3 block">Subjects Can Teach</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {mockSubjects.map((subject) => (
+              {subjects.map((subject) => (
                 <div key={subject.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`subject-${subject.id}`}

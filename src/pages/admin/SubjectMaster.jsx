@@ -13,22 +13,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Edit, Trash2, PlusCircle, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import { mockSubjects } from "@/data/mockData";
 import { toast } from "sonner";
+import { useSubjectMaster } from "@/hooks/useSubjectMaster";
 
 const SubjectMaster = () => {
+  const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
-  const [formData, setFormData] = useState({ name: "", code: "", description: "" });
-  const [subjects, setSubjects] = useState(mockSubjects);
+  const [formData, setFormData] = useState({ name: "", description: "" });
+
+  const { subjects, isLoading, createSubject, updateSubject, isCreating, isUpdating } = useSubjectMaster({ search });
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
       setEditingSubject(subject);
-      setFormData({ name: subject.name, code: subject.code || "", description: subject.description || "" });
+      setFormData({ name: subject.name, description: subject.description || "" });
     } else {
       setEditingSubject(null);
-      setFormData({ name: "", code: "", description: "" });
+      setFormData({ name: "", description: "" });
     }
     setIsDialogOpen(true);
   };
@@ -39,27 +41,42 @@ const SubjectMaster = () => {
       return;
     }
 
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      is_active: true,
+    };
+
     if (editingSubject) {
-      setSubjects(prev =>
-        prev.map(s =>
-          s.id === editingSubject.id ? { ...s, ...formData } : s
-        )
+      updateSubject(
+        { id: editingSubject.id, data: payload },
+        {
+          onSuccess: () => {
+            toast.success("Subject updated");
+            setIsDialogOpen(false);
+          },
+          onError: () => {
+            toast.error("Failed to update subject");
+          },
+        }
       );
-      toast.success("Subject updated");
     } else {
-      const newId = Math.max(...subjects.map(s => s.id)) + 1;
-      setSubjects(prev => [...prev, { id: newId, ...formData }]);
-      toast.success("Subject created");
+      createSubject(payload, {
+        onSuccess: () => {
+          toast.success("Subject created");
+          setIsDialogOpen(false);
+        },
+        onError: () => {
+          toast.error("Failed to create subject");
+        },
+      });
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = (subject) => {
-    setSubjects(prev => prev.filter(s => s.id !== subject.id));
-    toast.success("Subject deleted");
+    toast.info("Delete functionality not yet implemented");
   };
 
-  // DataGrid columns configuration
   const columns = [
     {
       field: "id",
@@ -68,7 +85,6 @@ const SubjectMaster = () => {
       template: (subject) => <span className="text-muted-foreground">#{subject.id}</span>,
     },
     { field: "name", headerText: "Subject Name", width: 180 },
-    { field: "code", headerText: "Code", width: 100 },
     {
       field: "description",
       headerText: "Description",
@@ -78,7 +94,6 @@ const SubjectMaster = () => {
     },
   ];
 
-  // DataGrid actions configuration (icon mode)
   const actionConfig = {
     mode: "icons",
     width: 100,
@@ -110,6 +125,8 @@ const SubjectMaster = () => {
           <Input
             placeholder="Search subjects..."
             className="pl-10 w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
@@ -125,6 +142,7 @@ const SubjectMaster = () => {
       <DataGrid
         columns={columns}
         data={subjects}
+        isLoading={isLoading}
         actionConfig={actionConfig}
         emptyMessage="No subjects found"
         keyField="id"
@@ -151,18 +169,6 @@ const SubjectMaster = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="code">Subject Code</Label>
-              <Input
-                id="code"
-                className="w-full"
-                value={formData.code}
-                onChange={(e) =>
-                  setFormData({ ...formData, code: e.target.value })
-                }
-                placeholder="e.g., MATH"
-              />
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -178,8 +184,8 @@ const SubjectMaster = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editingSubject ? "Save Changes" : "Add Subject"}
+            <Button onClick={handleSave} disabled={isCreating || isUpdating}>
+              {isCreating || isUpdating ? "Saving..." : editingSubject ? "Save Changes" : "Add Subject"}
             </Button>
           </DialogFooter>
         </DialogContent>
