@@ -1,16 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { baseRequest } from "@/api/api";
+import { buildQueryParams } from "@/utils/helper";
 
-const fetchSubjects = async ({ search, ordering }) => {
-  const params = new URLSearchParams();
-  if (search) params.append("search", search);
-  if (ordering) params.append("ordering", ordering);
-  
-  const queryString = params.toString();
-  const url = `/academics/subjects/${queryString ? `?${queryString}` : ""}`;
+const fetchSubjects = async ({ search, ordering, pagination }) => {
+  const queryParams = buildQueryParams({
+    pagination: pagination || { page: 1, pageSize: 100 },
+    search,
+    ordering,
+    filters: {},
+  });
   
   const res = await baseRequest({
-    url,
+    url: `/academics/subjects/?${queryParams.toString()}`,
     method: "GET",
   });
 
@@ -49,12 +50,16 @@ const updateSubject = async ({ id, data }) => {
   return res.data;
 };
 
-export const useSubjectMaster = ({ search = "", ordering = "" } = {}) => {
+export const useSubjectMaster = ({ 
+  search = "", 
+  ordering = "",
+  pagination = { page: 1, pageSize: 100 }
+} = {}) => {
   const queryClient = useQueryClient();
   
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["subjects", search, ordering],
-    queryFn: () => fetchSubjects({ search, ordering }),
+    queryFn: () => fetchSubjects({ search, ordering, pagination }),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -74,6 +79,7 @@ export const useSubjectMaster = ({ search = "", ordering = "" } = {}) => {
 
   return {
     subjects: data?.subjects || [],
+    count: data?.count || 0,
     isLoading,
     error,
     refetch,

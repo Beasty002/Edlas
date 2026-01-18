@@ -20,17 +20,21 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Edit, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import { mockClassSubjects } from "@/data/mockData";
 import { toast } from "sonner";
 import { useClassrooms } from "@/context/ClassroomsContext";
 import { useSubjectMaster } from "@/hooks/useSubjectMaster";
+import { useClassSubjects } from "@/hooks/useClassSubjects";
+import { useDebounce, getPaginationConfig } from "@/utils/helper";
 
 const Subjects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
   const [selectedClassroom, setSelectedClassroom] = useState("");
   const [selectedSubjectMaster, setSelectedSubjectMaster] = useState("");
-  const [classSubjects, setClassSubjects] = useState(mockClassSubjects);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [classFilter, setClassFilter] = useState("all");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20 });
   const [formData, setFormData] = useState({
     code: "",
     full_marks: 100,
@@ -40,21 +44,31 @@ const Subjects = () => {
     is_optional: false,
   });
 
-  const { classrooms, classOptions } = useClassrooms();
+  const { classOptions } = useClassrooms();
   const { subjects } = useSubjectMaster();
+  const {
+    classSubjects,
+    count,
+    isLoading,
+    createClassSubject,
+    updateClassSubject,
+    deleteClassSubject,
+    isCreating,
+    isUpdating
+  } = useClassSubjects({ search: debouncedSearch, classFilter, pagination });
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
       setEditingSubject(subject);
-      setSelectedClassroom(subject.classroom_name || "");
-      setSelectedSubjectMaster(subject.subject?.toString() || "");
+      setSelectedClassroom(subject.class_name || "");
+      setSelectedSubjectMaster(subject.subject_id?.toString() || "");
       setFormData({
-        code: subject.subject_code || "",
+        code: subject.code || "",
         full_marks: subject.full_marks || 100,
         pass_marks: subject.pass_marks || 40,
-        theory_marks: subject.theory_marks || 70,
-        practical_marks: subject.practical_marks || 30,
-        is_optional: subject.is_optional || false,
+        theory_marks: subject.theory || 70,
+        practical_marks: subject.practical || 30,
+        is_optional: subject.optional || false,
       });
     } else {
       setEditingSubject(null);
@@ -102,81 +116,80 @@ const Subjects = () => {
       return;
     }
 
-    const selectedSubject = subjects.find(s => s.id.toString() === selectedSubjectMaster);
-    const classroomObj = classrooms.find(c => c.name === selectedClassroom);
+    const payload = {
+      class_name: selectedClassroom,
+      subject_id: parseInt(selectedSubjectMaster),
+      code: formData.code,
+      full_marks: parseInt(formData.full_marks),
+      pass_marks: parseInt(formData.pass_marks),
+      theory_marks: parseInt(formData.theory_marks),
+      practical_marks: parseInt(formData.practical_marks),
+      is_optional: formData.is_optional,
+    };
 
     if (editingSubject) {
-      setClassSubjects(prev =>
-        prev.map(s =>
-          s.id === editingSubject.id
-            ? {
-              ...s,
-              subject_code: formData.code,
-              full_marks: parseInt(formData.full_marks),
-              pass_marks: parseInt(formData.pass_marks),
-              theory_marks: parseInt(formData.theory_marks),
-              practical_marks: parseInt(formData.practical_marks),
-              is_optional: formData.is_optional,
-            }
-            : s
-        )
-      );
-      toast.success("Class subject updated");
-    } else {
-      const newId = Math.max(...classSubjects.map(s => s.id)) + 1;
-      setClassSubjects(prev => [
-        ...prev,
+      updateClassSubject(
+        { id: editingSubject.id, data: payload },
         {
-          id: newId,
-          classroom: classroomObj?.id || 1,
-          classroom_name: selectedClassroom,
-          subject: parseInt(selectedSubjectMaster),
-          subject_name: selectedSubject?.name || "",
-          subject_code: formData.code,
-          full_marks: parseInt(formData.full_marks),
-          pass_marks: parseInt(formData.pass_marks),
-          theory_marks: parseInt(formData.theory_marks),
-          practical_marks: parseInt(formData.practical_marks),
-          is_optional: formData.is_optional,
+          onSuccess: () => {
+            toast.success("Class subject updated");
+            setIsDialogOpen(false);
+          },
+          onError: () => {
+            toast.error("Failed to update class subject");
+          },
+        }
+      );
+    } else {
+      createClassSubject(payload, {
+        onSuccess: () => {
+          toast.success("Subject added to class");
+          setIsDialogOpen(false);
         },
-      ]);
-      toast.success("Subject added to class");
+        onError: () => {
+          toast.error("Failed to add subject to class");
+        },
+      });
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = (subject) => {
-    setClassSubjects(prev => prev.filter(s => s.id !== subject.id));
-    toast.success("Subject removed from class");
+    deleteClassSubject(subject.id, {
+      onSuccess: () => {
+        toast.success("Subject removed from class");
+      },
+      onError: () => {
+        toast.error("Failed to remove subject");
+      },
+    });
   };
 
-  // DataGrid columns configuration
   const columns = [
     {
-      field: "classroom_name",
+      field: "class_name",
       headerText: "Class",
       width: 80,
       template: (subject) => (
         <Badge variant="outline" className="bg-primary/10 text-primary">
-          Class {subject.classroom_name}
+          Class {subject.class_name}
         </Badge>
       ),
     },
     { field: "subject_name", headerText: "Subject", width: 150 },
     {
-      field: "subject_code",
+      field: "code",
       headerText: "Code",
       width: 100,
       template: (subject) => (
-        <span className="font-mono text-sm">{subject.subject_code}</span>
+        <span className="font-mono text-sm">{subject.code}</span>
       ),
     },
     { field: "full_marks", headerText: "Full", width: 70, textAlign: "Center" },
     { field: "pass_marks", headerText: "Pass", width: 70, textAlign: "Center" },
-    { field: "theory_marks", headerText: "Theory", width: 70, textAlign: "Center" },
-    { field: "practical_marks", headerText: "Practical", width: 80, textAlign: "Center" },
+    { field: "theory", headerText: "Theory", width: 70, textAlign: "Center" },
+    { field: "practical", headerText: "Practical", width: 80, textAlign: "Center" },
     {
-      field: "is_optional",
+      field: "optional",
       headerText: "Optional",
       width: 80,
       textAlign: "Center",
@@ -184,7 +197,6 @@ const Subjects = () => {
     },
   ];
 
-  // DataGrid actions configuration (icon mode)
   const actionConfig = {
     mode: "icons",
     width: 100,
@@ -216,18 +228,20 @@ const Subjects = () => {
           <Input
             placeholder="Search subjects..."
             className="pl-10 w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Select>
-            <SelectTrigger className="w-28">
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="w-32">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
               {classOptions.map((c) => (
-                <SelectItem key={c.id} value={c.value}>Class {c.value}</SelectItem>
+                <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -245,6 +259,7 @@ const Subjects = () => {
       <DataGrid
         columns={columns}
         data={classSubjects}
+        isLoading={isLoading}
         actionConfig={actionConfig}
         emptyMessage="No class subjects found"
         keyField="id"
@@ -272,7 +287,7 @@ const Subjects = () => {
                   <SelectContent>
                     {classOptions.map((c) => (
                       <SelectItem key={c.id} value={c.value}>
-                        Class {c.value}
+                        {c.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -357,8 +372,8 @@ const Subjects = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editingSubject ? "Save Changes" : "Add Subject"}
+            <Button onClick={handleSave} disabled={isCreating || isUpdating}>
+              {isCreating || isUpdating ? "Saving..." : editingSubject ? "Save Changes" : "Add Subject"}
             </Button>
           </DialogFooter>
         </DialogContent>
