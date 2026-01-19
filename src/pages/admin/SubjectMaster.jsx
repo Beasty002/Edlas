@@ -15,14 +15,26 @@ import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import { toast } from "sonner";
 import { useSubjectMaster } from "@/hooks/useSubjectMaster";
+import { getSortConfig, useDebounce } from "@/utils/helper";
 
 const SubjectMaster = () => {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [ordering, setOrdering] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
 
-  const { subjects, isLoading, createSubject, updateSubject, isCreating, isUpdating } = useSubjectMaster({ search });
+  const { subjects, isLoading, createSubject, updateSubject, isCreating, isUpdating } = useSubjectMaster({
+    search: debouncedSearch,
+    ordering
+  });
+
+  const sortConfig = getSortConfig(ordering);
+
+  const handleSort = (newOrdering) => {
+    setOrdering(newOrdering);
+  };
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
@@ -146,6 +158,8 @@ const SubjectMaster = () => {
         actionConfig={actionConfig}
         emptyMessage="No subjects found"
         keyField="id"
+        sortConfig={sortConfig}
+        onSort={handleSort}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
