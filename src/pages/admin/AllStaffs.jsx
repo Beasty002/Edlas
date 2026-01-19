@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Edit, UserX, UserCheck, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
@@ -100,6 +101,21 @@ const AllStaffs = () => {
 
   const columns = [
     { field: "id", headerText: "ID", width: 60, template: (staff) => <span>#{staff.id}</span> },
+    {
+      field: "avatar_url",
+      headerText: "Avatar",
+      width: 60,
+      allowSorting: false,
+      template: (staff) => (
+        <Avatar className="h-8 w-8">
+          {staff.avatar_url ? (
+            <AvatarImage src={staff.avatar_url} alt={staff.name} className="object-cover" />
+          ) : (
+            <AvatarFallback>{staff.first_name?.[0]}{staff.last_name?.[0]}</AvatarFallback>
+          )}
+        </Avatar>
+      ),
+    },
     { field: "name", headerText: "Name", width: 150 },
     { field: "email", headerText: "Email", width: 200 },
     { field: "phone", headerText: "Phone", width: 120, template: (staff) => staff.phone || "-" },
