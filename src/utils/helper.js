@@ -82,8 +82,15 @@ export const getErrorMessage = (error, defaultMessage = "An error occurred. Plea
       return errorData.error;
     }
 
+    if (errorData.non_field_errors) {
+      const nonFieldErrors = Array.isArray(errorData.non_field_errors) 
+        ? errorData.non_field_errors.join(", ") 
+        : errorData.non_field_errors;
+      return nonFieldErrors;
+    }
+
     const fieldErrors = Object.entries(errorData)
-      .filter(([key]) => !["message", "detail", "error", "status", "statusCode"].includes(key))
+      .filter(([key]) => !["message", "detail", "error", "status", "statusCode", "non_field_errors"].includes(key))
       .map(([field, messages]) => {
         const msg = Array.isArray(messages) ? messages.join(", ") : messages;
         const formattedField = field

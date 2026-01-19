@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useClassrooms } from "@/context/ClassroomsContext";
 import { useSubjectMaster } from "@/hooks/useSubjectMaster";
 import { useClassSubjects } from "@/hooks/useClassSubjects";
-import { useDebounce, getPaginationConfig, getSortConfig } from "@/utils/helper";
+import { useDebounce, getPaginationConfig, getSortConfig, getErrorMessage } from "@/utils/helper";
 
 const Subjects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -142,8 +142,8 @@ const Subjects = () => {
             toast.success("Class subject updated");
             setIsDialogOpen(false);
           },
-          onError: () => {
-            toast.error("Failed to update class subject");
+          onError: (error) => {
+            toast.error(getErrorMessage(error, "Failed to update class subject"));
           },
         }
       );
@@ -153,8 +153,8 @@ const Subjects = () => {
           toast.success("Subject added to class");
           setIsDialogOpen(false);
         },
-        onError: () => {
-          toast.error("Failed to add subject to class");
+        onError: (error) => {
+          toast.error(getErrorMessage(error, "Failed to add subject to class"));
         },
       });
     }
@@ -165,8 +165,8 @@ const Subjects = () => {
       onSuccess: () => {
         toast.success("Subject removed from class");
       },
-      onError: () => {
-        toast.error("Failed to remove subject");
+      onError: (error) => {
+        toast.error(getErrorMessage(error, "Failed to remove subject"));
       },
     });
   };
