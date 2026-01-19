@@ -125,10 +125,10 @@ const Classes = () => {
       width: 80,
     },
     {
-      field: "teacher",
+      field: "teacher_name",
       headerText: "Class Teacher",
       width: 150,
-      template: (cls) => cls.teacher || "--",
+      template: (cls) => cls.teacher_name || "--",
     },
     {
       field: "total_students",
@@ -192,7 +192,7 @@ const Classes = () => {
     <div className="space-y-6 w-full">
       <PageHeader
         title="Class Management"
-        description="Manage classes, sections, and assign class teachers efficiently."
+        description="Manage classes, sections, and assign class teachers efficiently"
       />
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
