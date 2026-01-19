@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Edit, UserX, Search } from "lucide-react";
+import { Edit, UserX, UserCheck, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import { baseRequest } from "@/api/api";
@@ -128,9 +128,16 @@ const AllStaffs = () => {
         onClick: handleEditClick,
       },
       {
-        label: "Toggle Status",
+        label: "Activate",
+        icon: <UserCheck className="h-4 w-4" />,
+        onClick: handleToggleStatus,
+        hidden: (staff) => staff.status === "active",
+      },
+      {
+        label: "Deactivate",
         icon: <UserX className="h-4 w-4" />,
         onClick: handleToggleStatus,
+        hidden: (staff) => staff.status !== "active",
       },
     ],
   };
