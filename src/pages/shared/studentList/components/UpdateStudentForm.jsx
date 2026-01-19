@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -6,31 +7,32 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import StudentDetailForm from "./StudentDetailForm";
+import { baseRequest } from "@/api/api";
+import { Loader2 } from "lucide-react";
+
+const fetchStudentDetails = async (studentId) => {
+  const res = await baseRequest({
+    url: `/system/students/${studentId}/`,
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch student details");
+  }
+  return res.data;
+};
 
 const UpdateStudentForm = ({ student, onClose }) => {
-  const mappedStudent = {
-    ...student,
-    admission_number: student.admission_number,
-    first_name: student.first_name,
-    middle_name: student.middle_name,
-    last_name: student.last_name,
-    dob: student.dob,
-    gender: student.gender,
-    roll_no: student.roll_no,
-    student_class: student.student_class,
-    section: student.section,
-    admission_date: student.admission_date,
-    father_name: student.father_name,
-    father_phone: student.father_phone,
-    mother_name: student.mother_name,
-    mother_phone: student.mother_phone,
-    guardian_name: student.guardian_name,
-    guardian_relation: student.guardian_relation,
-    guardian_phone: student.guardian_phone,
-    address: student.address,
-    notes: student.notes,
-    previous_school: student.previous_school,
-    avatar_url: student.avatar_url,
+  const queryClient = useQueryClient();
+  const { data: fullStudentData, isLoading, isError, error } = useQuery({
+    queryKey: ["student", student?.id],
+    queryFn: () => fetchStudentDetails(student.id),
+    enabled: !!student?.id,
+    staleTime: 0,
+  });
+
+  const handleSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["student", student?.id] });
+    onClose?.();
   };
 
   return (
@@ -39,15 +41,28 @@ const UpdateStudentForm = ({ student, onClose }) => {
         <DialogHeader className="flex-shrink-0 sticky top-0 z-10 pb-4 border-b">
           <DialogTitle>Edit Student</DialogTitle>
           <DialogDescription>
-            Update details for {student.first_name} {student.last_name}.
+            Update details for {student?.first_name} {student?.last_name}.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-auto custom-scrollbar p-4">
-          <StudentDetailForm
-            mode="edit"
-            studentData={mappedStudent}
-            onSuccess={() => onClose?.()}
-          />
+          {isLoading && (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Loading student details...</span>
+            </div>
+          )}
+          {isError && (
+            <div className="flex items-center justify-center h-full text-red-500">
+              Failed to load student details: {error?.message}
+            </div>
+          )}
+          {fullStudentData && (
+            <StudentDetailForm
+              mode="edit"
+              studentData={fullStudentData}
+              onSuccess={handleSuccess}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
