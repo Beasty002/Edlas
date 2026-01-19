@@ -58,6 +58,7 @@ export const baseRequest = async ({
     params = null,
     skipAuth = false,
     contentType = "application/json",
+    isFormData = false,
 }) => {
     const requestConfig = {
         method,
@@ -68,7 +69,9 @@ export const baseRequest = async ({
         headers: {},
     };
 
-    if (body && contentType) {
+    if (isFormData) {
+        requestConfig.headers["Content-Type"] = undefined;
+    } else if (body && contentType) {
         requestConfig.headers["Content-Type"] = contentType;
     }
 

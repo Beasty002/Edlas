@@ -63,36 +63,59 @@ const StudentDetailForm = ({ mode = "new", studentData = null, onSuccess }) => {
   const queryClient = useQueryClient();
 
   const studentApiCall = async (data) => {
-    const payload = {
-      admission_number: data.admission_number,
+    const hasAvatar = data.avatar instanceof File;
+
+    const fields = {
+      admission_number: data.admission_number || "",
       first_name: data.first_name,
-      middle_name: data.middle_name,
+      middle_name: data.middle_name || "",
       last_name: data.last_name,
-      email: data.email,
-      roll_no: data.roll_no ? parseInt(data.roll_no, 10) : null,
+      email: data.email || "",
+      roll_no: data.roll_no ? parseInt(data.roll_no, 10) : "",
       student_class: data.student_class,
       section: data.section,
       dob: data.dob,
       gender: data.gender,
-      address: data.address,
+      address: data.address || "",
       admission_date: data.admission_date,
       status: data.status || "active",
-      father_name: data.father_name,
-      father_phone: data.father_phone,
-      mother_name: data.mother_name,
-      mother_phone: data.mother_phone,
-      guardian_name: data.guardian_name,
-      guardian_relation: data.guardian_relation,
-      guardian_phone: data.guardian_phone,
-      previous_school: data.previous_school,
-      notes: data.notes,
+      father_name: data.father_name || "",
+      father_phone: data.father_phone || "",
+      mother_name: data.mother_name || "",
+      mother_phone: data.mother_phone || "",
+      guardian_name: data.guardian_name || "",
+      guardian_relation: data.guardian_relation || "",
+      guardian_phone: data.guardian_phone || "",
+      previous_school: data.previous_school || "",
+      notes: data.notes || "",
     };
 
-    const res = await baseRequest({
-      url: mode === "new" ? "/system/students/" : `/system/students/${studentData?.id}/`,
-      method: mode === "new" ? "POST" : "PATCH",
-      body: payload,
-    });
+    let requestOptions;
+
+    if (hasAvatar) {
+      const formData = new FormData();
+      Object.entries(fields).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+      formData.append("avatar", data.avatar);
+
+      requestOptions = {
+        url: mode === "new" ? "/system/students/" : `/system/students/${studentData?.id}/`,
+        method: mode === "new" ? "POST" : "PATCH",
+        body: formData,
+        isFormData: true,
+      };
+    } else {
+      requestOptions = {
+        url: mode === "new" ? "/system/students/" : `/system/students/${studentData?.id}/`,
+        method: mode === "new" ? "POST" : "PATCH",
+        body: fields,
+      };
+    }
+
+    const res = await baseRequest(requestOptions);
 
     if (!res.ok) {
       throw { response: { data: res.data, status: res.status } };

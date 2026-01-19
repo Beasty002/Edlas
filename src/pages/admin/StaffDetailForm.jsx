@@ -118,30 +118,57 @@ const StaffDetailForm = ({ mode = "new", staffData = null, onSuccess }) => {
     };
 
     const staffApiCall = async (data) => {
-        const payload = {
+        const hasAvatar = data.avatar instanceof File;
+
+        const fields = {
             first_name: data.first_name,
-            middle_name: data.middle_name,
+            middle_name: data.middle_name || "",
             last_name: data.last_name,
             email: data.email,
-            phone: data.phone,
+            phone: data.phone || "",
             dob: data.dob,
             gender: data.gender,
-            address: data.address,
+            address: data.address || "",
             role: data.role,
-            qualification: data.qualification,
-            experience: data.experience,
-            specialization: data.specialization,
-            previous_school: data.previous_school,
-            subjects: selectedSubjects,
-            grades: selectedGrades,
+            qualification: data.qualification || "",
+            experience: data.experience || "",
+            specialization: data.specialization || "",
+            previous_school: data.previous_school || "",
+            subjects: JSON.stringify(selectedSubjects),
+            grades: JSON.stringify(selectedGrades),
             is_active: data.is_active,
         };
 
-        const res = await baseRequest({
-            url: mode === "new" ? "/system/staff/" : `/system/staff/${staffData?.id}/`,
-            method: mode === "new" ? "POST" : "PATCH",
-            body: payload,
-        });
+        let requestOptions;
+
+        if (hasAvatar) {
+            const formData = new FormData();
+            Object.entries(fields).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    formData.append(key, value);
+                }
+            });
+            formData.append("avatar", data.avatar);
+
+            requestOptions = {
+                url: mode === "new" ? "/system/staff/" : `/system/staff/${staffData?.id}/`,
+                method: mode === "new" ? "POST" : "PATCH",
+                body: formData,
+                isFormData: true,
+            };
+        } else {
+            requestOptions = {
+                url: mode === "new" ? "/system/staff/" : `/system/staff/${staffData?.id}/`,
+                method: mode === "new" ? "POST" : "PATCH",
+                body: {
+                    ...fields,
+                    subjects: selectedSubjects,
+                    grades: selectedGrades,
+                },
+            };
+        }
+
+        const res = await baseRequest(requestOptions);
 
         if (!res.ok) {
             throw { response: { data: res.data, status: res.status } };
