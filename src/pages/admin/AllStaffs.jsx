@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -17,13 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { Edit, UserX, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import { baseRequest } from "@/api/api";
 import { useDebounce, getSortConfig, buildQueryParams, getPaginationConfig } from "@/utils/helper";
 import { toast } from "sonner";
+import UpdateStaffForm from "./UpdateStaffForm";
 
 const statusOptions = [
   { label: "Active", value: "active" },
@@ -37,7 +29,6 @@ const roleOptions = [
 
 const AllStaffs = () => {
   const [editingStaff, setEditingStaff] = useState(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [status, setStatus] = useState("");
@@ -74,15 +65,7 @@ const AllStaffs = () => {
   };
 
   const handleEditClick = (staff) => {
-    setEditingStaff({ ...staff });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingStaff) return;
-    toast.success("Staff updated");
-    setIsEditDialogOpen(false);
-    setEditingStaff(null);
+    setEditingStaff(staff);
   };
 
   const handleToggleStatus = (staff) => {
@@ -186,72 +169,15 @@ const AllStaffs = () => {
         pagination={getPaginationConfig(pagination, data?.pagination?.total || 0, setPagination)}
       />
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Staff</DialogTitle>
-          </DialogHeader>
-          {editingStaff && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  className="w-full"
-                  value={editingStaff.full_name}
-                  onChange={(e) =>
-                    setEditingStaff({
-                      ...editingStaff,
-                      full_name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  className="w-full"
-                  value={editingStaff.email}
-                  onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  className="w-full"
-                  value={editingStaff.phone}
-                  onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, phone: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
-                <Input
-                  id="role"
-                  className="w-full"
-                  value={editingStaff.role}
-                  onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, role: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {editingStaff && (
+        <UpdateStaffForm
+          staff={editingStaff}
+          onClose={() => setEditingStaff(null)}
+        />
+      )}
     </div>
   );
 };
 
 export default AllStaffs;
+

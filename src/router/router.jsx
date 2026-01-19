@@ -18,7 +18,7 @@ const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const StudentDetailsPage = lazy(() => import("@/pages/shared/StudentDetailsPage"));
 const Unauthorized = lazy(() => import("@/pages/UnAuthorized"));
 const AllStaffs = lazy(() => import("@/pages/admin/AllStaffs"));
-const AddStaff = lazy(() => import("@/pages/admin/AddStaff"));
+const StaffDetailForm = lazy(() => import("@/pages/admin/StaffDetailForm"));
 const MyResults = lazy(() => import("@/pages/student/MyResults"));
 const Notifications = lazy(() => import("@/pages/admin/Notifications"));
 const TeacherClassroom = lazy(() => import("@/pages/Teacher/TeacherClassroom"));
@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
               { path: "/students/placement", element: <StudentPlacement /> },
               { path: "/students/StudentDetail", element: <StudentDetailsPage /> },
               { path: "/staffs", element: <AllStaffs /> },
-              { path: "/staffs/add", element: <AddStaff /> },
+              { path: "/staffs/add", element: <StaffDetailForm /> },
               { path: "/classes", element: <Classes /> },
               { path: "/subjects", element: <Subjects /> },
               { path: "/subject-master", element: <SubjectMaster /> },
