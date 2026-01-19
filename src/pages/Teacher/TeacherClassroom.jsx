@@ -1,9 +1,8 @@
 import { useMemo, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
     BookOpen,
     Users,
@@ -22,21 +21,25 @@ import {
     mockClassSubjects,
 } from "@/data/mockData";
 
+const cardStyles = [
+    { border: "border-l-emerald-500", iconBg: "bg-emerald-100 dark:bg-emerald-900/30", iconColor: "text-emerald-600 dark:text-emerald-400" },
+    { border: "border-l-sky-500", iconBg: "bg-sky-100 dark:bg-sky-900/30", iconColor: "text-sky-600 dark:text-sky-400" },
+    { border: "border-l-violet-500", iconBg: "bg-violet-100 dark:bg-violet-900/30", iconColor: "text-violet-600 dark:text-violet-400" },
+    { border: "border-l-amber-500", iconBg: "bg-amber-100 dark:bg-amber-900/30", iconColor: "text-amber-600 dark:text-amber-400" },
+    { border: "border-l-rose-400", iconBg: "bg-rose-100 dark:bg-rose-900/30", iconColor: "text-rose-500 dark:text-rose-400" },
+    { border: "border-l-teal-500", iconBg: "bg-teal-100 dark:bg-teal-900/30", iconColor: "text-teal-600 dark:text-teal-400" },
+];
+
 const TeacherClassroom = () => {
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
-
-    // Get teacher's assigned class-subjects based on logged in user
-    // For demo, we'll use teacher id 1 (Ram Bahadur Sharma) who teaches MATH in multiple classes
-    const teacherId = 1; // In real app, this would come from user context
+    const teacherId = 1;
 
     const teacherClasses = useMemo(() => {
-        // Get all assignments for this teacher
         const assignments = mockTeacherAssignments.filter(
             (ta) => ta.teacher === teacherId
         );
 
-        // Group by class-subject and get details
         const classMap = new Map();
 
         assignments.forEach((assignment) => {
@@ -47,14 +50,12 @@ const TeacherClassroom = () => {
                     (cs) => cs.id === assignment.class_subject
                 );
 
-                // Get assignments for this class-subject-section
                 const classAssignments = mockAssignments.filter(
                     (a) =>
                         a.classSubjectId === assignment.class_subject &&
                         a.section === assignment.section
                 );
 
-                // Get total students in this class-section
                 const students = mockStudents.filter(
                     (s) =>
                         s.student_class === assignment.classroom_name &&
@@ -62,7 +63,6 @@ const TeacherClassroom = () => {
                         s.status === "active"
                 );
 
-                // Count submissions for these assignments
                 let totalSubmissions = 0;
                 let pendingGrading = 0;
                 classAssignments.forEach((a) => {
@@ -103,122 +103,135 @@ const TeacherClassroom = () => {
     }, [teacherClasses]);
 
     return (
-        <div className="space-y-6 w-full">
+        <div className="w-full space-y-6">
             <PageHeader
                 title="My Classroom"
-                description="Manage assignments and track student submissions across your classes."
+                description="Manage assignments and track student submissions"
             />
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-                    <CardContent className="p-4 flex items-center gap-3">
-                        <div className="p-2 bg-blue-500 rounded-lg">
-                            <GraduationCap className="h-5 w-5 text-white" />
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                            <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">{stats.totalClasses}</p>
-                            <p className="text-xs text-muted-foreground">Classes</p>
+                            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{stats.totalClasses}</p>
+                            <p className="text-xs text-gray-500">Classes</p>
                         </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
-                    <CardContent className="p-4 flex items-center gap-3">
-                        <div className="p-2 bg-purple-500 rounded-lg">
-                            <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{stats.totalAssignments}</p>
-                            <p className="text-xs text-muted-foreground">Assignments</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-                    <CardContent className="p-4 flex items-center gap-3">
-                        <div className="p-2 bg-green-500 rounded-lg">
-                            <CheckCircle className="h-5 w-5 text-white" />
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                            <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">{stats.totalSubmissions}</p>
-                            <p className="text-xs text-muted-foreground">Submissions</p>
+                            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{stats.totalAssignments}</p>
+                            <p className="text-xs text-gray-500">Assignments</p>
                         </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800">
-                    <CardContent className="p-4 flex items-center gap-3">
-                        <div className="p-2 bg-amber-500 rounded-lg">
-                            <Clock className="h-5 w-5 text-white" />
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                            <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">{stats.pendingGrading}</p>
-                            <p className="text-xs text-muted-foreground">To Grade</p>
+                            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{stats.totalSubmissions}</p>
+                            <p className="text-xs text-gray-500">Submissions</p>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                            <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{stats.pendingGrading}</p>
+                            <p className="text-xs text-gray-500">Needs Review</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Class Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {teacherClasses.map((classData) => (
-                    <Card
-                        key={classData.id}
-                        className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-700"
-                        onClick={() => handleCardClick(classData)}
-                    >
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                                        <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-lg">{classData.subjectName}</CardTitle>
-                                        <p className="text-sm text-muted-foreground">
-                                            Class {classData.className} - Section {classData.section}
-                                        </p>
-                                    </div>
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Badge variant="outline" className="text-xs">
-                                    {classData.subjectCode}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs">
-                                    <Users className="h-3 w-3 mr-1" />
-                                    {classData.totalStudents} students
-                                </Badge>
-                            </div>
+            {/* Section Label */}
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
+                Your classes ({teacherClasses.length})
+            </p>
 
-                            <div className="grid grid-cols-3 gap-3 text-center">
-                                <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <p className="text-lg font-semibold">{classData.totalAssignments}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Assignments</p>
+            {/* Class Cards */}
+            <div className="space-y-3">
+                {teacherClasses.map((classData, index) => {
+                    const style = cardStyles[index % cardStyles.length];
+                    return (
+                        <Card
+                            key={classData.id}
+                            className={`cursor-pointer bg-white dark:bg-gray-800 border-l-4 ${style.border} hover:shadow-sm transition-shadow`}
+                            onClick={() => handleCardClick(classData)}
+                        >
+                            <CardContent className="p-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className={`hidden sm:block p-2 ${style.iconBg} rounded-lg`}>
+                                            <BookOpen className={`h-5 w-5 ${style.iconColor}`} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {classData.subjectName}
+                                                </h3>
+                                                <Badge variant="outline" className="text-xs font-normal">
+                                                    {classData.subjectCode}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                <span>Class {classData.className} • Sec {classData.section}</span>
+                                                <span className="flex items-center gap-1">
+                                                    <Users className="h-3.5 w-3.5" />
+                                                    {classData.totalStudents}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex gap-4 text-sm">
+                                            <div className="text-center">
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">{classData.totalAssignments}</p>
+                                                <p className="text-xs text-gray-500">Tasks</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="font-medium text-emerald-600">{classData.totalSubmissions}</p>
+                                                <p className="text-xs text-gray-500">Done</p>
+                                            </div>
+                                            {classData.pendingGrading > 0 && (
+                                                <div className="text-center">
+                                                    <p className="font-medium text-amber-600">{classData.pendingGrading}</p>
+                                                    <p className="text-xs text-gray-500">Review</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                                    </div>
                                 </div>
-                                <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                    <p className="text-lg font-semibold text-green-600">{classData.totalSubmissions}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Submitted</p>
-                                </div>
-                                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                                    <p className="text-lg font-semibold text-amber-600">{classData.pendingGrading}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">To Grade</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
 
+            {/* Empty State */}
             {teacherClasses.length === 0 && (
-                <Card className="p-12 text-center">
-                    <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Classes Assigned</h3>
-                    <p className="text-muted-foreground">
-                        You don't have any classes assigned yet. Contact the administrator to get assigned to classes.
+                <div className="text-center py-16">
+                    <BookOpen className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                    <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">No classes assigned</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Contact the administrator to get assigned to classes.
                     </p>
-                </Card>
+                </div>
             )}
         </div>
     );
