@@ -189,14 +189,14 @@ const AllStaffs = () => {
 
       <DataGrid
         columns={columns}
-        data={data?.staff || []}
+        data={data?.results || []}
         isLoading={isLoading}
         actionConfig={actionConfig}
         emptyMessage="No staff members found"
         keyField="id"
         sortConfig={sortConfig}
         onSort={handleSort}
-        pagination={getPaginationConfig(pagination, data?.pagination?.total || 0, setPagination)}
+        pagination={getPaginationConfig(pagination, data?.count || 0, setPagination)}
       />
 
       {editingStaff && (

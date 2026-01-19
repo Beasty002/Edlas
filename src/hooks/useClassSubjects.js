@@ -79,11 +79,6 @@ export const useClassSubjects = ({
     staleTime: 1000 * 60 * 5,
   });
 
-  const flattenedData = () => {
-    if (!data?.class_subjects) return [];
-    return Object.values(data.class_subjects).flat();
-  };
-
   const createMutation = useMutation({
     mutationFn: createClassSubject,
     onSuccess: () => {
@@ -106,8 +101,7 @@ export const useClassSubjects = ({
   });
 
   return {
-    classSubjects: flattenedData(),
-    rawData: data,
+    classSubjects: data?.results || [],
     count: data?.count || 0,
     isLoading,
     error,

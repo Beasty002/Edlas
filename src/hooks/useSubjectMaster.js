@@ -78,7 +78,7 @@ export const useSubjectMaster = ({
   });
 
   return {
-    subjects: data?.subjects || [],
+    subjects: data?.results || [],
     count: data?.count || 0,
     isLoading,
     error,

@@ -272,6 +272,7 @@ const Subjects = () => {
         keyField="id"
         sortConfig={sortConfig}
         onSort={handleSort}
+        pagination={getPaginationConfig(pagination, count, setPagination)}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
