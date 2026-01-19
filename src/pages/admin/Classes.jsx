@@ -14,49 +14,100 @@ import { Badge } from "@/components/ui/badge";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import AddClassModal from "./components/AddClassModal";
 import AssignTeacherModal from "./components/AssignTeacherModal";
-import { mockClassSections, mockStaff } from "@/data/mockData";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { buildQueryParams, useDebounce } from "@/utils/helper";
+import { baseRequest } from "@/api/api";
+
+const fetchClassSections = async (queryString) => {
+  const res = await baseRequest({
+    url: `/academics/class-sections/${queryString}`,
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch class sections");
+  }
+  return res.data;
+};
 
 const Classes = () => {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [status, setStatus] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [ordering, setOrdering] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
-  const [classes, setClasses] = useState(mockClassSections);
 
-  const activeTeachers = mockStaff.filter(s => s.role === "Teacher" && s.status === "active");
+  const queryParams = buildQueryParams({
+    pagination,
+    search: debouncedSearch,
+    ordering,
+    filters: {
+      is_active: status === "active" ? true : status === "inactive" ? false : undefined,
+    },
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["classSections", queryParams.toString()],
+    queryFn: () => fetchClassSections(queryParams.toString() ? `?${queryParams.toString()}` : ""),
+  });
+
+  const classSections = data?.results || [];
+  const totalCount = data?.count || 0;
+
+  const handleStatusChange = (value) => {
+    setStatus(value === "all" ? "" : value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   const handleAssignTeacher = (cls) => {
     setSelectedClass(cls);
     setIsTeacherModalOpen(true);
   };
 
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (cls) => {
+      const res = await baseRequest({
+        url: `/academics/class-sections/${cls.id}/`,
+        method: "PATCH",
+        body: { is_active: !cls.is_active },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update status");
+      }
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classSections"] });
+      toast.success("Status updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update status");
+    },
+  });
+
   const handleAction = (action, cls) => {
     if (action === "toggle") {
-      setClasses(prev =>
-        prev.map(c =>
-          c.id === cls.id ? { ...c, status: c.status === "active" ? "inactive" : "active" } : c
-        )
-      );
-      toast.success("Status updated");
+      toggleStatusMutation.mutate(cls);
     }
   };
 
-  const handleSaveNewClass = (newClass) => {
-    const newId = Math.max(...classes.map(c => c.id)) + 1;
-    setClasses(prev => [...prev, { ...newClass, id: newId }]);
-    toast.success("Class created");
+  const handleSaveNewClass = () => {
+    queryClient.invalidateQueries({ queryKey: ["classSections"] });
   };
 
-  const handleSaveTeacher = (updatedClass) => {
-    setClasses(prev =>
-      prev.map(c =>
-        c.id === updatedClass.id ? { ...c, class_teacher: updatedClass.teacher, class_teacher_id: updatedClass.teacherId } : c
-      )
-    );
-    toast.success("Teacher assigned");
+  const handleSaveTeacher = () => {
+    queryClient.invalidateQueries({ queryKey: ["classSections"] });
     setIsTeacherModalOpen(false);
   };
 
-  // DataGrid columns configuration
   const columns = [
     {
       field: "classroom_name",
@@ -68,12 +119,16 @@ const Classes = () => {
         </Badge>
       ),
     },
-    { field: "section", headerText: "Section", width: 80 },
     {
-      field: "class_teacher",
+      field: "name",
+      headerText: "Section",
+      width: 80,
+    },
+    {
+      field: "teacher",
       headerText: "Class Teacher",
       width: 150,
-      template: (cls) => cls.class_teacher || "--",
+      template: (cls) => cls.teacher || "--",
     },
     {
       field: "total_students",
@@ -83,19 +138,18 @@ const Classes = () => {
       template: (cls) => cls.total_students || 0,
     },
     {
-      field: "status",
+      field: "is_active",
       headerText: "Status",
       width: 100,
       textAlign: "Center",
       template: (cls) => (
-        <Badge variant={cls.status === "active" ? "default" : "destructive"}>
-          {cls.status === "active" ? "Active" : "Inactive"}
+        <Badge variant={cls.is_active ? "default" : "destructive"}>
+          {cls.is_active ? "Active" : "Inactive"}
         </Badge>
       ),
     },
   ];
 
-  // DataGrid actions configuration
   const actionConfig = {
     mode: "dropdown",
     showOnHover: false,
@@ -119,6 +173,21 @@ const Classes = () => {
     ],
   };
 
+  const paginationConfig = {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    total: totalCount,
+    onPageChange: (newPage) => setPagination((prev) => ({ ...prev, page: newPage })),
+    onPageSizeChange: (newSize) => setPagination({ page: 1, pageSize: newSize }),
+  };
+
+  const sortConfig = ordering
+    ? {
+      field: ordering.startsWith("-") ? ordering.slice(1) : ordering,
+      direction: ordering.startsWith("-") ? "desc" : "asc",
+    }
+    : { field: "", direction: null };
+
   return (
     <div className="space-y-6 w-full">
       <PageHeader
@@ -132,11 +201,13 @@ const Classes = () => {
           <Input
             placeholder="Search classes..."
             className="pl-10 w-full"
+            value={search}
+            onChange={handleSearchChange}
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Select>
+          <Select value={status || "all"} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-28">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -148,27 +219,27 @@ const Classes = () => {
           </Select>
 
           <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            <AddClassModal
-              classesData={classes}
-              onSave={handleSaveNewClass}
-            />
+            <AddClassModal onSave={handleSaveNewClass} />
           </Button>
         </div>
       </div>
 
       <DataGrid
         columns={columns}
-        data={classes}
+        data={classSections}
+        isLoading={isLoading}
         actionConfig={actionConfig}
         emptyMessage="No classes found"
         keyField="id"
+        pagination={paginationConfig}
+        sortConfig={sortConfig}
+        onSort={setOrdering}
       />
 
       <AssignTeacherModal
         cls={selectedClass}
         open={isTeacherModalOpen}
         onOpenChange={setIsTeacherModalOpen}
-        teachers={activeTeachers}
         onSave={handleSaveTeacher}
       />
     </div>

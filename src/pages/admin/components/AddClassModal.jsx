@@ -20,22 +20,47 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Minus, PlusCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { mockClassrooms } from "@/data/mockData";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { baseRequest } from "@/api/api";
+import { getErrorMessage } from "@/utils/helper";
 
-const AddClassModal = ({ classesData = [], onSave }) => {
+const fetchClassrooms = async () => {
+  const res = await baseRequest({
+    url: "/academics/classrooms/",
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch classrooms");
+  }
+  return res.data;
+};
+
+const AddClassModal = ({ onSave }) => {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState("new"); // "new" | "section"
+  const [mode, setMode] = useState("new");
   const [className, setClassName] = useState("");
   const [selectedClassroomId, setSelectedClassroomId] = useState("");
   const [sections, setSections] = useState(["A"]);
   const [existingSections, setExistingSections] = useState([]);
 
+  const { data: classroomsData } = useQuery({
+    queryKey: ["classrooms"],
+    queryFn: fetchClassrooms,
+    enabled: open,
+  });
+
+  const classrooms = classroomsData?.results || [];
+
   useEffect(() => {
     if (mode === "section" && selectedClassroomId) {
-      const selectedClassroom = mockClassrooms.find((c) => c.id.toString() === selectedClassroomId);
-      if (selectedClassroom) {
-        // For mock, we don't have nested sections, just reset
+      const selectedClassroom = classrooms.find((c) => c.id.toString() === selectedClassroomId);
+      if (selectedClassroom && selectedClassroom.sections) {
+        const existing = selectedClassroom.sections.map((s) => s.name);
+        setExistingSections(existing);
+        setSections([...existing]);
+      } else {
         setExistingSections([]);
         setSections(["A"]);
       }
@@ -43,7 +68,7 @@ const AddClassModal = ({ classesData = [], onSave }) => {
       setExistingSections([]);
       setSections(["A"]);
     }
-  }, [selectedClassroomId, mode]);
+  }, [selectedClassroomId, mode, classrooms]);
 
   const addSection = () => {
     const allSections = [...sections];
@@ -72,45 +97,85 @@ const AddClassModal = ({ classesData = [], onSave }) => {
     }
   };
 
+  const createClassMutation = useMutation({
+    mutationFn: async ({ classroomName, sectionsList }) => {
+      const res = await baseRequest({
+        url: "/academics/classrooms/create_with_sections/",
+        method: "POST",
+        body: {
+          classroom_name: classroomName,
+          section_names: sectionsList,
+        },
+      });
+      if (!res.ok) {
+        throw { response: { data: res.data, status: res.status } };
+      }
+      return res.data;
+    },
+    onMutate: () => {
+      toast.loading("Creating class...", { id: "addClass" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classrooms"] });
+      queryClient.invalidateQueries({ queryKey: ["classSections"] });
+      toast.success("Class created successfully", { id: "addClass" });
+      setOpen(false);
+      onSave?.();
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to create class"), { id: "addClass" });
+    },
+  });
+
+  const addSectionsMutation = useMutation({
+    mutationFn: async ({ classroomId, sectionsList }) => {
+      const res = await baseRequest({
+        url: `/academics/classrooms/${classroomId}/add-sections/`,
+        method: "POST",
+        body: {
+          sections: sectionsList,
+        },
+      });
+      if (!res.ok) {
+        throw { response: { data: res.data, status: res.status } };
+      }
+      return res.data;
+    },
+    onMutate: () => {
+      toast.loading("Adding sections...", { id: "addSections" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classrooms"] });
+      queryClient.invalidateQueries({ queryKey: ["classSections"] });
+      toast.success("Sections added successfully", { id: "addSections" });
+      setOpen(false);
+      onSave?.();
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to add sections"), { id: "addSections" });
+    },
+  });
+
   const handleSubmit = () => {
     if (mode === "new") {
-      // For mock, just call onSave with the data
-      const newClassData = {
-        classroom_name: className,
-        section: sections[0] || "A",
-        class_teacher: "",
-        total_students: 0,
-        status: "active",
-      };
-
-      // Create entries for each section
-      sections.forEach((sec, idx) => {
-        onSave?.({
-          ...newClassData,
-          section: sec,
-        });
+      createClassMutation.mutate({
+        classroomName: className,
+        sectionsList: sections,
       });
-
-      toast.success("Class created successfully");
-      setOpen(false);
     } else {
-      // Add new sections to existing classroom
-      const selectedClassroom = mockClassrooms.find((c) => c.id.toString() === selectedClassroomId);
-      if (selectedClassroom) {
-        sections.forEach((sec) => {
-          onSave?.({
-            classroom_name: selectedClassroom.name,
-            section: sec,
-            class_teacher: "",
-            total_students: 0,
-            status: "active",
-          });
+      const newSections = sections.filter((s) => !existingSections.includes(s));
+      if (newSections.length > 0) {
+        addSectionsMutation.mutate({
+          classroomId: selectedClassroomId,
+          sectionsList: newSections,
         });
-        toast.success("Sections added successfully");
-        setOpen(false);
+      } else {
+        toast.info("No new sections to add");
       }
     }
   };
+
+  const isPending = createClassMutation.isPending || addSectionsMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -161,7 +226,7 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                   <SelectValue placeholder="Select Existing Class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockClassrooms.map((c) => (
+                  {classrooms.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()}>
                       Class {c.name}
                     </SelectItem>
@@ -204,7 +269,6 @@ const AddClassModal = ({ classesData = [], onSave }) => {
                   ))}
                 </div>
 
-                {/* Add button */}
                 <Button
                   type="button"
                   variant="outline"
@@ -221,10 +285,10 @@ const AddClassModal = ({ classesData = [], onSave }) => {
         <DialogFooter>
           <Button
             onClick={handleSubmit}
-            disabled={(!className && !selectedClassroomId) || sections.length === 0}
+            disabled={(!className && !selectedClassroomId) || sections.length === 0 || isPending}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            Save
+            {isPending ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>
