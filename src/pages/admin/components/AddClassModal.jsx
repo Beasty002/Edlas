@@ -54,8 +54,8 @@ const AddClassModal = ({ onSave }) => {
   const classrooms = classroomsData?.results || [];
 
   useEffect(() => {
-    if (mode === "section" && selectedClassroomId) {
-      const selectedClassroom = classrooms.find((c) => c.id.toString() === selectedClassroomId);
+    if (mode === "section" && selectedClassroomId && classroomsData?.results) {
+      const selectedClassroom = classroomsData.results.find((c) => c.id.toString() === selectedClassroomId);
       if (selectedClassroom && selectedClassroom.sections) {
         const existing = selectedClassroom.sections.map((s) => s.name);
         setExistingSections(existing);
@@ -68,7 +68,7 @@ const AddClassModal = ({ onSave }) => {
       setExistingSections([]);
       setSections(["A"]);
     }
-  }, [selectedClassroomId, mode, classrooms]);
+  }, [selectedClassroomId, mode, classroomsData]);
 
   const addSection = () => {
     const allSections = [...sections];
