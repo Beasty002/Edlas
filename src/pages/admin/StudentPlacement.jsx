@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,6 @@ import { toast } from "sonner";
 import { baseRequest } from "@/api/api";
 import { getErrorMessage } from "@/utils/helper";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -72,8 +66,8 @@ const dummyStudents = [
 
 const StudentPlacement = () => {
   const [students, setStudents] = useState(dummyStudents);
-  const [classFilter, setClassFilter] = useState("10");
-  const [sectionFilter, setSectionFilter] = useState("A");
+  const [classFilter, setClassFilter] = useState("");
+  const [sectionFilter, setSectionFilter] = useState("");
   const [search, setSearch] = useState("");
   const [selectedAction, setSelectedAction] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -82,7 +76,26 @@ const StudentPlacement = () => {
   const queryClient = useQueryClient();
   const { classOptions, getSectionsForClass } = useClassrooms();
 
-  // Placement API call function
+  useEffect(() => {
+    if (classOptions.length > 0 && !classFilter) {
+      const firstClass = classOptions[0].value;
+      setClassFilter(firstClass);
+      const sections = getSectionsForClass(firstClass);
+      if (sections.length > 0) {
+        setSectionFilter(sections[0].value);
+      }
+    }
+  }, [classOptions]);
+
+  useEffect(() => {
+    if (classFilter) {
+      const sections = getSectionsForClass(classFilter);
+      if (sections.length > 0 && !sections.find(s => s.value === sectionFilter)) {
+        setSectionFilter(sections[0].value);
+      }
+    }
+  }, [classFilter]);
+
   const placementApiCall = async ({ studentIds, action, targetClass, targetSection }) => {
     const payload = {
       student_ids: studentIds,
@@ -318,12 +331,11 @@ const StudentPlacement = () => {
         </div>
 
         <div className="flex gap-4">
-          <Select value={classFilter} onValueChange={(val) => { setClassFilter(val); setSectionFilter(""); }}>
+          <Select value={classFilter} onValueChange={setClassFilter}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Class" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Classes</SelectItem>
               {classOptions.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
                   {c.label}
@@ -337,7 +349,6 @@ const StudentPlacement = () => {
               <SelectValue placeholder="Section" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Sections</SelectItem>
               {getSectionsForClass(classFilter).map((s) => (
                 <SelectItem key={s.value} value={s.value}>
                   {s.label}
