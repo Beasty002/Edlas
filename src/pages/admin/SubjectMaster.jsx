@@ -23,7 +23,7 @@ const SubjectMaster = () => {
   const [ordering, setOrdering] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [formData, setFormData] = useState({ name: "", code: "", description: "" });
 
   const { subjects, isLoading, createSubject, updateSubject, isCreating, isUpdating } = useSubjectMaster({
     search: debouncedSearch,
@@ -39,10 +39,10 @@ const SubjectMaster = () => {
   const handleOpenDialog = (subject = null) => {
     if (subject) {
       setEditingSubject(subject);
-      setFormData({ name: subject.name, description: subject.description || "" });
+      setFormData({ name: subject.name, code: subject.code || "", description: subject.description || "" });
     } else {
       setEditingSubject(null);
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "", code: "", description: "" });
     }
     setIsDialogOpen(true);
   };
@@ -55,6 +55,7 @@ const SubjectMaster = () => {
 
     const payload = {
       name: formData.name,
+      code: formData.code,
       description: formData.description,
       is_active: true,
     };
@@ -96,6 +97,7 @@ const SubjectMaster = () => {
       width: 60,
       template: (subject) => <span className="text-muted-foreground">#{subject.id}</span>,
     },
+    { field: "code", headerText: "Code", width: 100 },
     { field: "name", headerText: "Subject Name", width: 180 },
     {
       field: "description",
@@ -180,6 +182,18 @@ const SubjectMaster = () => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="e.g., Mathematics"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="code">Subject Code</Label>
+              <Input
+                id="code"
+                className="w-full"
+                value={formData.code}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
+                placeholder="e.g., MATH101"
               />
             </div>
             <div className="grid gap-2">

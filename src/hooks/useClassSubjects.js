@@ -8,7 +8,7 @@ const fetchClassSubjects = async ({ search, ordering, classFilter, pagination })
     search,
     ordering,
     filters: {
-      class_name: classFilter,
+      classroom__name: classFilter,
     },
   });
   

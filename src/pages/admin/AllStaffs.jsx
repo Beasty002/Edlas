@@ -24,8 +24,8 @@ const statusOptions = [
 ];
 
 const roleOptions = [
-  { label: "Teacher", value: "teacher" },
-  { label: "Admin", value: "admin" },
+  { label: "Teacher", value: "Teacher" },
+  { label: "Admin", value: "Admin" },
 ];
 
 const AllStaffs = () => {
