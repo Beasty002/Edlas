@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -13,7 +13,7 @@ import { Edit, UserX, Search } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import { baseRequest } from "@/api/api";
-import { useDebounce, getSortConfig, buildQueryParams, getPaginationConfig } from "@/utils/helper";
+import { useDebounce, getSortConfig, buildQueryParams, getPaginationConfig, getErrorMessage } from "@/utils/helper";
 import { toast } from "sonner";
 import UpdateStaffForm from "./UpdateStaffForm";
 
@@ -28,6 +28,7 @@ const roleOptions = [
 ];
 
 const AllStaffs = () => {
+  const queryClient = useQueryClient();
   const [editingStaff, setEditingStaff] = useState(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
@@ -57,6 +58,30 @@ const AllStaffs = () => {
     },
   });
 
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ staffId, isActive }) => {
+      const res = await baseRequest({
+        url: `/system/staff/${staffId}/`,
+        method: "PATCH",
+        body: { is_active: isActive },
+      });
+      if (!res.ok) {
+        throw { response: { data: res.data, status: res.status } };
+      }
+      return res.data;
+    },
+    onMutate: ({ isActive }) => {
+      toast.loading(isActive ? "Activating staff..." : "Deactivating staff...", { id: "toggle-status" });
+    },
+    onSuccess: (_, { isActive }) => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+      toast.success(isActive ? "Staff activated" : "Staff deactivated", { id: "toggle-status" });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to update status"), { id: "toggle-status" });
+    },
+  });
+
   const sortConfig = getSortConfig(ordering);
 
   const handleSort = (newOrdering) => {
@@ -69,10 +94,8 @@ const AllStaffs = () => {
   };
 
   const handleToggleStatus = (staff) => {
-    const newStatus = staff.status === "active" ? "inactive" : "active";
-    toast.success(
-      `Staff ${newStatus === "active" ? "activated" : "deactivated"}`
-    );
+    const newIsActive = staff.status !== "active";
+    toggleStatusMutation.mutate({ staffId: staff.id, isActive: newIsActive });
   };
 
   const columns = [
