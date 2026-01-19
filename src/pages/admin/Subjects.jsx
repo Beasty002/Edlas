@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useClassrooms } from "@/context/ClassroomsContext";
 import { useSubjectMaster } from "@/hooks/useSubjectMaster";
 import { useClassSubjects } from "@/hooks/useClassSubjects";
-import { useDebounce, getPaginationConfig } from "@/utils/helper";
+import { useDebounce, getPaginationConfig, getSortConfig } from "@/utils/helper";
 
 const Subjects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,6 +35,7 @@ const Subjects = () => {
   const debouncedSearch = useDebounce(search, 400);
   const [classFilter, setClassFilter] = useState("all");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 20 });
+  const [ordering, setOrdering] = useState(null);
   const [formData, setFormData] = useState({
     code: "",
     full_marks: 100,
@@ -55,7 +56,13 @@ const Subjects = () => {
     deleteClassSubject,
     isCreating,
     isUpdating
-  } = useClassSubjects({ search: debouncedSearch, classFilter, pagination });
+  } = useClassSubjects({ search: debouncedSearch, classFilter, pagination, ordering });
+
+  const sortConfig = getSortConfig(ordering);
+
+  const handleSort = (newOrdering) => {
+    setOrdering(newOrdering);
+  };
 
   const handleOpenDialog = (subject = null) => {
     if (subject) {
@@ -263,6 +270,8 @@ const Subjects = () => {
         actionConfig={actionConfig}
         emptyMessage="No class subjects found"
         keyField="id"
+        sortConfig={sortConfig}
+        onSort={handleSort}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
