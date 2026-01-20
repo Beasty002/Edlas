@@ -21,16 +21,17 @@ import {
     MessageSquare,
     Link as LinkIcon,
     FileText,
+    Megaphone,
+    Send,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import CreateNotificationModal from "./components/CreateNotificationModal";
-import NotificationDetailModal from "./components/NotificationDetailModal";
-import { mockNotifications } from "@/data/mockData";
+import CreateAnnouncementModal from "./components/CreateAnnouncementModal";
+import AnnouncementDetailModal from "./components/AnnouncementDetailModal";
+import { mockAnnouncements } from "@/data/mockData";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useClassrooms } from "@/context/ClassroomsContext";
 
 const getContentTypeConfig = (type) => {
     switch (type) {
@@ -51,12 +52,8 @@ const getRecipientLabel = (recipients) => {
             return "Whole School";
         case "all_students":
             return "All Students";
-        case "teachers":
-            return "Teachers";
-        case "specific_class":
-            return `Class ${recipients.classes.join(", ")}`;
-        case "specific_section":
-            return `Class ${recipients.classes.join(", ")} - Section ${recipients.sections.join(", ")}`;
+        case "all_staff":
+            return "All Staff";
         default:
             return "Unknown";
     }
@@ -65,7 +62,7 @@ const getRecipientLabel = (recipients) => {
 const getStatusConfig = (status) => {
     switch (status) {
         case "sent":
-            return { label: "Sent", variant: "default", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
+            return { label: "Published", variant: "default", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
         case "scheduled":
             return { label: "Scheduled", variant: "outline", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" };
         case "draft":
@@ -75,77 +72,85 @@ const getStatusConfig = (status) => {
     }
 };
 
-const Notifications = () => {
-    const [notifications, setNotifications] = useState(mockNotifications);
+const Announcements = () => {
+    const [announcements, setAnnouncements] = useState(mockAnnouncements);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [typeFilter, setTypeFilter] = useState("all");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [selectedNotification, setSelectedNotification] = useState(null);
-    const [editingNotification, setEditingNotification] = useState(null);
-    const { classOptions, allSectionOptions } = useClassrooms();
+    const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+    const [editingAnnouncement, setEditingAnnouncement] = useState(null);
 
-    const filteredNotifications = useMemo(() => {
-        return notifications.filter((notif) => {
-            const matchesSearch = notif.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                notif.description.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = statusFilter === "all" || notif.status === statusFilter;
-            const matchesType = typeFilter === "all" || notif.contentType === typeFilter;
+    const filteredAnnouncements = useMemo(() => {
+        return announcements.filter((item) => {
+            const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                item.description.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+            const matchesType = typeFilter === "all" || item.contentType === typeFilter;
             return matchesSearch && matchesStatus && matchesType;
         });
-    }, [notifications, searchQuery, statusFilter, typeFilter]);
+    }, [announcements, searchQuery, statusFilter, typeFilter]);
 
-    const handleView = (notif) => {
-        setSelectedNotification(notif);
+    const handleView = (item) => {
+        setSelectedAnnouncement(item);
         setIsDetailModalOpen(true);
     };
 
-    const handleEdit = (notif) => {
-        setEditingNotification(notif);
+    const handleEdit = (item) => {
+        setEditingAnnouncement(item);
         setIsCreateModalOpen(true);
     };
 
-    const handleDelete = (notif) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
-        toast.success("Notification deleted");
+    const handleDelete = (item) => {
+        setAnnouncements((prev) => prev.filter((n) => n.id !== item.id));
+        toast.success("Announcement deleted");
     };
 
-    const handleCancelScheduled = (notif) => {
-        setNotifications((prev) =>
+    const handleCancelScheduled = (item) => {
+        setAnnouncements((prev) =>
             prev.map((n) =>
-                n.id === notif.id ? { ...n, status: "draft", scheduledDate: null } : n
+                n.id === item.id ? { ...n, status: "draft", scheduledDate: null } : n
             )
         );
-        toast.success("Scheduled notification cancelled");
+        toast.success("Scheduled announcement cancelled");
     };
 
-    const handleSave = (notifData) => {
-        if (editingNotification) {
-            setNotifications((prev) =>
+    const handlePublishNow = (item) => {
+        setAnnouncements((prev) =>
+            prev.map((n) =>
+                n.id === item.id ? { ...n, status: "sent", scheduledDate: null, sentAt: new Date().toISOString() } : n
+            )
+        );
+        toast.success("Announcement published successfully");
+    };
+
+    const handleSave = (announcementData) => {
+        if (editingAnnouncement) {
+            setAnnouncements((prev) =>
                 prev.map((n) =>
-                    n.id === editingNotification.id ? { ...n, ...notifData } : n
+                    n.id === editingAnnouncement.id ? { ...n, ...announcementData } : n
                 )
             );
-            toast.success("Notification updated");
-            setEditingNotification(null);
+            toast.success("Announcement updated");
+            setEditingAnnouncement(null);
         } else {
-            const newId = Math.max(...notifications.map((n) => n.id), 0) + 1;
-            setNotifications((prev) => [
+            const newId = Math.max(...announcements.map((n) => n.id), 0) + 1;
+            setAnnouncements((prev) => [
                 {
                     id: newId,
-                    ...notifData,
+                    ...announcementData,
                     createdAt: new Date().toISOString(),
                     createdBy: "Admin User",
                 },
                 ...prev,
             ]);
             toast.success(
-                notifData.status === "scheduled"
-                    ? "Notification scheduled"
-                    : notifData.status === "draft"
+                announcementData.status === "scheduled"
+                    ? "Announcement scheduled"
+                    : announcementData.status === "draft"
                         ? "Draft saved"
-                        : "Notification sent"
+                        : "Announcement published"
             );
         }
         setIsCreateModalOpen(false);
@@ -153,7 +158,7 @@ const Notifications = () => {
 
     const handleCloseCreateModal = () => {
         setIsCreateModalOpen(false);
-        setEditingNotification(null);
+        setEditingAnnouncement(null);
     };
 
     const columns = [
@@ -161,9 +166,9 @@ const Notifications = () => {
             field: "title",
             headerText: "Title",
             width: 250,
-            template: (notif) => (
-                <div className="font-medium truncate max-w-[230px]" title={notif.title}>
-                    {notif.title}
+            template: (item) => (
+                <div className="font-medium truncate max-w-[230px]" title={item.title}>
+                    {item.title}
                 </div>
             ),
         },
@@ -172,8 +177,8 @@ const Notifications = () => {
             headerText: "Type",
             width: 110,
             textAlign: "Center",
-            template: (notif) => {
-                const config = getContentTypeConfig(notif.contentType);
+            template: (item) => {
+                const config = getContentTypeConfig(item.contentType);
                 const Icon = config.icon;
                 return (
                     <Badge className={`${config.className} gap-1`}>
@@ -187,9 +192,9 @@ const Notifications = () => {
             field: "recipients",
             headerText: "Recipients",
             width: 150,
-            template: (notif) => (
+            template: (item) => (
                 <span className="text-sm text-muted-foreground">
-                    {getRecipientLabel(notif.recipients)}
+                    {getRecipientLabel(item.recipients)}
                 </span>
             ),
         },
@@ -198,12 +203,10 @@ const Notifications = () => {
             headerText: "Delivery",
             width: 100,
             textAlign: "Center",
-            template: (notif) => (
+            template: (item) => (
                 <div className="flex items-center justify-center gap-1.5">
-                    {notif.deliveryChannel.includes("web") && (
-                        <Globe className="h-4 w-4 text-blue-500" title="Web" />
-                    )}
-                    {notif.deliveryChannel.includes("email") && (
+                    <Globe className="h-4 w-4 text-blue-500" title="Bulletin Board" />
+                    {item.deliveryChannel.includes("email") && (
                         <Mail className="h-4 w-4 text-purple-500" title="Email" />
                     )}
                 </div>
@@ -214,30 +217,30 @@ const Notifications = () => {
             headerText: "Status",
             width: 110,
             textAlign: "Center",
-            template: (notif) => {
-                const config = getStatusConfig(notif.status);
+            template: (item) => {
+                const config = getStatusConfig(item.status);
                 return <Badge className={config.className}>{config.label}</Badge>;
             },
         },
         {
             field: "scheduledDate",
-            headerText: "Schedule/Sent",
+            headerText: "Schedule/Published",
             width: 150,
-            template: (notif) => {
-                if (notif.scheduledDate) {
+            template: (item) => {
+                if (item.scheduledDate) {
                     return (
                         <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                             <Clock className="h-3.5 w-3.5" />
                             <span className="text-sm">
-                                {format(new Date(notif.scheduledDate), "MMM d, h:mm a")}
+                                {format(new Date(item.scheduledDate), "MMM d, h:mm a")}
                             </span>
                         </div>
                     );
                 }
-                if (notif.sentAt) {
+                if (item.sentAt) {
                     return (
                         <span className="text-sm text-muted-foreground">
-                            {format(new Date(notif.sentAt), "MMM d, h:mm a")}
+                            {format(new Date(item.sentAt), "MMM d, h:mm a")}
                         </span>
                     );
                 }
@@ -260,13 +263,19 @@ const Notifications = () => {
                 label: "Edit",
                 icon: <Edit className="h-4 w-4" />,
                 onClick: handleEdit,
-                hidden: (notif) => notif.status === "sent",
+                hidden: (item) => item.status === "sent",
+            },
+            {
+                label: "Publish Now",
+                icon: <Send className="h-4 w-4" />,
+                onClick: handlePublishNow,
+                hidden: (item) => item.status !== "scheduled",
             },
             {
                 label: "Cancel Schedule",
                 icon: <XCircle className="h-4 w-4" />,
                 onClick: handleCancelScheduled,
-                hidden: (notif) => notif.status !== "scheduled",
+                hidden: (item) => item.status !== "scheduled",
             },
             {
                 label: "Delete",
@@ -280,15 +289,16 @@ const Notifications = () => {
     return (
         <div className="space-y-6 w-full">
             <PageHeader
-                title="Notification Management"
-                description="Create, schedule, and manage notifications for students, teachers, and staff."
+                title="Announcements"
+                description="Create, schedule, and manage announcements for students, teachers, and staff."
+                icon={<Megaphone className="h-7 w-7 text-blue-600" />}
             />
 
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-sm">
                 <div className="flex-1 min-w-[200px] relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
-                        placeholder="Search notifications..."
+                        placeholder="Search announcements..."
                         className="pl-10 w-full"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -302,7 +312,7 @@ const Notifications = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
+                            <SelectItem value="sent">Published</SelectItem>
                             <SelectItem value="scheduled">Scheduled</SelectItem>
                             <SelectItem value="draft">Draft</SelectItem>
                         </SelectContent>
@@ -325,35 +335,33 @@ const Notifications = () => {
                         onClick={() => setIsCreateModalOpen(true)}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Create New
+                        New Announcement
                     </Button>
                 </div>
             </div>
 
             <DataGrid
                 columns={columns}
-                data={filteredNotifications}
+                data={filteredAnnouncements}
                 actionConfig={actionConfig}
-                emptyMessage="No notifications found"
+                emptyMessage="No announcements found"
                 keyField="id"
             />
 
-            <CreateNotificationModal
+            <CreateAnnouncementModal
                 open={isCreateModalOpen}
                 onOpenChange={handleCloseCreateModal}
                 onSave={handleSave}
-                editData={editingNotification}
-                allClasses={classOptions.map(c => c.value)}
-                allSections={allSectionOptions.map(s => s.value)}
+                editData={editingAnnouncement}
             />
 
-            <NotificationDetailModal
+            <AnnouncementDetailModal
                 open={isDetailModalOpen}
                 onOpenChange={setIsDetailModalOpen}
-                notification={selectedNotification}
+                announcement={selectedAnnouncement}
             />
         </div>
     );
 };
 
-export default Notifications;
+export default Announcements;

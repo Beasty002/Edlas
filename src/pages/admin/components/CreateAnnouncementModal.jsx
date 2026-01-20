@@ -19,13 +19,11 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     MessageSquare,
     Link as LinkIcon,
     FileText,
-    Globe,
     Mail,
     Clock,
     Send,
@@ -36,26 +34,22 @@ import {
 import { cn } from "@/lib/utils";
 
 const contentTypes = [
-    { value: "message", label: "Message", icon: MessageSquare, description: "Simple text notification" },
+    { value: "message", label: "Message", icon: MessageSquare, description: "Simple text announcement" },
     { value: "link", label: "Link", icon: LinkIcon, description: "Share a link with description" },
     { value: "blog", label: "Blog", icon: FileText, description: "Rich content with image" },
 ];
 
 const recipientTypes = [
-    { value: "whole_school", label: "Whole School" },
-    { value: "all_students", label: "All Students" },
-    { value: "teachers", label: "All Teachers" },
-    { value: "specific_class", label: "Specific Class" },
-    { value: "specific_section", label: "Specific Section" },
+    { value: "whole_school", label: "Whole School", description: "Send to everyone in the school" },
+    { value: "all_students", label: "All Students", description: "Send to all enrolled students" },
+    { value: "all_staff", label: "All Staff", description: "Send to all staff members" },
 ];
 
-const CreateNotificationModal = ({
+const CreateAnnouncementModal = ({
     open,
     onOpenChange,
     onSave,
     editData,
-    allClasses = [],
-    allSections = [],
 }) => {
     const [activeTab, setActiveTab] = useState("content");
     const fileInputRef = useRef(null);
@@ -71,7 +65,7 @@ const CreateNotificationModal = ({
             classes: [],
             sections: [],
         },
-        deliveryChannel: ["web"],
+        sendEmail: false,
         scheduleType: "now",
         scheduledDate: "",
         scheduledTime: "",
@@ -88,7 +82,7 @@ const CreateNotificationModal = ({
                 imageUrl: editData.imageUrl || "",
                 imageFile: null,
                 recipients: editData.recipients || { type: "all_students", classes: [], sections: [] },
-                deliveryChannel: editData.deliveryChannel || ["web"],
+                sendEmail: editData.deliveryChannel?.includes("email") || false,
                 scheduleType: editData.scheduledDate ? "schedule" : "now",
                 scheduledDate: scheduleDate ? scheduleDate.toISOString().split("T")[0] : "",
                 scheduledTime: scheduleDate ? scheduleDate.toTimeString().slice(0, 5) : "",
@@ -112,7 +106,7 @@ const CreateNotificationModal = ({
                 classes: [],
                 sections: [],
             },
-            deliveryChannel: ["web"],
+            sendEmail: false,
             scheduleType: "now",
             scheduledDate: "",
             scheduledTime: "",
@@ -134,31 +128,6 @@ const CreateNotificationModal = ({
             ...prev,
             recipients: { ...prev.recipients, [field]: value },
         }));
-    };
-
-    const toggleDeliveryChannel = (channel) => {
-        setFormData((prev) => {
-            const channels = prev.deliveryChannel.includes(channel)
-                ? prev.deliveryChannel.filter((c) => c !== channel)
-                : [...prev.deliveryChannel, channel];
-            return { ...prev, deliveryChannel: channels.length ? channels : ["web"] };
-        });
-    };
-
-    const toggleClass = (cls) => {
-        const currentClasses = formData.recipients.classes;
-        const newClasses = currentClasses.includes(cls)
-            ? currentClasses.filter((c) => c !== cls)
-            : [...currentClasses, cls];
-        updateRecipients("classes", newClasses);
-    };
-
-    const toggleSection = (section) => {
-        const currentSections = formData.recipients.sections;
-        const newSections = currentSections.includes(section)
-            ? currentSections.filter((s) => s !== section)
-            : [...currentSections, section];
-        updateRecipients("sections", newSections);
     };
 
     const handleImageUpload = (e) => {
@@ -185,9 +154,6 @@ const CreateNotificationModal = ({
         if (!formData.title.trim()) return false;
         if (!formData.description.trim()) return false;
         if (formData.contentType === "link" && !formData.linkUrl.trim()) return false;
-        if (formData.deliveryChannel.length === 0) return false;
-        if (formData.recipients.type === "specific_class" && formData.recipients.classes.length === 0) return false;
-        if (formData.recipients.type === "specific_section" && (formData.recipients.classes.length === 0 || formData.recipients.sections.length === 0)) return false;
         if (formData.scheduleType === "schedule" && (!formData.scheduledDate || !formData.scheduledTime)) return false;
         return true;
     };
@@ -198,20 +164,23 @@ const CreateNotificationModal = ({
             scheduledDate = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString();
         }
 
-        const notifData = {
+        // Web is always included by default, email is optional
+        const deliveryChannel = formData.sendEmail ? ["web", "email"] : ["web"];
+
+        const announcementData = {
             title: formData.title,
             description: formData.description,
             contentType: formData.contentType,
             linkUrl: formData.contentType === "link" ? formData.linkUrl : null,
             imageUrl: formData.contentType === "blog" ? formData.imageUrl : null,
             recipients: formData.recipients,
-            deliveryChannel: formData.deliveryChannel,
+            deliveryChannel: deliveryChannel,
             status: status,
             scheduledDate: status === "scheduled" ? scheduledDate : null,
             sentAt: status === "sent" ? new Date().toISOString() : null,
         };
 
-        onSave(notifData);
+        onSave(announcementData);
     };
 
     return (
@@ -219,10 +188,10 @@ const CreateNotificationModal = ({
             <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0">
                 <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
                     <DialogTitle className="text-xl font-semibold">
-                        {editData ? "Edit Notification" : "Create New Notification"}
+                        {editData ? "Edit Announcement" : "Create New Announcement"}
                     </DialogTitle>
                     <DialogDescription>
-                        Create and send notifications to students, teachers, or the whole school.
+                        Create and publish announcements to students, teachers, or the whole school.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -239,7 +208,7 @@ const CreateNotificationModal = ({
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium">Title *</Label>
                                 <Input
-                                    placeholder="Enter notification title"
+                                    placeholder="Enter announcement title"
                                     value={formData.title}
                                     onChange={(e) => updateFormData("title", e.target.value)}
                                     className="h-11"
@@ -278,7 +247,7 @@ const CreateNotificationModal = ({
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium">Description *</Label>
                                 <Textarea
-                                    placeholder="Enter notification content..."
+                                    placeholder="Enter announcement content..."
                                     value={formData.description}
                                     onChange={(e) => updateFormData("description", e.target.value)}
                                     rows={4}
@@ -359,83 +328,29 @@ const CreateNotificationModal = ({
                                 <Label className="text-sm font-medium">Send To</Label>
                                 <Select
                                     value={formData.recipients.type}
-                                    onValueChange={(value) => {
-                                        updateRecipients("type", value);
-                                        updateRecipients("classes", []);
-                                        updateRecipients("sections", []);
-                                    }}
+                                    onValueChange={(value) => updateRecipients("type", value)}
                                 >
-                                    <SelectTrigger className="h-11">
+                                    <SelectTrigger className="w-full h-11">
                                         <SelectValue placeholder="Select recipients" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {recipientTypes.map((type) => (
                                             <SelectItem key={type.value} value={type.value}>
-                                                {type.label}
+                                                <div className="flex flex-col">
+                                                    <span>{type.label}</span>
+                                                </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {(formData.recipients.type === "specific_class" || formData.recipients.type === "specific_section") && (
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-medium">Select Class(es) *</Label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {allClasses.map((cls) => (
-                                            <Badge
-                                                key={cls}
-                                                variant={formData.recipients.classes.includes(cls) ? "default" : "outline"}
-                                                className={cn(
-                                                    "cursor-pointer px-4 py-2 text-sm rounded-lg transition-all",
-                                                    formData.recipients.classes.includes(cls)
-                                                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                )}
-                                                onClick={() => toggleClass(cls)}
-                                            >
-                                                Class {cls}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {formData.recipients.type === "specific_section" && formData.recipients.classes.length > 0 && (
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-medium">Select Section(s) *</Label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {allSections.map((section) => (
-                                            <Badge
-                                                key={section}
-                                                variant={formData.recipients.sections.includes(section) ? "default" : "outline"}
-                                                className={cn(
-                                                    "cursor-pointer px-4 py-2 text-sm rounded-lg transition-all",
-                                                    formData.recipients.sections.includes(section)
-                                                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                )}
-                                                onClick={() => toggleSection(section)}
-                                            >
-                                                Section {section}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
                             <div className="p-4 bg-muted/50 rounded-xl">
                                 <h4 className="font-medium mb-2">Recipients Preview</h4>
                                 <p className="text-sm text-muted-foreground">
-                                    {formData.recipients.type === "whole_school" && "This notification will be sent to everyone in the school."}
-                                    {formData.recipients.type === "all_students" && "This notification will be sent to all students."}
-                                    {formData.recipients.type === "teachers" && "This notification will be sent to all teachers."}
-                                    {formData.recipients.type === "specific_class" && formData.recipients.classes.length > 0 &&
-                                        `This notification will be sent to all students in Class ${formData.recipients.classes.join(", ")}.`}
-                                    {formData.recipients.type === "specific_section" && formData.recipients.classes.length > 0 && formData.recipients.sections.length > 0 &&
-                                        `This notification will be sent to students in Class ${formData.recipients.classes.join(", ")} Section ${formData.recipients.sections.join(", ")}.`}
-                                    {(formData.recipients.type === "specific_class" || formData.recipients.type === "specific_section") && formData.recipients.classes.length === 0 &&
-                                        "Please select at least one class."}
+                                    {formData.recipients.type === "whole_school" && "This announcement will be sent to everyone in the school."}
+                                    {formData.recipients.type === "all_students" && "This announcement will be sent to all students."}
+                                    {formData.recipients.type === "all_staff" && "This announcement will be sent to all staff members."}
                                 </p>
                             </div>
                         </TabsContent>
@@ -443,29 +358,25 @@ const CreateNotificationModal = ({
                         {/* Delivery Tab */}
                         <TabsContent value="delivery" className="space-y-6 mt-0">
                             <div className="space-y-3">
-                                <Label className="text-sm font-medium">Delivery Channel *</Label>
-                                <div className="flex gap-6">
-                                    <label className="flex items-center gap-3 cursor-pointer">
-                                        <Checkbox
-                                            checked={formData.deliveryChannel.includes("web")}
-                                            onCheckedChange={() => toggleDeliveryChannel("web")}
-                                        />
-                                        <Globe className="h-5 w-5 text-blue-500" />
-                                        <span className="text-sm">Web Notification</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 cursor-pointer">
-                                        <Checkbox
-                                            checked={formData.deliveryChannel.includes("email")}
-                                            onCheckedChange={() => toggleDeliveryChannel("email")}
-                                        />
-                                        <Mail className="h-5 w-5 text-purple-500" />
-                                        <span className="text-sm">Email</span>
-                                    </label>
-                                </div>
+                                <Label className="text-sm font-medium">Additional Delivery Options</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Announcements are always shown on the bulletin board. Optionally send via email.
+                                </p>
+                                <label className="flex items-center gap-3 cursor-pointer p-4 border rounded-xl hover:bg-muted/50 transition-colors">
+                                    <Checkbox
+                                        checked={formData.sendEmail}
+                                        onCheckedChange={(checked) => updateFormData("sendEmail", checked)}
+                                    />
+                                    <Mail className="h-5 w-5 text-purple-500" />
+                                    <div>
+                                        <span className="text-sm font-medium">Also send via Email</span>
+                                        <p className="text-xs text-muted-foreground">Recipients will receive an email notification</p>
+                                    </div>
+                                </label>
                             </div>
 
                             <div className="space-y-3">
-                                <Label className="text-sm font-medium">When to Send</Label>
+                                <Label className="text-sm font-medium">When to Publish</Label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
@@ -478,7 +389,7 @@ const CreateNotificationModal = ({
                                         )}
                                     >
                                         <Send className={cn("h-5 w-5", formData.scheduleType === "now" ? "text-blue-600" : "text-muted-foreground")} />
-                                        <span className={cn("font-medium", formData.scheduleType === "now" ? "text-blue-600" : "")}>Send Now</span>
+                                        <span className={cn("font-medium", formData.scheduleType === "now" ? "text-blue-600" : "")}>Publish Now</span>
                                     </button>
                                     <button
                                         type="button"
@@ -548,7 +459,7 @@ const CreateNotificationModal = ({
                         ) : (
                             <>
                                 <Send className="mr-2 h-4 w-4" />
-                                Send Now
+                                Publish Now
                             </>
                         )}
                     </Button>
@@ -558,4 +469,4 @@ const CreateNotificationModal = ({
     );
 };
 
-export default CreateNotificationModal;
+export default CreateAnnouncementModal;

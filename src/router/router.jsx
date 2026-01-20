@@ -20,7 +20,7 @@ const Unauthorized = lazy(() => import("@/pages/UnAuthorized"));
 const AllStaffs = lazy(() => import("@/pages/admin/AllStaffs"));
 const StaffDetailForm = lazy(() => import("@/pages/admin/StaffDetailForm"));
 const MyResults = lazy(() => import("@/pages/student/MyResults"));
-const Notifications = lazy(() => import("@/pages/admin/Notifications"));
+const Announcements = lazy(() => import("@/pages/admin/Announcements"));
 const TeacherClassroom = lazy(() => import("@/pages/Teacher/TeacherClassroom"));
 const TeacherAssignmentList = lazy(() => import("@/pages/Teacher/TeacherAssignmentList"));
 const StudentClassroom = lazy(() => import("@/pages/student/StudentClassroom"));
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
               { path: "/subjects", element: <Subjects /> },
               { path: "/subject-master", element: <SubjectMaster /> },
               { path: "/teacher-assignments", element: <TeacherAssignments /> },
-              { path: "/notifications", element: <Notifications /> },
+              { path: "/announcements", element: <Announcements /> },
             ],
           },
 

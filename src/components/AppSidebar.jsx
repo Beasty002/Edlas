@@ -19,7 +19,7 @@ import {
   UserPlus,
   BookMarked,
   UserCheck,
-  Bell,
+  Megaphone,
   ClipboardList,
 } from 'lucide-react';
 
@@ -69,10 +69,10 @@ const allMenuItems = [
     ],
   },
   {
-    id: 'notifications',
-    label: 'Notifications',
-    path: '/notifications',
-    icon: Bell,
+    id: 'announcements',
+    label: 'Announcements',
+    path: '/announcements',
+    icon: Megaphone,
     roles: ['superadmin'],
   },
   {

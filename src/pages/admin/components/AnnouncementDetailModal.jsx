@@ -39,12 +39,8 @@ const getRecipientLabel = (recipients) => {
             return "Whole School";
         case "all_students":
             return "All Students";
-        case "teachers":
-            return "All Teachers";
-        case "specific_class":
-            return `Class ${recipients.classes?.join(", ") || ""}`;
-        case "specific_section":
-            return `Class ${recipients.classes?.join(", ") || ""} - Section ${recipients.sections?.join(", ") || ""}`;
+        case "all_staff":
+            return "All Staff";
         default:
             return "Unknown";
     }
@@ -53,7 +49,7 @@ const getRecipientLabel = (recipients) => {
 const getStatusConfig = (status) => {
     switch (status) {
         case "sent":
-            return { label: "Sent", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
+            return { label: "Published", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
         case "scheduled":
             return { label: "Scheduled", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" };
         case "draft":
@@ -63,12 +59,12 @@ const getStatusConfig = (status) => {
     }
 };
 
-const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
-    if (!notification) return null;
+const AnnouncementDetailModal = ({ open, onOpenChange, announcement }) => {
+    if (!announcement) return null;
 
-    const contentTypeConfig = getContentTypeConfig(notification.contentType);
+    const contentTypeConfig = getContentTypeConfig(announcement.contentType);
     const ContentIcon = contentTypeConfig.icon;
-    const statusConfig = getStatusConfig(notification.status);
+    const statusConfig = getStatusConfig(announcement.status);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,7 +73,7 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                     <div className="flex items-start gap-3">
                         <div className="flex-1">
                             <DialogTitle className="text-xl font-semibold leading-relaxed">
-                                {notification.title}
+                                {announcement.title}
                             </DialogTitle>
                             <div className="flex flex-wrap items-center gap-2 mt-3">
                                 <Badge className={contentTypeConfig.className}>
@@ -94,11 +90,11 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
                     {/* Image Preview for Blog Type */}
-                    {notification.contentType === "blog" && notification.imageUrl && (
+                    {announcement.contentType === "blog" && announcement.imageUrl && (
                         <div className="rounded-xl overflow-hidden border mb-6">
                             <img
-                                src={notification.imageUrl}
-                                alt="Notification image"
+                                src={announcement.imageUrl}
+                                alt="Announcement image"
                                 className="w-full h-48 object-cover"
                                 onError={(e) => { e.target.style.display = "none"; }}
                             />
@@ -110,22 +106,22 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                         <div>
                             <h4 className="text-sm font-medium text-muted-foreground mb-3">Content</h4>
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                {notification.description}
+                                {announcement.description}
                             </p>
                         </div>
 
                         {/* Link for Link Type */}
-                        {notification.contentType === "link" && notification.linkUrl && (
+                        {announcement.contentType === "link" && announcement.linkUrl && (
                             <div>
                                 <h4 className="text-sm font-medium text-muted-foreground mb-3">Link</h4>
                                 <a
-                                    href={notification.linkUrl}
+                                    href={announcement.linkUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg"
                                 >
                                     <ExternalLink className="h-4 w-4" />
-                                    {notification.linkUrl}
+                                    {announcement.linkUrl}
                                 </a>
                             </div>
                         )}
@@ -137,7 +133,7 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                                     <User className="h-4 w-4" />
                                     <span className="text-xs font-medium uppercase tracking-wide">Recipients</span>
                                 </div>
-                                <p className="text-sm font-medium">{getRecipientLabel(notification.recipients)}</p>
+                                <p className="text-sm font-medium">{getRecipientLabel(announcement.recipients)}</p>
                             </div>
 
                             <div className="space-y-2">
@@ -146,12 +142,10 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                                     <span className="text-xs font-medium uppercase tracking-wide">Delivery</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {notification.deliveryChannel?.includes("web") && (
-                                        <span className="flex items-center gap-1.5 text-sm font-medium">
-                                            <Globe className="h-4 w-4 text-blue-500" /> Web
-                                        </span>
-                                    )}
-                                    {notification.deliveryChannel?.includes("email") && (
+                                    <span className="flex items-center gap-1.5 text-sm font-medium">
+                                        <Globe className="h-4 w-4 text-blue-500" /> Bulletin Board
+                                    </span>
+                                    {announcement.deliveryChannel?.includes("email") && (
                                         <span className="flex items-center gap-1.5 text-sm font-medium">
                                             <Mail className="h-4 w-4 text-purple-500" /> Email
                                         </span>
@@ -165,8 +159,8 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                                     <span className="text-xs font-medium uppercase tracking-wide">Created</span>
                                 </div>
                                 <p className="text-sm font-medium">
-                                    {notification.createdAt
-                                        ? format(new Date(notification.createdAt), "MMM d, yyyy 'at' h:mm a")
+                                    {announcement.createdAt
+                                        ? format(new Date(announcement.createdAt), "MMM d, yyyy 'at' h:mm a")
                                         : "—"}
                                 </p>
                             </div>
@@ -175,14 +169,14 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                     <Clock className="h-4 w-4" />
                                     <span className="text-xs font-medium uppercase tracking-wide">
-                                        {notification.status === "scheduled" ? "Scheduled For" : "Sent At"}
+                                        {announcement.status === "scheduled" ? "Scheduled For" : "Published At"}
                                     </span>
                                 </div>
                                 <p className="text-sm font-medium">
-                                    {notification.status === "scheduled" && notification.scheduledDate
-                                        ? format(new Date(notification.scheduledDate), "MMM d, yyyy 'at' h:mm a")
-                                        : notification.sentAt
-                                            ? format(new Date(notification.sentAt), "MMM d, yyyy 'at' h:mm a")
+                                    {announcement.status === "scheduled" && announcement.scheduledDate
+                                        ? format(new Date(announcement.scheduledDate), "MMM d, yyyy 'at' h:mm a")
+                                        : announcement.sentAt
+                                            ? format(new Date(announcement.sentAt), "MMM d, yyyy 'at' h:mm a")
                                             : "—"}
                                 </p>
                             </div>
@@ -191,7 +185,7 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
                         {/* Created By */}
                         <div className="pt-6 border-t">
                             <p className="text-sm text-muted-foreground">
-                                Created by <span className="font-medium text-foreground">{notification.createdBy || "Admin"}</span>
+                                Created by <span className="font-medium text-foreground">{announcement.createdBy || "Admin"}</span>
                             </p>
                         </div>
                     </div>
@@ -207,4 +201,4 @@ const NotificationDetailModal = ({ open, onOpenChange, notification }) => {
     );
 };
 
-export default NotificationDetailModal;
+export default AnnouncementDetailModal;

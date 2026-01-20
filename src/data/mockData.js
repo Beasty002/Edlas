@@ -51,8 +51,8 @@ export const mockUsers = {
 // ==================== ROLE PERMISSIONS ====================
 export const rolePermissions = {
   superadmin: {
-    sidebar: ["dashboard", "students", "staffs", "academics", "notifications", "ai"],
-    routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/StudentDetail", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/notifications", "/marks", "/ai"]
+    sidebar: ["dashboard", "students", "staffs", "academics", "announcements", "ai"],
+    routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/StudentDetail", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/announcements", "/marks", "/ai"]
   },
   staff: {
     sidebar: ["dashboard", "students", "academics", "classroom", "ai"],
@@ -507,8 +507,8 @@ export const mockStudentResults = [
   }
 ];
 
-// ==================== NOTIFICATIONS ====================
-export const mockNotifications = [
+// ==================== ANNOUNCEMENTS ====================
+export const mockAnnouncements = [
   {
     id: 1,
     title: "Annual Sports Day Announcement",
@@ -534,8 +534,8 @@ export const mockNotifications = [
     description: "The board examination schedule for Class 10 has been released. Please click the link below to download the complete timetable and guidelines.",
     contentType: "link",
     recipients: {
-      type: "specific_class",
-      classes: ["10"],
+      type: "all_students",
+      classes: [],
       sections: []
     },
     deliveryChannel: ["web", "email"],
@@ -553,9 +553,9 @@ export const mockNotifications = [
     description: "A reminder that the Parent-Teacher Meeting for Class 9A and 9B is scheduled for tomorrow. Parents are requested to be present at the school auditorium by 10:00 AM.",
     contentType: "message",
     recipients: {
-      type: "specific_section",
-      classes: ["9"],
-      sections: ["A", "B"]
+      type: "all_students",
+      classes: [],
+      sections: []
     },
     deliveryChannel: ["email"],
     status: "scheduled",
@@ -572,7 +572,7 @@ export const mockNotifications = [
     description: "All teaching staff are required to attend the professional development workshop on modern teaching methodologies. The workshop will be conducted by Dr. Sharma from the Education Board.",
     contentType: "blog",
     recipients: {
-      type: "teachers",
+      type: "all_staff",
       classes: [],
       sections: []
     },
