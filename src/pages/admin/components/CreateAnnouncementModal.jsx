@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { baseRequest } from "@/api/api";
+import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -53,6 +56,7 @@ const CreateAnnouncementModal = ({
 }) => {
     const [activeTab, setActiveTab] = useState("content");
     const fileInputRef = useRef(null);
+    const isEditingSent = editData?.status === "sent";
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -158,29 +162,74 @@ const CreateAnnouncementModal = ({
         return true;
     };
 
-    const handleSubmit = (status) => {
-        let scheduledDate = null;
-        if (formData.scheduleType === "schedule" && formData.scheduledDate && formData.scheduledTime) {
-            scheduledDate = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString();
+    const queryClient = useQueryClient();
+
+    const announcementMutation = useMutation({
+        mutationFn: async ({ apiFormData, isEditing, editId }) => {
+            const response = await baseRequest({
+                url: isEditing ? `/system/announcements/${editId}/` : '/system/announcements/',
+                method: isEditing ? 'PATCH' : 'POST',
+                body: apiFormData,
+                isFormData: true,
+            });
+            if (!response.ok) {
+                throw new Error(response.data?.message || 'Failed to save announcement');
+            }
+            return response.data;
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['announcements'] });
+            const successMessage = variables.isEditing
+                ? 'Announcement updated'
+                : variables.isDraft
+                    ? 'Draft saved'
+                    : variables.isScheduled
+                        ? 'Announcement scheduled'
+                        : 'Announcement published';
+            toast.success(successMessage);
+            onSave(data);
+            handleClose();
+        },
+        onError: (error, variables) => {
+            toast.error(error.message || `Failed to ${variables.isEditing ? 'update' : 'create'} announcement`);
+        },
+    });
+
+    const handleSubmit = (isDraft) => {
+        const apiFormData = new FormData();
+
+        apiFormData.append('title', formData.title);
+        apiFormData.append('description', formData.description);
+        apiFormData.append('announcement_type', formData.contentType);
+        apiFormData.append('via_web', 'true');
+        apiFormData.append('via_email', formData.sendEmail ? 'true' : 'false');
+
+        const recipientType = formData.recipients.type;
+        apiFormData.append('student_receipent', (recipientType === 'whole_school' || recipientType === 'all_students') ? 'true' : 'false');
+        apiFormData.append('staff_receipent', (recipientType === 'whole_school' || recipientType === 'all_staff') ? 'true' : 'false');
+        apiFormData.append('is_draft', isDraft ? 'true' : 'false');
+
+        if (formData.contentType === 'link' && formData.linkUrl) {
+            apiFormData.append('link', formData.linkUrl);
         }
 
-        // Web is always included by default, email is optional
-        const deliveryChannel = formData.sendEmail ? ["web", "email"] : ["web"];
+        const isScheduled = formData.scheduleType === 'schedule' && formData.scheduledDate && formData.scheduledTime;
+        if (isScheduled) {
+            const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString();
+            apiFormData.append('scheduled_datetime', scheduledDateTime);
+        }
 
-        const announcementData = {
-            title: formData.title,
-            description: formData.description,
-            contentType: formData.contentType,
-            linkUrl: formData.contentType === "link" ? formData.linkUrl : null,
-            imageUrl: formData.contentType === "blog" ? formData.imageUrl : null,
-            recipients: formData.recipients,
-            deliveryChannel: deliveryChannel,
-            status: status,
-            scheduledDate: status === "scheduled" ? scheduledDate : null,
-            sentAt: status === "sent" ? new Date().toISOString() : null,
-        };
+        if (formData.contentType === 'blog' && formData.imageFile) {
+            apiFormData.append('image', formData.imageFile);
+        }
 
-        onSave(announcementData);
+        announcementMutation.mutate({
+            apiFormData,
+            isEditing: !!editData?.id,
+            editId: editData?.id,
+            isDraft,
+            isScheduled,
+        });
     };
 
     return (
@@ -329,6 +378,7 @@ const CreateAnnouncementModal = ({
                                 <Select
                                     value={formData.recipients.type}
                                     onValueChange={(value) => updateRecipients("type", value)}
+                                    disabled={isEditingSent}
                                 >
                                     <SelectTrigger className="w-full h-11">
                                         <SelectValue placeholder="Select recipients" />
@@ -362,10 +412,14 @@ const CreateAnnouncementModal = ({
                                 <p className="text-xs text-muted-foreground">
                                     Announcements are always shown on the bulletin board. Optionally send via email.
                                 </p>
-                                <label className="flex items-center gap-3 cursor-pointer p-4 border rounded-xl hover:bg-muted/50 transition-colors">
+                                <label className={cn(
+                                    "flex items-center gap-3 p-4 border rounded-xl transition-colors",
+                                    isEditingSent ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50"
+                                )}>
                                     <Checkbox
                                         checked={formData.sendEmail}
                                         onCheckedChange={(checked) => updateFormData("sendEmail", checked)}
+                                        disabled={isEditingSent}
                                     />
                                     <Mail className="h-5 w-5 text-purple-500" />
                                     <div>
@@ -380,9 +434,11 @@ const CreateAnnouncementModal = ({
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
-                                        onClick={() => updateFormData("scheduleType", "now")}
+                                        onClick={() => !isEditingSent && updateFormData("scheduleType", "now")}
+                                        disabled={isEditingSent}
                                         className={cn(
                                             "flex items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all",
+                                            isEditingSent && "opacity-50 cursor-not-allowed",
                                             formData.scheduleType === "now"
                                                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                                                 : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
@@ -393,9 +449,11 @@ const CreateAnnouncementModal = ({
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => updateFormData("scheduleType", "schedule")}
+                                        onClick={() => !isEditingSent && updateFormData("scheduleType", "schedule")}
+                                        disabled={isEditingSent}
                                         className={cn(
                                             "flex items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all",
+                                            isEditingSent && "opacity-50 cursor-not-allowed",
                                             formData.scheduleType === "schedule"
                                                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                                                 : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
@@ -435,21 +493,21 @@ const CreateAnnouncementModal = ({
                 </div>
 
                 <DialogFooter className="px-6 py-4 border-t shrink-0 flex-col sm:flex-row gap-2">
-                    <Button variant="outline" onClick={handleClose}>
+                    <Button variant="outline" onClick={handleClose} disabled={announcementMutation.isPending}>
                         Cancel
                     </Button>
                     <Button
                         variant="secondary"
-                        onClick={() => handleSubmit("draft")}
-                        disabled={!formData.title.trim()}
+                        onClick={() => handleSubmit(true)}
+                        disabled={!formData.title.trim() || announcementMutation.isPending}
                     >
                         <Save className="mr-2 h-4 w-4" />
                         Save Draft
                     </Button>
                     <Button
                         className="bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => handleSubmit(formData.scheduleType === "schedule" ? "scheduled" : "sent")}
-                        disabled={!isValid()}
+                        onClick={() => handleSubmit(false)}
+                        disabled={!isValid() || announcementMutation.isPending}
                     >
                         {formData.scheduleType === "schedule" ? (
                             <>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,9 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import CreateAnnouncementModal from "./components/CreateAnnouncementModal";
 import AnnouncementDetailModal from "./components/AnnouncementDetailModal";
-import { mockAnnouncements } from "@/data/mockData";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { baseRequest } from "@/api/api";
 
 const getContentTypeConfig = (type) => {
     switch (type) {
@@ -72,8 +73,36 @@ const getStatusConfig = (status) => {
     }
 };
 
+const fetchAnnouncements = async () => {
+    const response = await baseRequest({
+        url: '/system/announcements/',
+        method: 'GET',
+    });
+    if (!response.ok) {
+        throw new Error('Failed to fetch announcements');
+    }
+    return response.data?.results?.map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        contentType: item.announcement_type,
+        linkUrl: item.link,
+        imageUrl: item.image,
+        recipients: {
+            type: item.student_receipent && item.staff_receipent ? 'whole_school'
+                : item.student_receipent ? 'all_students'
+                    : 'all_staff'
+        },
+        deliveryChannel: [item.via_web && 'web', item.via_email && 'email'].filter(Boolean),
+        status: item.is_draft ? 'draft' : item.scheduled_datetime ? 'scheduled' : 'sent',
+        scheduledDate: item.scheduled_datetime,
+        sentAt: !item.is_draft ? item.created_at : null,
+        createdAt: item.created_at,
+    })) || [];
+};
+
 const Announcements = () => {
-    const [announcements, setAnnouncements] = useState(mockAnnouncements);
+    const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [typeFilter, setTypeFilter] = useState("all");
@@ -81,6 +110,11 @@ const Announcements = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
     const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+
+    const { data: announcements = [], isLoading } = useQuery({
+        queryKey: ['announcements'],
+        queryFn: fetchAnnouncements,
+    });
 
     const filteredAnnouncements = useMemo(() => {
         return announcements.filter((item) => {
@@ -103,56 +137,23 @@ const Announcements = () => {
     };
 
     const handleDelete = (item) => {
-        setAnnouncements((prev) => prev.filter((n) => n.id !== item.id));
+        queryClient.invalidateQueries({ queryKey: ['announcements'] });
         toast.success("Announcement deleted");
     };
 
     const handleCancelScheduled = (item) => {
-        setAnnouncements((prev) =>
-            prev.map((n) =>
-                n.id === item.id ? { ...n, status: "draft", scheduledDate: null } : n
-            )
-        );
+        queryClient.invalidateQueries({ queryKey: ['announcements'] });
         toast.success("Scheduled announcement cancelled");
     };
 
     const handlePublishNow = (item) => {
-        setAnnouncements((prev) =>
-            prev.map((n) =>
-                n.id === item.id ? { ...n, status: "sent", scheduledDate: null, sentAt: new Date().toISOString() } : n
-            )
-        );
+        queryClient.invalidateQueries({ queryKey: ['announcements'] });
         toast.success("Announcement published successfully");
     };
 
-    const handleSave = (announcementData) => {
-        if (editingAnnouncement) {
-            setAnnouncements((prev) =>
-                prev.map((n) =>
-                    n.id === editingAnnouncement.id ? { ...n, ...announcementData } : n
-                )
-            );
-            toast.success("Announcement updated");
-            setEditingAnnouncement(null);
-        } else {
-            const newId = Math.max(...announcements.map((n) => n.id), 0) + 1;
-            setAnnouncements((prev) => [
-                {
-                    id: newId,
-                    ...announcementData,
-                    createdAt: new Date().toISOString(),
-                    createdBy: "Admin User",
-                },
-                ...prev,
-            ]);
-            toast.success(
-                announcementData.status === "scheduled"
-                    ? "Announcement scheduled"
-                    : announcementData.status === "draft"
-                        ? "Draft saved"
-                        : "Announcement published"
-            );
-        }
+    const handleSave = () => {
+        queryClient.invalidateQueries({ queryKey: ['announcements'] });
+        setEditingAnnouncement(null);
         setIsCreateModalOpen(false);
     };
 
@@ -343,6 +344,7 @@ const Announcements = () => {
             <DataGrid
                 columns={columns}
                 data={filteredAnnouncements}
+                isLoading={isLoading}
                 actionConfig={actionConfig}
                 emptyMessage="No announcements found"
                 keyField="id"
