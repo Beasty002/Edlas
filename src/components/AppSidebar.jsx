@@ -21,6 +21,7 @@ import {
   UserCheck,
   Megaphone,
   ClipboardList,
+  BrainIcon,
 } from 'lucide-react';
 
 import { AuthContext } from '@/context/AuthContext';
@@ -96,10 +97,10 @@ const allMenuItems = [
   },
   {
     id: 'ai',
-    label: 'AI Chat',
+    label: 'Ask AI',
     path: '/ai',
-    icon: MessageSquare,
-    roles: ['superadmin', 'staff', 'student'],
+    icon: BrainIcon,
+    roles: ['superadmin', 'staff'],
   },
 ];
 
