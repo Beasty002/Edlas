@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,23 +18,45 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Edit, Search } from "lucide-react";
+import { PlusCircle, Edit, Search, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
 import { toast } from "sonner";
-import { mockTeacherAssignments } from "@/data/mockData";
 import { useClassrooms } from "@/context/ClassroomsContext";
 import { useClassSubjects } from "@/hooks/useClassSubjects";
 import { baseRequest } from "@/api/api";
-import { useDebounce, buildQueryParams } from "@/utils/helper";
+import { useDebounce, buildQueryParams, getErrorMessage } from "@/utils/helper";
+
+const fetchTeacherAssignments = async () => {
+  const res = await baseRequest({
+    url: "/academics/teacher-assignments/",
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw { response: { data: res.data, status: res.status } };
+  }
+  return res.data;
+};
 
 const TeacherAssignments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
-  const [assignments, setAssignments] = useState(mockTeacherAssignments);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [classFilter, setClassFilter] = useState("all");
+  const queryClient = useQueryClient();
+
+  const {
+    data: assignmentsData,
+    isLoading: isLoadingAssignments,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["teacher-assignments"],
+    queryFn: fetchTeacherAssignments,
+  });
+
+  const assignments = assignmentsData?.results || [];
   const [formData, setFormData] = useState({
     selectedClass: "",
     classSubjectId: "",
@@ -98,9 +120,9 @@ const TeacherAssignments = () => {
       setEditingAssignment(assignment);
       setFormData({
         selectedClass: assignment.classroom_name || "",
-        classSubjectId: assignment.class_subject?.toString() || "",
-        section: assignment.section || "",
-        teacherId: assignment.teacher?.toString() || "",
+        classSubjectId: assignment.subject_id?.toString() || "",
+        section: assignment.section_name || "",
+        teacherId: assignment.teacher_id?.toString() || "",
       });
     } else {
       setEditingAssignment(null);
@@ -114,49 +136,43 @@ const TeacherAssignments = () => {
     setIsDialogOpen(true);
   };
 
+  const assignTeacherMutation = useMutation({
+    mutationFn: async (payload) => {
+      const res = await baseRequest({
+        url: "/academics/teacher-assignments/",
+        method: "POST",
+        body: payload,
+      });
+      if (!res.ok) {
+        throw { response: { data: res.data, status: res.status } };
+      }
+      return res.data;
+    },
+    onMutate: () => {
+      toast.loading("Assigning teacher...", { id: "assign-teacher" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacher-assignments"] });
+      toast.success("Teacher assigned successfully", { id: "assign-teacher" });
+      setIsDialogOpen(false);
+      setEditingAssignment(null);
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to assign teacher"), { id: "assign-teacher" });
+    },
+  });
+
   const handleSave = () => {
     if (!formData.classSubjectId || !formData.section || !formData.teacherId) {
       toast.error("Please fill all required fields");
       return;
     }
 
-    const selectedTeacher = teachers.find((t) => t.id.toString() === formData.teacherId);
-    const selectedClassSubject = classSubjects.find(
-      (cs) => cs.id.toString() === formData.classSubjectId
-    );
-
-    if (editingAssignment) {
-      setAssignments((prev) =>
-        prev.map((a) =>
-          a.id === editingAssignment.id
-            ? {
-              ...a,
-              section: formData.section,
-              teacher: parseInt(formData.teacherId),
-              teacher_name: selectedTeacher?.name || "",
-            }
-            : a
-        )
-      );
-      toast.success("Assignment updated");
-    } else {
-      const newId = Math.max(...assignments.map((a) => a.id), 0) + 1;
-      setAssignments((prev) => [
-        ...prev,
-        {
-          id: newId,
-          class_subject: parseInt(formData.classSubjectId),
-          class_subject_code: selectedClassSubject?.code || "",
-          subject_name: selectedClassSubject?.subject_name || "",
-          classroom_name: formData.selectedClass,
-          section: formData.section,
-          teacher: parseInt(formData.teacherId),
-          teacher_name: selectedTeacher?.name || "",
-        },
-      ]);
-      toast.success("Teacher assigned");
-    }
-    setIsDialogOpen(false);
+    assignTeacherMutation.mutate({
+      subject_id: parseInt(formData.classSubjectId),
+      section_name: formData.section,
+      teacher_id: parseInt(formData.teacherId),
+    });
   };
 
   const handleClassChange = (value) => {
@@ -187,26 +203,33 @@ const TeacherAssignments = () => {
     },
     { field: "subject_name", headerText: "Subject", width: 150 },
     {
-      field: "class_subject_code",
+      field: "subject_code",
       headerText: "Code",
       width: 100,
       template: (assignment) => (
-        <span className="font-mono text-sm">{assignment.class_subject_code}</span>
+        <span className="font-mono text-sm">{assignment.subject_code}</span>
       ),
     },
     {
-      field: "section",
+      field: "section_name",
       headerText: "Section",
       width: 80,
       textAlign: "Center",
       template: (assignment) => (
-        <Badge variant="secondary">{assignment.section}</Badge>
+        <Badge variant="secondary">{assignment.section_name}</Badge>
       ),
     },
     {
       field: "teacher_name",
       headerText: "Teacher",
       width: 200,
+      template: (assignment) => (
+        assignment.is_assigned ? (
+          <span>{assignment.teacher_name}</span>
+        ) : (
+          <span className="text-muted-foreground italic">Not Assigned</span>
+        )
+      ),
     },
   ];
 
@@ -265,13 +288,26 @@ const TeacherAssignments = () => {
         </div>
       </div>
 
-      <DataGrid
-        columns={columns}
-        data={filteredAssignments}
-        actionConfig={actionConfig}
-        emptyMessage="No teacher assignments found"
-        keyField="id"
-      />
+      {isLoadingAssignments ? (
+        <div className="flex items-center justify-center p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-muted-foreground">Loading assignments...</span>
+        </div>
+      ) : isError ? (
+        <div className="p-8 text-center bg-white dark:bg-gray-800 border border-red-200 dark:border-red-700 rounded-sm">
+          <p className="text-red-600 dark:text-red-400">
+            {getErrorMessage(error, "Failed to load teacher assignments.")}
+          </p>
+        </div>
+      ) : (
+        <DataGrid
+          columns={columns}
+          data={filteredAssignments}
+          actionConfig={actionConfig}
+          emptyMessage="No teacher assignments found"
+          keyField="section_id"
+        />
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
