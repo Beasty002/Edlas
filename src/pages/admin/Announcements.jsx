@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +62,7 @@ const getRecipientLabel = (recipients) => {
 
 const getStatusConfig = (status) => {
     switch (status) {
-        case "sent":
+        case "published":
             return { label: "Published", variant: "default", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
         case "scheduled":
             return { label: "Scheduled", variant: "outline", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" };
@@ -73,9 +73,16 @@ const getStatusConfig = (status) => {
     }
 };
 
-const fetchAnnouncements = async () => {
+const fetchAnnouncements = async ({ search, status, type }) => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (status && status !== 'all') params.append('announcement_status', status);
+    if (type && type !== 'all') params.append('announcement_type', type);
+
+    const url = params.toString() ? `/system/announcements/?${params.toString()}` : '/system/announcements/';
+
     const response = await baseRequest({
-        url: '/system/announcements/',
+        url,
         method: 'GET',
     });
     if (!response.ok) {
@@ -94,7 +101,7 @@ const fetchAnnouncements = async () => {
                     : 'all_staff'
         },
         deliveryChannel: [item.via_web && 'web', item.via_email && 'email'].filter(Boolean),
-        status: item.is_draft ? 'draft' : item.scheduled_datetime ? 'scheduled' : 'sent',
+        status: item.announcement_status,
         scheduledDate: item.scheduled_datetime,
         sentAt: !item.is_draft ? item.created_at : null,
         createdAt: item.created_at,
@@ -112,19 +119,13 @@ const Announcements = () => {
     const [editingAnnouncement, setEditingAnnouncement] = useState(null);
 
     const { data: announcements = [], isLoading } = useQuery({
-        queryKey: ['announcements'],
-        queryFn: fetchAnnouncements,
+        queryKey: ['announcements', searchQuery, statusFilter, typeFilter],
+        queryFn: () => fetchAnnouncements({
+            search: searchQuery,
+            status: statusFilter,
+            type: typeFilter
+        }),
     });
-
-    const filteredAnnouncements = useMemo(() => {
-        return announcements.filter((item) => {
-            const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.description.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = statusFilter === "all" || item.status === statusFilter;
-            const matchesType = typeFilter === "all" || item.contentType === typeFilter;
-            return matchesSearch && matchesStatus && matchesType;
-        });
-    }, [announcements, searchQuery, statusFilter, typeFilter]);
 
     const handleView = (item) => {
         setSelectedAnnouncement(item);
@@ -264,7 +265,7 @@ const Announcements = () => {
                 label: "Edit",
                 icon: <Edit className="h-4 w-4" />,
                 onClick: handleEdit,
-                hidden: (item) => item.status === "sent",
+                hidden: (item) => item.status === "published",
             },
             {
                 label: "Publish Now",
@@ -313,7 +314,7 @@ const Announcements = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="sent">Published</SelectItem>
+                            <SelectItem value="published">Published</SelectItem>
                             <SelectItem value="scheduled">Scheduled</SelectItem>
                             <SelectItem value="draft">Draft</SelectItem>
                         </SelectContent>
@@ -343,7 +344,7 @@ const Announcements = () => {
 
             <DataGrid
                 columns={columns}
-                data={filteredAnnouncements}
+                data={announcements}
                 isLoading={isLoading}
                 actionConfig={actionConfig}
                 emptyMessage="No announcements found"
