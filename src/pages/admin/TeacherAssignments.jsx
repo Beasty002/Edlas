@@ -342,7 +342,7 @@ const TeacherAssignments = () => {
                 <Select
                   value={formData.section}
                   onValueChange={(v) => setFormData({ ...formData, section: v })}
-                  disabled={!formData.selectedClass}
+                  disabled={!formData.selectedClass || !!editingAssignment}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select section" />
