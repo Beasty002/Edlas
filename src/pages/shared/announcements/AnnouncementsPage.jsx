@@ -8,9 +8,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Megaphone, Inbox } from "lucide-react";
+import { Search, Megaphone, Inbox, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import AnnouncementCard from "./AnnouncementCard";
+import AnnouncementDetailModal from "./AnnouncementDetailModal";
 import { baseRequest } from "@/api/api";
 
 const fetchAnnouncements = async ({ search, type }) => {
@@ -40,25 +41,17 @@ const fetchAnnouncements = async ({ search, type }) => {
     })) || [];
 };
 
-// Loading skeleton component
 const AnnouncementSkeleton = () => (
-    <div className="rounded-xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 overflow-hidden animate-pulse">
-        <div className="h-48 bg-gray-200 dark:bg-gray-700" />
-        <div className="p-5 space-y-4">
-            <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700" />
-                <div className="flex-1 space-y-2">
+    <div className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 animate-pulse">
+        <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-3">
                     <div className="h-5 w-16 rounded bg-gray-200 dark:bg-gray-700" />
-                    <div className="h-6 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                    <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
                 </div>
-            </div>
-            <div className="space-y-2">
+                <div className="h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
                 <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="h-4 w-5/6 rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="h-4 w-4/6 rounded bg-gray-200 dark:bg-gray-700" />
-            </div>
-            <div className="pt-3 border-t border-gray-100 dark:border-gray-700/50">
-                <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
             </div>
         </div>
     </div>
@@ -83,6 +76,7 @@ const EmptyState = ({ hasFilters }) => (
 const AnnouncementsPage = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
+    const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
     const { data: announcements = [], isLoading } = useQuery({
         queryKey: ['bulletin-announcements', searchQuery, typeFilter],
@@ -102,7 +96,7 @@ const AnnouncementsPage = () => {
                 icon={<Megaphone className="h-7 w-7 text-blue-600" />}
             />
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex-1 min-w-[200px] relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -127,23 +121,30 @@ const AnnouncementsPage = () => {
             </div>
 
             {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, i) => (
+                <div className="flex flex-col gap-3">
+                    {[...Array(4)].map((_, i) => (
                         <AnnouncementSkeleton key={i} />
                     ))}
                 </div>
             ) : announcements.length === 0 ? (
                 <EmptyState hasFilters={hasFilters} />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex flex-col gap-3">
                     {announcements.map((announcement) => (
                         <AnnouncementCard
                             key={announcement.id}
                             announcement={announcement}
+                            onClick={() => setSelectedAnnouncement(announcement)}
                         />
                     ))}
                 </div>
             )}
+
+            <AnnouncementDetailModal
+                announcement={selectedAnnouncement}
+                open={!!selectedAnnouncement}
+                onClose={() => setSelectedAnnouncement(null)}
+            />
         </div>
     );
 };
