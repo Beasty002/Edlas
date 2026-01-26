@@ -25,6 +25,7 @@ const TeacherClassroom = lazy(() => import("@/pages/Teacher/TeacherClassroom"));
 const TeacherAssignmentList = lazy(() => import("@/pages/Teacher/TeacherAssignmentList"));
 const StudentClassroom = lazy(() => import("@/pages/student/StudentClassroom"));
 const StudentAssignmentList = lazy(() => import("@/pages/student/StudentAssignmentList"));
+const BulletinBoard = lazy(() => import("@/pages/shared/announcements/AnnouncementsPage"));
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
           { path: "/", element: <Dashboard /> },
+          { path: "/bulletin", element: <BulletinBoard /> },
           { path: "/ai", element: <AiChat /> },
 
           {

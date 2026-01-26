@@ -22,6 +22,7 @@ import {
   Megaphone,
   ClipboardList,
   BrainIcon,
+  Newspaper,
 } from 'lucide-react';
 
 import { AuthContext } from '@/context/AuthContext';
@@ -68,6 +69,13 @@ const allMenuItems = [
       { id: 'teacher-assignments', label: 'Teacher Assignments', path: '/teacher-assignments', icon: UserCheck, roles: ['superadmin'] },
       { id: 'markings', label: 'Markings', path: '/marks', icon: FileDigit, roles: ['staff', 'superadmin'] },
     ],
+  },
+  {
+    id: 'bulletin',
+    label: 'Bulletin Board',
+    path: '/bulletin',
+    icon: Newspaper,
+    roles: ['superadmin', 'staff', 'student'],
   },
   {
     id: 'announcements',

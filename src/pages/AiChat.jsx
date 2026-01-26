@@ -282,7 +282,7 @@ export default function AiInterface() {
                 }}
               />
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground invisible">
                   <Lightbulb className="h-3.5 w-3.5" />
                   <span>Press Enter to submit, Shift+Enter for new line</span>
                 </div>
