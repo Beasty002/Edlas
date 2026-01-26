@@ -57,9 +57,9 @@ const AssignTeacherModal = ({
   const assignTeacherMutation = useMutation({
     mutationFn: async ({ classId, teacherId }) => {
       const res = await baseRequest({
-        url: `/academics/class-sections/${classId}/`,
+        url: `/academics/class-sections/${classId}/teacher`,
         method: "PATCH",
-        body: { teacher: teacherId },
+        body: { teacher_id: teacherId },
       });
       if (!res.ok) {
         throw new Error("Failed to assign teacher");
@@ -77,6 +77,7 @@ const AssignTeacherModal = ({
 
   const handleSave = () => {
     if (!selectedTeacher) return;
+    console.log(cls);
     assignTeacherMutation.mutate({
       classId: cls.id,
       teacherId: selectedTeacher,
