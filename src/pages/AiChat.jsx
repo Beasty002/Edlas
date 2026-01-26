@@ -307,7 +307,6 @@ export default function AiInterface() {
             </form>
           </div>
 
-          {/* Loading State */}
           {loading && (
             <div className="bg-white dark:bg-gray-800 p-8 border border-gray-200 dark:border-gray-700 rounded-sm">
               <div className="flex flex-col items-center justify-center space-y-4">
@@ -317,7 +316,6 @@ export default function AiInterface() {
             </div>
           )}
 
-          {/* Response Area */}
           {!loading && response && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
@@ -328,7 +326,6 @@ export default function AiInterface() {
             </div>
           )}
 
-          {/* Empty State */}
           {!loading && !response && (
             <div className="bg-white dark:bg-gray-800 p-8 border border-gray-200 dark:border-gray-700 rounded-sm border-dashed">
               <div className="flex flex-col items-center justify-center text-center space-y-3">
@@ -344,9 +341,7 @@ export default function AiInterface() {
           )}
         </div>
 
-        {/* Right Sidebar - Suggestions */}
         <div className="space-y-6">
-          {/* Suggested Queries */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-medium flex items-center gap-2">

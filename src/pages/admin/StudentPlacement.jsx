@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,50 +22,23 @@ import {
 } from "@/components/ui/dialog";
 import PageHeader from "../../components/PageHeader";
 import { DataGrid } from "@/components/reusable/DataGrid";
-import { Search, ArrowUp, ArrowDown, ArrowRightLeft } from "lucide-react";
+import { Search, ArrowUp, ArrowDown, ArrowRightLeft, Loader2 } from "lucide-react";
 import { useClassrooms } from "@/context/ClassroomsContext";
 
-const dummyStudents = [
-  {
-    id: "stu-1",
-    roll: 1,
-    name: "John Doe",
-    class: "10",
-    section: "A",
-    grade: "A",
-    status: "Pass",
-  },
-  {
-    id: "stu-2",
-    roll: 2,
-    name: "Jane Smith",
-    class: "10",
-    section: "A",
-    grade: "F",
-    status: "Fail",
-  },
-  {
-    id: "stu-3",
-    roll: 3,
-    name: "Alice Brown",
-    class: "10",
-    section: "B",
-    grade: "B+",
-    status: "Pass",
-  },
-  {
-    id: "stu-4",
-    roll: 4,
-    name: "Bob Lee",
-    class: "9",
-    section: "A",
-    grade: "D",
-    status: "Pass",
-  },
-];
+const fetchPlacementList = async (studentClass, section) => {
+  const res = await baseRequest({
+    url: `/system/students/placement-list/?student_class=${studentClass}&section=${section}`,
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    throw { response: { data: res.data, status: res.status } };
+  }
+
+  return res.data;
+};
 
 const StudentPlacement = () => {
-  const [students, setStudents] = useState(dummyStudents);
   const [classFilter, setClassFilter] = useState("");
   const [sectionFilter, setSectionFilter] = useState("");
   const [search, setSearch] = useState("");
@@ -96,6 +69,17 @@ const StudentPlacement = () => {
     }
   }, [classFilter]);
 
+  const {
+    data: placementData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["placement-list", classFilter, sectionFilter],
+    queryFn: () => fetchPlacementList(classFilter, sectionFilter),
+    enabled: !!classFilter && !!sectionFilter, // Only fetch when both filters are set
+  });
+
   const placementApiCall = async ({ studentIds, action, targetClass, targetSection }) => {
     const payload = {
       student_ids: studentIds,
@@ -123,8 +107,8 @@ const StudentPlacement = () => {
       toast.loading("Processing placement...", { id: "placement" });
     },
     onSuccess: (_, variables) => {
-      // Invalidate students query to refetch the list
-      queryClient.invalidateQueries({ queryKey: ["students"] });
+      // Invalidate placement-list query to refetch the list
+      queryClient.invalidateQueries({ queryKey: ["placement-list"] });
 
       const count = variables.studentIds.length;
       if (variables.action === "promote") {
@@ -144,11 +128,10 @@ const StudentPlacement = () => {
     },
   });
 
-  const filtered = students.filter(
-    (s) =>
-      s.class === classFilter &&
-      s.section === sectionFilter &&
-      (search ? s.name.toLowerCase().includes(search.toLowerCase()) : true)
+  // Get students from API response and apply local search filter
+  const students = placementData?.results || [];
+  const filtered = students.filter((s) =>
+    search ? s.name.toLowerCase().includes(search.toLowerCase()) : true
   );
 
   const handleBulkAction = (action, selectedStudents) => {
@@ -215,12 +198,12 @@ const StudentPlacement = () => {
     { field: "name", headerText: "Name", width: 150 },
     { field: "grade", headerText: "Grade", width: 80, textAlign: "Center" },
     {
-      field: "status",
+      field: "placement_status",
       headerText: "Status",
-      width: 80,
+      width: 100,
       template: (student) => (
-        <span className={student.status === "Pass" ? "text-green-600" : "text-red-600"}>
-          {student.status}
+        <span className={student.placement_status === "Pass" ? "text-green-600" : "text-red-600"}>
+          {student.placement_status}
         </span>
       ),
     },
@@ -363,15 +346,28 @@ const StudentPlacement = () => {
         Showing: Class {classFilter} - Section {sectionFilter}
       </h2>
 
-      <DataGrid
-        key={`${classFilter}-${sectionFilter}`}
-        columns={columns}
-        data={filtered}
-        actionConfig={actionConfig}
-        bulkActionConfig={bulkActionConfig}
-        emptyMessage="No students found"
-        keyField="id"
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-muted-foreground">Loading students...</span>
+        </div>
+      ) : isError ? (
+        <div className="p-8 text-center bg-white dark:bg-gray-800 border border-red-200 dark:border-red-700 rounded-sm">
+          <p className="text-red-600 dark:text-red-400">
+            {getErrorMessage(error, "Failed to load placement list. Please try again.")}
+          </p>
+        </div>
+      ) : (
+        <DataGrid
+          key={`${classFilter}-${sectionFilter}`}
+          columns={columns}
+          data={filtered}
+          actionConfig={actionConfig}
+          bulkActionConfig={bulkActionConfig}
+          emptyMessage="No students found"
+          keyField="id"
+        />
+      )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-lg">
