@@ -39,7 +39,7 @@ const StudentListView = () => {
 
   const handleAction = (studentId, action) => {
     console.log(`${action} clicked for ${studentId}`);
-    navigate("/students/StudentDetail");
+    navigate(`/students/${studentId}`);
   };
 
   return (

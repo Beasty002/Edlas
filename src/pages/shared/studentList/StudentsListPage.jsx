@@ -150,7 +150,7 @@ export default function StudentsListPage() {
       {
         label: "View Details",
         icon: <View className="h-4 w-4" />,
-        onClick: (student) => navigate(`/students/StudentDetail`),
+        onClick: (student) => navigate(`/students/${student.id}`),
       },
     ],
   };

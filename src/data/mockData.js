@@ -52,7 +52,7 @@ export const mockUsers = {
 export const rolePermissions = {
   superadmin: {
     sidebar: ["dashboard", "students", "staffs", "academics", "announcements", "ai"],
-    routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/StudentDetail", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/announcements", "/marks", "/ai"]
+    routes: ["/", "/students", "/students/newEnrollment", "/students/placement", "/students/:id", "/staffs", "/staffs/add", "/classes", "/subjects", "/subject-master", "/teacher-assignments", "/announcements", "/marks", "/ai"]
   },
   staff: {
     sidebar: ["dashboard", "students", "academics", "classroom", "ai"],
